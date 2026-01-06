@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <title>FREE FIRE TOURNAMENT — SQL</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
-  <!-- Firebase (v10 modules) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
@@ -27,7 +26,7 @@
       getDoc
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ---------- FIREBASE CONFIG (provided)
+    // ---------- FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
       authDomain: "sqladmin-ff04d.firebaseapp.com",
@@ -43,11 +42,11 @@
     const db = getFirestore(app);
 
     // ---------- UI state
-    let currentMatch = null;     // { id, amt }
-    let lastPaymentDocId = null; // track user's last payment for status view
-    let lang = 'en';             // en / hi / ur (roman) simple switch
+    let currentMatch = null;
+    let lastPaymentDocId = null;
+    let lang = 'en'; 
 
-    // ---------- Helpers for translations (simple strings)
+    // ---------- Translations
     const STR = {
       en: {
         title: 'FREE FIRE TOURNAMENT',
@@ -55,7 +54,6 @@
         join: 'JOIN MATCH',
         joinClosed: 'Join Closed',
         full: 'Full',
-        proceedPayment: 'Complete Payment',
         enterUTR: 'Enter UTR / TXID',
         submitPayment: 'SUBMIT PAYMENT',
         cancel: 'Cancel',
@@ -67,8 +65,16 @@
         policyTitle: 'Policy',
         policyText: 'This game involves risk. Play at your own risk.',
         whatsappLabel: 'WhatsApp',
-        loginLabel: 'Login / Register',
-        homeLabel: 'Home'
+        homeLabel: 'Home',
+        homeSub: 'Return to matches',
+        loginHeader: 'Login / Register',
+        emailPh: 'Email',
+        passPh: 'Password',
+        btnReg: 'Register',
+        btnLogin: 'Login',
+        btnLogout: 'Logout',
+        regNote: '{ Registration creates a simple account for demo. }',
+        payTitle: 'Total: '
       },
       hi: {
         title: 'FREE FIRE TOURNAMENT',
@@ -76,7 +82,6 @@
         join: 'मैच जॉइन करें',
         joinClosed: 'जॉइन बंद',
         full: 'फुल',
-        proceedPayment: 'भुगतान पूरा करें',
         enterUTR: 'UTR / TXID डालें',
         submitPayment: 'भुगतान दर्ज करें',
         cancel: 'रद्द करें',
@@ -88,8 +93,16 @@
         policyTitle: 'नीतियाँ',
         policyText: 'यह खेल जोखिम शामिल करता है। अपनी जिम्मेदारी पर खेलें।',
         whatsappLabel: 'WhatsApp',
-        loginLabel: 'लॉगिन / रजिस्टर',
-        homeLabel: 'होम'
+        homeLabel: 'होम',
+        homeSub: 'मैच पर वापस जाएं',
+        loginHeader: 'लॉगिन / रजिस्टर',
+        emailPh: 'ईमेल',
+        passPh: 'पासवर्ड',
+        btnReg: 'रजिस्टर',
+        btnLogin: 'लॉगिन',
+        btnLogout: 'लॉगआउट',
+        regNote: '{ डेमो के लिए आसान अकाउंट बनता है }',
+        payTitle: 'कुल: '
       },
       ur: {
         title: 'FREE FIRE TOURNAMENT',
@@ -97,7 +110,6 @@
         join: 'میچ جوائن کریں',
         joinClosed: 'جوائن بند',
         full: 'فل',
-        proceedPayment: 'ادائیگی مکمل کریں',
         enterUTR: 'UTR / TXID درج کریں',
         submitPayment: 'ادائیگی جمع کریں',
         cancel: 'منسوخ کریں',
@@ -109,8 +121,16 @@
         policyTitle: 'پالیسی',
         policyText: 'یہ گیم خطرات شامل کرتا ہے۔ اپنی ذمہ داری پر کھیلیں۔',
         whatsappLabel: 'WhatsApp',
-        loginLabel: 'لاگ ان / رجسٹر',
-        homeLabel: 'ہوم'
+        homeLabel: 'ہوم',
+        homeSub: 'میچ پر واپس جائیں',
+        loginHeader: 'لاگ ان / رجسٹر',
+        emailPh: 'ای میل',
+        passPh: 'پاس ورڈ',
+        btnReg: 'رجسٹر',
+        btnLogin: 'لاگ ان',
+        btnLogout: 'لاگ آؤٹ',
+        regNote: '{ ڈیمو کے لیے آسان اکاؤنٹ بنتا ہے }',
+        payTitle: 'کل: '
       }
     };
 
@@ -127,11 +147,8 @@
       payModal: null,
       utrInput: null,
       paymentStatusView: null,
-      loginPanel: null,
       authEmail: null,
-      authPass: null,
-      authRegisterBtn: null,
-      authLoginBtn: null
+      authPass: null
     };
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -142,15 +159,12 @@
       ui.payModal = document.getElementById('pay');
       ui.utrInput = document.getElementById('utr');
       ui.paymentStatusView = document.getElementById('payment-status');
-      ui.loginPanel = document.getElementById('login-panel');
       ui.authEmail = document.getElementById('auth-email');
       ui.authPass = document.getElementById('auth-pass');
-      ui.authRegisterBtn = document.getElementById('auth-register');
-      ui.authLoginBtn = document.getElementById('auth-login');
 
-      // wire register/login UI
-      ui.authRegisterBtn.onclick = registerUser;
-      ui.authLoginBtn.onclick = loginUser;
+      // wire buttons
+      document.getElementById('auth-register').onclick = registerUser;
+      document.getElementById('auth-login').onclick = loginUser;
 
       // menu outside-click close
       document.getElementById('menu-overlay').addEventListener('click', (e)=>{
@@ -169,12 +183,44 @@
       });
 
       // initial render text
-      renderHeaderText();
+      renderInterface();
     });
 
-    function renderHeaderText(){
+    // UPDATED: Render all text elements based on current lang
+    function renderInterface(){
       document.getElementById('hdr-title').textContent = t('title');
       document.getElementById('hdr-sub').textContent = t('subtitle');
+      document.getElementById('logout-btn').textContent = t('btnLogout');
+      
+      // Menu text
+      document.getElementById('m-home-t').textContent = t('homeLabel');
+      document.getElementById('m-home-s').textContent = t('homeSub');
+      document.getElementById('m-pol-t').textContent = t('policyTitle');
+      document.getElementById('m-wa-t').textContent = t('whatsappLabel');
+      document.getElementById('m-log-h').textContent = t('loginHeader');
+      document.getElementById('m-log-n').textContent = t('regNote');
+      document.getElementById('m-ref-msg').textContent = t('refundMsg');
+      
+      // Auth inputs
+      document.getElementById('auth-email').placeholder = t('emailPh');
+      document.getElementById('auth-pass').placeholder = t('passPh');
+      document.getElementById('auth-register').textContent = t('btnReg');
+      document.getElementById('auth-login').textContent = t('btnLogin');
+
+      // Modal
+      document.getElementById('utr').placeholder = t('enterUTR');
+      document.getElementById('btn-pay-sub').textContent = t('submitPayment');
+      document.getElementById('btn-pay-can').textContent = t('cancel');
+      document.getElementById('note-pay-ref').textContent = t('refundMsg');
+
+      // Update Pay Modal Title if open
+      if(currentMatch && ui.payModal.style.display === 'flex') {
+         document.getElementById('p-amt').innerText = t('payTitle') + `₹${currentMatch.amt}`;
+      }
+      
+      // Update matches (to refresh buttons)
+      // We trigger a re-render if matches exist, but Firestore listener handles real updates.
+      // This simple function mostly handles static UI.
     }
 
     // ---------- Matches realtime listener
@@ -190,10 +236,9 @@
         const max = m.maxPlayers ?? m.slots ?? '—';
         const roomId = m.roomId ?? '';
         const password = m.password ?? '';
-        const startAt = m.startTime || null; // timestamp number ms expected
+        const startAt = m.startTime || null; 
         const isFull = (typeof max === 'number') && joined >= max;
 
-        // status class color
         const statusClass = {
           'waiting': 'st-wait',
           'upcoming': 'st-upc',
@@ -202,18 +247,15 @@
           'open': 'st-open'
         }[status] || 'st-wait';
 
-        // Timer HTML (if startTime exists)
         let timerHtml = '';
         if(startAt){
           timerHtml = `<div class="timer" data-start="${startAt}" id="timer-${id}">--:--</div>`;
         }
 
-        // Room / payment hint box
         const roomBox = (status === 'approved' && roomId && password)
           ? `<div class="room ok"><strong>Room:</strong> ${escapeHtml(roomId)}<br><strong>Password:</strong> ${escapeHtml(password)}</div>`
           : `<div class="room hint">${escapeHtml(t('roomWaiting') )}</div>`;
 
-        // Join button logic: if status is 'open' and not full show join; if full show Full button; else show Join Closed
         let actionBtn = '';
         if(isFull) {
           actionBtn = `<button class="btn full" disabled>${t('full')}</button>`;
@@ -223,7 +265,6 @@
           actionBtn = `<button class="btn closed" disabled>${t('joinClosed')}</button>`;
         }
 
-        // markup
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -242,14 +283,12 @@
         `;
         ui.matchesBox.appendChild(card);
 
-        // start timers for cards with startTime
         if(startAt){
           startTimerFor(id, startAt);
         }
       });
     }
 
-    // Start countdown for a particular match id
     function startTimerFor(id, startAtMs){
       const el = document.getElementById('timer-'+id);
       if(!el) return;
@@ -272,29 +311,28 @@
 
     function pad(n){ return n<10? '0'+n: n; }
     function capitalize(s){ if(!s) return s; return s.charAt(0).toUpperCase()+s.slice(1); }
-
-    // safe escape
     function escapeHtml(str){ if(!str && str!==0) return ''; return String(str).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
 
-    // Subscribe to matches collection
     onSnapshot(collection(db, "matches"), snap => {
       renderMatchesSnapshot(snap);
     });
 
-    // ---------- Payment modal and flow
+    // ---------- Payment modal
     window.openPay = (amt, matchId) => {
       if(!auth.currentUser) {
-        openMenu(); // encourage login/register
+        openMenu();
         alert('Please login or register first.');
         return;
       }
       currentMatch = { id: matchId, amt };
-      // Set amount text and UPI links
-      document.getElementById('p-amt').innerText = `Total: ₹${amt}`;
+      document.getElementById('p-amt').innerText = t('payTitle') + `₹${amt}`;
+      
       const upi = encodeURI(`upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR`);
+      // FIXED: removed target="_blank" for mobile app links
       document.getElementById('gpay').href = upi;
       document.getElementById('ppay').href = upi;
       document.getElementById('paytm').href = upi;
+      
       ui.utrInput.value = '';
       ui.payModal.style.display = 'flex';
       ui.paymentStatusView.style.display = 'none';
@@ -304,18 +342,13 @@
       ui.payModal.style.display = 'none';
     };
 
-    window.copyA = (a,t) => {
-      navigator.clipboard.writeText(a).then(()=> alert(t+' Address Copied!'));
-    };
-
-    // submit payment (adds document to 'payments')
     window.submitPayment = async () => {
       const utr = ui.utrInput.value.trim();
       if(!currentMatch) return alert('No match selected.');
       if(!utr) return alert(t('enterUTR'));
       const user = auth.currentUser;
       if(!user) return alert('Login required.');
-      // create payments doc
+      
       const payload = {
         userId: user.uid,
         userEmail: user.email,
@@ -330,7 +363,6 @@
         lastPaymentDocId = r.id;
         alert(t('paymentSubmitted'));
         ui.payModal.style.display = 'none';
-        // open status view for this payment
         openPaymentStatusView(currentMatch.id);
       } catch(e){
         console.error(e);
@@ -338,14 +370,12 @@
       }
     };
 
-    // open payment status view and listen for user's payment for this match
     async function openPaymentStatusView(matchId){
       ui.paymentStatusView.style.display = 'block';
       ui.paymentStatusView.innerHTML = `<h2>Payment Status</h2><div id="ps-box">Checking payment...</div><button class="back" onclick="backToMatches()">Back to matches</button>`;
       const user = auth.currentUser;
       if(!user) return document.getElementById('ps-box').innerText = 'Login required.';
 
-      // query latest payment by this user for this match
       const q = query(collection(db, 'payments'),
         where('userId', '==', user.uid),
         where('matchId', '==', matchId),
@@ -363,12 +393,10 @@
         const status = p.status || 'pending';
         const box = document.getElementById('ps-box');
 
-        // fetch match doc for room info
         const mRef = doc(db, 'matches', matchId);
         const mSnap = await getDoc(mRef);
         const match = mSnap.exists()? mSnap.data() : null;
 
-        // show info
         let html = `<div class="status-box">Status: <strong>${escapeHtml(capitalize(status))}</strong></div>`;
         html += `<div class="p-info"><strong>Match:</strong> ${escapeHtml(match?.type ?? matchId)}<br>`;
         html += `<strong>Amount:</strong> ₹${p.amount}<br>`;
@@ -381,7 +409,6 @@
         box.innerHTML = html;
       });
 
-      // auto-unsubscribe when leaving status view
       ui.paymentStatusView._unsub = unsub;
     }
 
@@ -390,7 +417,6 @@
       if(ui.paymentStatusView._unsub) ui.paymentStatusView._unsub();
     };
 
-    // ---------- Login / Register flows
     async function registerUser(){
       const email = ui.authEmail.value.trim();
       const pass = ui.authPass.value.trim();
@@ -429,7 +455,6 @@
       closeMenu();
     };
 
-    // ---------- Menu controls
     window.openMenu = ()=>{
       ui.menuOverlay.style.display = 'block';
       ui.menuOverlay.classList.add('open');
@@ -439,21 +464,15 @@
       ui.menuOverlay.classList.remove('open');
     };
 
-    // language switch
     window.setLang = (L)=>{
       lang = L;
-      renderHeaderText();
+      renderInterface(); // FIXED: Updates all text now
       closeMenu();
     };
 
-    // ---------- small utility to ensure header banner / email area behavior
     window.showBannerImage = (show=true) => {
       document.getElementById('header-banner').style.display = show ? 'block' : 'none';
     };
-
-    // ---------- initialize small UI pieces on load (hook)
-    // Nothing else to do here; listeners above handle reactivity
-
   </script>
 
   <style>
@@ -461,7 +480,7 @@
       --bg:#050505;
       --card:#0f0f0f;
       --muted:#999;
-      --accent: #f2c94c; /* gold */
+      --accent: #f2c94c;
       --green:#00ff88;
       --panel: #111;
       --btn-bg: #f3c83d;
@@ -525,7 +544,7 @@
     .v-btn{background:var(--green);border:none;padding:12px;border-radius:10px;font-weight:900;color:#000;cursor:pointer;margin-top:10px;width:100%}
     .small-note{color:var(--muted);font-size:13px;margin-top:8px}
 
-    /* menu overlay (right side) */
+    /* menu overlay */
     #menu-overlay{position:fixed;inset:0;display:none;z-index:200}
     #menu-panel{position:absolute;right:0;top:0;width:86%;max-width:360px;height:100%;background:#080808;border-left:1px solid rgba(255,255,255,0.03);padding:18px;overflow:auto}
     .menu-item{display:flex;gap:12px;align-items:center;padding:16px;border-radius:8px;cursor:pointer}
@@ -533,12 +552,10 @@
     .menu-item .icon{width:36px;height:36px;border-radius:8px;background:#0b0b0b;display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:800}
     .menu-footer{margin-top:30px;color:var(--muted);font-size:13px}
 
-    /* login form inside menu */
     #login-panel{margin-top:12px;padding:12px;background:#0b0b0b;border-radius:8px}
     #login-panel input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #222;background:#020202;color:#fff}
     #login-panel button{padding:8px 10px;border-radius:8px;background:var(--btn-bg);border:none;color:#111;font-weight:800;cursor:pointer;margin-right:8px}
 
-    /* small screens fix */
     @media (min-width:900px){
       main{padding:30px}
       .card-right{width:300px;align-items:flex-end}
@@ -547,7 +564,6 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="site">
     <div class="hdr-left">
       <div id="hdr-icon" onclick="location.reload()">☰</div>
@@ -564,15 +580,14 @@
     </div>
   </header>
 
-  <!-- Menu overlay panel -->
   <div id="menu-overlay" aria-hidden="true">
     <div id="menu-panel">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;gap:12px;align-items:center">
           <div style="width:46px;height:46px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--green)">⚑</div>
           <div>
-            <div style="font-weight:800" id="menu-title">Home</div>
-            <div style="font-size:12px;color:var(--muted)">Return to matches</div>
+            <div style="font-weight:800" id="m-home-t">Home</div>
+            <div style="font-size:12px;color:var(--muted)" id="m-home-s">Return to matches</div>
           </div>
         </div>
         <div style="cursor:pointer" onclick="closeMenu()">✕</div>
@@ -581,17 +596,17 @@
       <div style="margin-top:18px">
         <div class="menu-item" onclick="backToMatches(); closeMenu();">
           <div class="icon">🏠</div>
-          <div><strong>Home</strong><div style="font-size:12px;color:var(--muted)">Return to matches</div></div>
+          <div><strong id="m-home-btn">Home</strong></div>
         </div>
 
         <div class="menu-item" onclick="alert(t('policyText'))">
           <div class="icon">📜</div>
-          <div><strong>Policy</strong><div style="font-size:12px;color:var(--muted)">${/* placeholder */''}</div></div>
+          <div><strong id="m-pol-t">Policy</strong></div>
         </div>
 
         <a class="menu-item" href="https://wa.me/919012277862" target="_blank" style="text-decoration:none;color:inherit">
           <div class="icon">💬</div>
-          <div><strong>WhatsApp</strong><div style="font-size:12px;color:var(--muted)">+91 9012277862</div></div>
+          <div><strong id="m-wa-t">WhatsApp</strong><div style="font-size:12px;color:var(--muted)">+91 9012277862</div></div>
         </a>
 
         <div style="height:8px"></div>
@@ -603,34 +618,31 @@
         </div>
 
         <div id="login-panel">
-          <div style="font-weight:800;margin-bottom:6px">Login / Register</div>
+          <div style="font-weight:800;margin-bottom:6px" id="m-log-h">Login / Register</div>
           <input id="auth-email" placeholder="Email" type="email" />
           <input id="auth-pass" placeholder="Password" type="password" />
           <div style="display:flex;gap:8px">
             <button id="auth-register">Register</button>
             <button id="auth-login">Login</button>
           </div>
-          <div style="margin-top:8px;color:var(--muted);font-size:13px">
+          <div style="margin-top:8px;color:var(--muted);font-size:13px" id="m-log-n">
             { Registration creates a simple email/password account for quick demo. }
           </div>
         </div>
 
         <div class="menu-footer" style="margin-top:18px">
-          <div style="font-weight:700;color:var(--muted)">${STR.en.refundMsg}</div>
+          <div style="font-weight:700;color:var(--muted)" id="m-ref-msg">Refunds processed within 20 minutes.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MAIN -->
   <main>
     <div id="header-banner" style="background-image:url('https://i.imgur.com/6r0bVZC.jpg');display:block"></div>
 
     <div id="matches" class="matches-grid">
-      <!-- cards injected here -->
-    </div>
+      </div>
 
-    <!-- Payment status view (hidden by default) -->
     <div id="payment-status" style="display:none;margin-top:18px"></div>
 
     <footer>
@@ -638,34 +650,27 @@
     </footer>
   </main>
 
-  <!-- Payment modal (UPI + UTR) -->
   <div id="pay">
     <div class="paybox">
       <h2 id="p-amt">Total: ₹0</h2>
 
-      <a id="gpay" class="p-btn" href="#" target="_blank"><img src="https://img.icons8.com/color/48/google-pay.png" alt="GPay"> Google Pay</a>
-      <a id="ppay" class="p-btn" href="#" target="_blank"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="PhonePe"> PhonePe</a>
-      <a id="paytm" class="p-btn" href="#" target="_blank"><img src="https://img.icons8.com/color/48/paytm.png" alt="Paytm"> Paytm</a>
+      <a id="gpay" class="p-btn" href="#"><img src="https://img.icons8.com/color/48/google-pay.png" alt="GPay"> Google Pay</a>
+      <a id="ppay" class="p-btn" href="#"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="PhonePe"> PhonePe</a>
+      <a id="paytm" class="p-btn" href="#"><img src="https://img.icons8.com/color/48/paytm.png" alt="Paytm"> Paytm</a>
 
       <input id="utr" class="v-input" placeholder="Enter UTR / TXID" />
-      <button class="v-btn" onclick="submitPayment()">${STR.en.submitPayment}</button>
-      <button onclick="closePay()" style="color:#ff6666;border:none;background:none;margin-top:12px;cursor:pointer;font-weight:700">${STR.en.cancel}</button>
-      <div class="small-note" style="margin-top:10px">${STR.en.refundMsg}</div>
+      <button class="v-btn" onclick="submitPayment()" id="btn-pay-sub">SUBMIT PAYMENT</button>
+      <button onclick="closePay()" id="btn-pay-can" style="color:#ff6666;border:none;background:none;margin-top:12px;cursor:pointer;font-weight:700">Cancel</button>
+      <div class="small-note" style="margin-top:10px" id="note-pay-ref">Refunds processed within 20 minutes.</div>
     </div>
   </div>
 
-  <!-- SCRIPTS: small UI utilities (non-Firebase) -->
   <script>
-    // Keep header banner email area aligned & stable: avoid layout shifts
-    // Ensure menu overlay sizing
     window.addEventListener('resize', () => {
-      // keep things stable, no zooming shifts
       document.documentElement.style.fontSize = '100%';
     });
-
-    // Ensure header banner visible with fast load (user wanted banner instead of email)
     document.getElementById('header-banner').style.display = 'block';
   </script>
 
 </body>
-            </html>
+</html>
