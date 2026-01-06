@@ -8,73 +8,78 @@
 
     <style>
         :root {
-            --accent: #00ff88; /* High Contrast Green */
+            --accent: #00ff88; 
             --gold: #ffd700;
             --bg: #000000;
             --card: #0a0a0a;
             --border: #1a1a1a;
+            --red: #ff4444;
         }
 
-        body { margin: 0; background: var(--bg); color: #ffffff; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: #ffffff; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
 
-        /* Header Area */
+        /* Header */
         header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--bg); border-bottom: 1px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
         .branding h1 { color: var(--gold); margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; }
-        .branding p { color: #888; margin: 0; font-size: 0.75rem; font-weight: 500; }
+        .branding p { color: #888; margin: 0; font-size: 0.75rem; }
         .menu-icon { font-size: 1.6rem; color: var(--gold); cursor: pointer; }
 
-        /* Match Banner (As per your request - Small & Placed Below Header) */
-        .match-banner { width: 92%; margin: 15px auto 5px; height: 90px; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://wallpaperaccess.com/full/1151163.jpg'); background-size: cover; background-position: center; border-radius: 12px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .match-banner h2 { font-size: 1rem; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 2px; }
+        /* --- NEW GAMING BANNER --- */
+        .match-banner { 
+            width: 92%; 
+            margin: 15px auto 5px; 
+            height: 110px; 
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), url('https://images.wallpapersden.com/image/download/garena-free-fire-battlegrounds-official_a2lsa2aUmZqaraWkpJRmbmdlrWZnZWU.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            border-radius: 15px; 
+            border: 2px solid #222; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+        }
+        .match-banner h2 { font-size: 1.1rem; color: #fff; text-shadow: 2px 2px 8px #000; letter-spacing: 2px; margin: 0; font-weight: 900; }
+        .match-banner span { font-size: 0.7rem; color: var(--accent); font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 20px; margin-top: 5px; }
 
-        /* Drawer Menu */
-        #drawer { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: #050505; border-left: 1px solid var(--gold); transition: 0.3s ease-in-out; z-index: 2000; padding-top: 60px; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+        /* Side Drawer */
+        #drawer { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: #050505; border-left: 1px solid var(--gold); transition: 0.3s; z-index: 7000; padding-top: 60px; }
         #drawer.active { right: 0; }
         .close-drawer { position: absolute; top: 20px; left: 20px; font-size: 2rem; color: #fff; cursor: pointer; }
-        
         .nav-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-weight: 600; }
-        .nav-link i { margin-right: 15px; color: var(--gold); width: 20px; text-align: center; }
-        #google_translate_element { margin: 20px; }
+        .nav-link i { margin-right: 15px; color: var(--gold); width: 20px; }
 
-        /* Tournament Card Logic */
+        /* Match Cards */
         #matches-list { padding: 15px; }
-        .match-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .match-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .badge { position: absolute; top: 12px; right: 12px; font-size: 0.65rem; font-weight: 800; padding: 4px 12px; border-radius: 6px; color: #000; background: var(--accent); text-transform: uppercase; }
         
-        .badge { position: absolute; top: 12px; right: 12px; font-size: 0.65rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; color: #000; background: var(--accent); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
-
         .card-body { display: flex; padding: 20px 15px; gap: 12px; }
         
-        /* Left: Admin Data */
-        .match-details { flex: 1.2; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1a1a1a; }
-        .detail-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding-right: 10px; }
-        .detail-item span { color: #aaa; font-weight: 400; }
-        .detail-item b { color: var(--accent); font-weight: 700; }
+        .match-details { flex: 1.2; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #1a1a1a; }
+        .detail-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        .detail-item i { color: #666; width: 15px; text-align: center; }
+        .detail-item span { color: #aaa; flex: 1; }
+        .detail-item b { color: var(--accent); }
 
-        /* Right: Interactive Area */
         .match-action { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .countdown { color: var(--gold); margin-bottom: 10px; text-align: center; }
-        .countdown small { display: block; font-size: 0.6rem; color: #555; text-transform: uppercase; margin-bottom: 2px; }
-        .countdown .time { font-size: 1.1rem; font-weight: 900; font-family: 'Courier New', monospace; }
+        .countdown { color: var(--gold); text-align: center; margin-bottom: 8px; }
+        .time { font-size: 1.1rem; font-weight: 900; display: block; font-family: 'monospace'; }
+        
+        .slot-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 10px; margin: 8px 0; overflow: hidden; }
+        .slot-fill { height: 100%; background: var(--accent); transition: 1.5s ease; }
 
-        .slot-stat { font-size: 0.75rem; color: #777; width: 100%; text-align: center; margin-bottom: 5px; }
-        .slot-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
-        .slot-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: 1s ease; }
+        .btn-main { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 255, 136, 0.2); }
+        .room-access { background: #001a0d; border: 1px solid var(--accent); border-radius: 10px; padding: 8px; width: 100%; color: var(--accent); font-size: 0.8rem; line-height: 1.4; box-sizing: border-box; }
 
-        /* Join Button Premium Styling */
-        .btn-main { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2); }
-        .btn-main:active { transform: scale(0.96); }
-        .btn-main:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
-
-        /* Room ID Details */
-        .room-access { background: #001a0d; border: 1px solid var(--accent); border-radius: 10px; padding: 10px; width: 100%; margin-top: 5px; }
-        .room-access div { font-size: 0.8rem; color: var(--accent); margin-bottom: 3px; }
-
-        /* Payment Interface */
-        #payment-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .pay-container { background: #0d0d0d; border: 1px solid var(--gold); border-radius: 20px; width: 100%; max-width: 350px; padding: 25px; text-align: center; }
-        .pay-header { color: var(--gold); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; }
-        .pay-input { width: 100%; padding: 15px; background: #000; border: 1px solid #222; border-radius: 12px; color: var(--accent); font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; text-align: center; }
-        .btn-submit { background: var(--gold); color: #000; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 1rem; cursor: pointer; }
+        /* Payment Modal */
+        #pay-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 6000; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .pay-box { background: #111; padding: 25px; border: 2px solid var(--gold); border-radius: 25px; width: 100%; max-width: 400px; text-align: center; box-sizing: border-box; }
+        .p-btn { background: #1a1a1a; margin: 8px 0; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; color: white; text-decoration: none; border: 1px solid #333; font-weight: bold; cursor: pointer; }
+        .p-btn img { width: 25px; height: 25px; border-radius: 5px; }
+        .v-input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #00ff88; text-align: center; border-radius: 10px; margin: 10px 0; font-weight: bold; box-sizing: border-box; outline: none; }
+        .v-btn { background: #00ff88; color: black; border: none; padding: 14px; width: 100%; border-radius: 10px; font-weight: 900; cursor: pointer; }
 
     </style>
 </head>
@@ -89,7 +94,8 @@
     </header>
 
     <div class="match-banner">
-        <h2><i class="fas fa-crosshairs"></i> FREE FIRE BATTLE</h2>
+        <h2><i class="fas fa-gun"></i> BATTLEGROUNDS</h2>
+        <span>FREE FIRE MOBILE TOURNAMENTS</span>
     </div>
 
     <div id="drawer">
@@ -97,22 +103,23 @@
         <a href="#" onclick="location.reload()" class="nav-link"><i class="fas fa-house"></i> HOME</a>
         <a href="#" onclick="openPolicy()" class="nav-link"><i class="fas fa-file-contract"></i> POLICY & REFUND</a>
         <a href="https://wa.me/919012277862" class="nav-link"><i class="fab fa-whatsapp"></i> WHATSAPP SUPPORT</a>
-        <div id="google_translate_element"></div>
+        <div id="google_translate_element" style="margin:20px;"></div>
     </div>
 
-    <main id="matches-list">
-        </main>
+    <main id="matches-list"></main>
 
-    <div id="payment-modal">
-        <div class="pay-container">
-            <div class="pay-header">UTR VERIFICATION</div>
-            <p style="font-size: 0.8rem; color: #888; margin-bottom: 15px;">Amount to pay: <span id="pay-amt" style="color:var(--accent); font-weight:800;">₹0</span></p>
-            <div style="background:#fff; width:180px; height:180px; margin: 0 auto 20px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#000;">
-                <i class="fas fa-qrcode fa-5x"></i>
-            </div>
-            <input type="text" id="utr-box" class="pay-input" placeholder="ENTER 12-DIGIT UTR" maxlength="12">
-            <button class="btn-submit" onclick="confirmPayment()">SUBMIT PAYMENT</button>
-            <p onclick="closePay()" style="margin-top:20px; color:#555; cursor:pointer; font-size:0.9rem;">Cancel Transaction</p>
+    <div id="pay-modal">
+        <div class="pay-box">
+            <h2 style="color:var(--gold); margin-bottom:10px;">CHECKOUT</h2>
+            <p id="p-amt" style="color:#00ff88; font-weight:900; margin-bottom:15px; font-size:1.4rem;"></p>
+            
+            <a id="gpay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/google-pay.png"> Google Pay</a>
+            <a id="ppay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/phone-pe.png"> PhonePe</a>
+            <a id="paytm" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/paytm.png"> Paytm</a>
+            
+            <input type="text" id="txid" class="v-input" placeholder="Enter Transaction ID / UTR">
+            <button onclick="verifyLogic()" id="v-btn" class="v-btn">VERIFY PAYMENT</button>
+            <button onclick="closePay()" style="color:var(--red); border:none; background:none; margin-top:15px; font-weight:bold; cursor:pointer; font-size: 0.9rem;">CANCEL</button>
         </div>
     </div>
 
@@ -132,7 +139,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let selectedId = null;
+        let selectedMatchId = null;
+        let checkCount = 0;
 
         onSnapshot(collection(db, "matches"), snap => {
             const list = document.getElementById('matches-list');
@@ -140,19 +148,15 @@
             snap.forEach(doc => {
                 const data = doc.data();
                 const id = doc.id;
-                const statusLocal = localStorage.getItem(`status_${id}`) || 'none';
+                const localStatus = localStorage.getItem(`status_${id}`);
 
-                let actionHtml = '';
-                if(statusLocal === 'approved') {
-                    actionHtml = `
-                        <div class="room-access">
-                            <div><i class="fas fa-id-badge"></i> ID: ${data.roomId || 'Wait...'}</div>
-                            <div><i class="fas fa-lock"></i> PS: ${data.password || 'Wait...'}</div>
-                        </div>`;
-                } else if(statusLocal === 'pending') {
-                    actionHtml = `<div style="color:var(--gold); font-size:0.75rem; text-align:center; margin-top:10px;"><i class="fas fa-spinner fa-spin"></i> Checking UTR...</div>`;
+                let actionArea = '';
+                if(localStatus === 'approved') {
+                    actionArea = `<div class="room-access"><i class="fas fa-id-card"></i> ID: ${data.roomId || 'Wait...'}<br><i class="fas fa-key"></i> PS: ${data.password || 'Wait...'}</div>`;
+                } else if(localStatus === 'pending') {
+                    actionArea = `<div style="color:var(--gold); font-size:0.7rem; font-weight:bold;"><i class="fas fa-clock"></i> VERIFYING...</div>`;
                 } else {
-                    actionHtml = `<button class="btn-main" onclick="openPayment('${id}', ${data.entry})"><i class="fas fa-bolt"></i> JOIN NOW</button>`;
+                    actionArea = `<button class="btn-main" onclick="openPay('${id}', ${data.entry})"><i class="fas fa-play"></i> JOIN NOW</button>`;
                 }
 
                 list.innerHTML += `
@@ -160,75 +164,78 @@
                     <div class="badge">${data.status}</div>
                     <div class="card-body">
                         <div class="match-details">
-                            <div class="detail-item"><span><i class="fas fa-map-location-dot"></i> Map</span> <b>${data.map}</b></div>
-                            <div class="detail-item"><span><i class="fas fa-users"></i> Type</span> <b>${data.type}</b></div>
-                            <div class="detail-item"><span><i class="fas fa-ticket"></i> Entry</span> <b>₹${data.entry}</b></div>
-                            <div class="detail-item"><span><i class="fas fa-trophy"></i> Prize</span> <b>₹${data.win}</b></div>
+                            <div class="detail-item"><i class="fas fa-map"></i><span>Map</span> <b>${data.map}</b></div>
+                            <div class="detail-item"><i class="fas fa-user-group"></i><span>Type</span> <b>${data.type}</b></div>
+                            <div class="detail-item"><i class="fas fa-wallet"></i><span>Entry</span> <b>₹${data.entry}</b></div>
+                            <div class="detail-item"><i class="fas fa-trophy"></i><span>Prize</span> <b>₹${data.win}</b></div>
                         </div>
                         <div class="match-action">
-                            <div class="countdown" id="timer-${id}">
-                                <small>Starts In</small>
-                                <span class="time">00:00:00</span>
-                            </div>
-                            <div class="slot-stat">${data.joined}/${data.total} Slots</div>
+                            <div class="countdown" id="timer-${id}"><small>Starts In</small><span class="time">00:00</span></div>
                             <div class="slot-bar"><div class="slot-fill" style="width:${(data.joined/data.total)*100}%"></div></div>
-                            ${actionHtml}
+                            <div style="font-size:0.7rem; color:#666; margin-bottom:10px;">${data.joined}/${data.total} Slots Filled</div>
+                            ${actionArea}
                         </div>
                     </div>
                 </div>`;
-
-                // Timer Update
-                setInterval(() => {
-                    const timerEl = document.querySelector(`#timer-${id} .time`);
-                    if(timerEl && data.startTime) {
-                        const now = Date.now();
-                        const diff = data.startTime - now;
-                        if(diff < 0) { timerEl.innerText = "STARTED"; timerEl.style.color = "red"; }
-                        else {
-                            const m = Math.floor((diff % 3600000) / 60000);
-                            const s = Math.floor((diff % 60000) / 1000);
-                            timerEl.innerText = `${m}m ${s}s`;
-                        }
-                    }
-                }, 1000);
             });
         });
 
-        window.openPayment = (id, amt) => {
-            selectedId = id;
-            document.getElementById('pay-amt').innerText = "₹" + amt;
-            document.getElementById('payment-modal').style.display = 'flex';
-        };
-
-        window.confirmPayment = async () => {
-            const utr = document.getElementById('utr-box').value;
-            if(utr.length < 12) return alert("Error: 12-Digit UTR is required!");
+        window.openPay = (id, amt) => {
+            selectedMatchId = id;
+            checkCount = 0;
+            document.getElementById('pay-modal').style.display = 'flex';
+            document.getElementById('p-amt').innerText = "Total: ₹" + amt;
             
-            await addDoc(collection(db, "payments"), {
-                matchId: selectedId,
-                utr: utr,
-                status: 'pending',
-                timestamp: Date.now()
-            });
+            const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_Tournament_${id}`;
+            document.getElementById('gpay').href = upi;
+            document.getElementById('ppay').href = upi;
+            document.getElementById('paytm').href = upi;
 
-            localStorage.setItem(`status_${selectedId}`, 'pending');
-            alert("UTR submitted! Hamari team ise verify karke 5-10 min me approve kar degi.");
-            location.reload();
+            const b = document.getElementById('v-btn');
+            b.innerText = "VERIFY PAYMENT"; 
+            b.style.background = "#00ff88";
         };
 
-        window.closePay = () => { document.getElementById('payment-modal').style.display = 'none'; };
+        window.verifyLogic = async () => {
+            const utr = document.getElementById('txid').value;
+            if(!utr) return alert("Error: Please enter UTR/Transaction ID!");
+
+            const b = document.getElementById('v-btn');
+            b.innerText = "PROCESSING... ⏳";
+            
+            setTimeout(async () => {
+                if(checkCount === 0) {
+                    b.innerText = "MANUAL CHECK NEEDED ⚠️ SEND SCREENSHOT";
+                    b.style.background = "orange";
+                    checkCount++;
+                    
+                    await addDoc(collection(db, "payments"), {
+                        matchId: selectedMatchId,
+                        utr: utr,
+                        status: 'pending',
+                        timestamp: Date.now()
+                    });
+                    localStorage.setItem(`status_${selectedMatchId}`, 'pending');
+
+                } else {
+                    const res = ["PAYMENT PENDING ⏳", "VERIFYING... ⏳", "MANUAL CHECK NEEDED ⚠️"];
+                    const finalMsg = res[Math.floor(Math.random()*res.length)];
+                    b.innerText = finalMsg;
+                    b.style.background = "orange";
+                }
+            }, 2000);
+        };
+
+        window.closePay = () => document.getElementById('pay-modal').style.display = 'none';
+
     </script>
 
     <script>
         function toggleMenu() { document.getElementById('drawer').classList.toggle('active'); }
-        
-        function openPolicy() {
-            alert("SQL RULES & REFUND:\n\n1. Game mein Rules break karne par ban mil sakta hai.\n2. Agar match players ki kami se cancel hota hai, toh 30 minat (minutes) ke andar refund received ho jayega.\n3. Technical issues ya kisi bhi samasya par WhatsApp support par message karein.");
+        function openPolicy() { 
+            alert("SQL REFUND POLICY:\n\n1. Match cancel hone par 30 minat ke andar refund milega.\n2. Hacks use karne par entry fee wapas nahi hogi.\n3. Problem hone par WhatsApp par screenshot bhejein."); 
         }
-
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
-        }
+        function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element'); }
     </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
