@@ -1,106 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>FREE FIRE TOURNAMENT</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
-  <!-- Google Translate script -->
-  <script type="text/javascript">
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
-    }
-  </script>
-  <script type="text/javascript" 
-    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
-  </script>
-  <style>
-    /* Dark theme styling */
-    body { margin: 0; font-family: Arial, sans-serif; background: #121212; color: #e0e0e0; }
-    header { background: #000; padding: 20px; text-align: center; position: relative; }
-    header h1 { margin: 0; color: #2ecc71; letter-spacing: 2px; }
-    header p { margin: 5px 0 0; color: #e0e0e0; font-size: 1.2em; }
-    #google_translate_element { position: absolute; top: 20px; right: 60px; }
-    /* Hamburger menu */
-    .hamburger { position: absolute; top: 25px; right: 20px; cursor: pointer; width: 30px; }
-    .hamburger span { display: block; height: 3px; margin: 5px 0; background: #e0e0e0; }
-    .menu { display: none; position: fixed; top: 0; right: 0; background: #1e1e1e; width: 200px; height: 100%; box-shadow: -2px 0 5px rgba(0,0,0,0.5); }
-    .menu a { display: block; padding: 15px; color: #e0e0e0; text-decoration: none; border-bottom: 1px solid #333; }
-    .menu a:hover { background: #2ecc71; color: #000; }
-    /* Match cards */
-    #matches-container { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-    .match-card { background: #1e1e1e; border: 2px solid #2ecc71; border-radius: 8px; width: 300px; margin: 10px; padding: 15px; position: relative; }
-    .match-card h3 { margin: 0 0 10px; color: #2ecc71; }
-    .match-info { margin-bottom: 10px; }
-    .match-info span { display: inline-block; width: 50%; }
-    .status { font-weight: bold; color: #2ecc71; }
-    .btn-join { width: 100%; padding: 10px; background: #2ecc71; border: none; border-radius: 5px; color: #000; cursor: pointer; font-weight: bold; }
-    .btn-join.disabled { background: #555; color: #999; cursor: not-allowed; }
-    /* Modal styling */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-             background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-    .modal-content { background: #1e1e1e; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; }
-    .modal-content h2 { color: #2ecc71; margin-top: 0; }
-    .modal-content label { display: block; margin: 10px 0 5px; }
-    .modal-content input[type="text"] { width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #e0e0e0; }
-    .modal-content button { margin-top: 15px; padding: 10px; width: 100%; background: #2ecc71; border: none; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
-    .modal-content button.cancel { background: #e74c3c; }
-  </style>
-</head>
-<body>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FREE FIRE TOURNAMENT</title>
 
-<header>
-  <h1>FREE FIRE TOURNAMENT</h1>
-  <p>Join • Play • Win Real Cash</p>
-  <div id="google_translate_element"></div>
-  <div class="hamburger" onclick="toggleMenu()">
-    <span></span><span></span><span></span>
-  </div>
-</header>
+<!-- Firebase (modular) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, onSnapshot, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<div id="matches-container">
-  <!-- Match cards will be injected here -->
-</div>
-
-<!-- Payment Modal -->
-<div id="paymentModal" class="modal">
-  <div class="modal-content">
-    <h2>Enter Payment UTR</h2>
-    <label for="utrInput">UTR/Transaction ID:</label>
-    <input type="text" id="utrInput" placeholder="Enter UTR here">
-    <button id="submitUtrBtn">Submit Payment</button>
-    <button class="cancel" onclick="closeModal('paymentModal')">Cancel</button>
-  </div>
-</div>
-
-<!-- Login Modal -->
-<div id="loginModal" class="modal">
-  <div class="modal-content">
-    <h2>Login</h2>
-    <label for="emailInput">Email:</label>
-    <input type="text" id="emailInput" placeholder="Enter email">
-    <label for="passInput">Password:</label>
-    <input type="password" id="passInput" placeholder="Enter password">
-    <button id="loginBtn">Login</button>
-    <button class="cancel" onclick="closeModal('loginModal')">Cancel</button>
-  </div>
-</div>
-
-<!-- Hamburger Menu Links -->
-<div id="menu" class="menu">
-  <a href="#" onclick="location.reload()">Home</a>
-  <a href="#" onclick="alert('Is game mein jokhim shamil hai. Apne jokhim par khelein. Refund 20 minute ke andar process ho jata hai.')">Privacy Policy</a>
-  <a href="https://wa.me/919012277862" target="_blank">WhatsApp</a>
-  <a href="#" id="loginLink" onclick="openLoginModal()">Login</a>
-  <a href="#" id="logoutLink" onclick="logoutUser()" style="display:none">Logout</a>
-</div>
-
-<script>
-  // Initialize Firebase
+  // ---------- YOUR FIREBASE CONFIG (you provided) ----------
   const firebaseConfig = {
     apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
     authDomain: "sqladmin-ff04d.firebaseapp.com",
@@ -110,124 +22,548 @@
     appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
     measurementId: "G-KH4J0CZ9M5"
   };
-  firebase.initializeApp(firebaseConfig);
-  firebase.analytics();
-  const db = firebase.firestore();
-  const auth = firebase.auth();
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){ /* analytics optional */ }
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  let currentMatchId = null;  // track which match user is joining
+  // ---------- App State ----------
+  window.currentMatch = null;
+  window.currentUser = null;
+  window.lang = 'en'; // 'en' | 'hi' | 'ur'  (simple toggle translations)
 
-  // Listen for auth state changes to toggle login/logout in menu
-  auth.onAuthStateChanged(user => {
-    document.getElementById('loginLink').style.display = user ? 'none' : 'block';
-    document.getElementById('logoutLink').style.display = user ? 'block' : 'none';
+  // ---------- Utilities ----------
+  function $(s){ return document.querySelector(s); }
+  function setText(sel, txt){ const el = document.querySelector(sel); if(el) el.innerText = txt; }
+  function formatRupee(n){ return (isNaN(n)||n===undefined)? '—' : '₹' + Number(n); }
+
+  // small translator (few labels)
+  const T = {
+    en: {
+      join: "JOIN MATCH",
+      waiting: "waiting",
+      upcoming: "upcoming",
+      live: "live",
+      submit_payment: "SUBMIT PAYMENT",
+      enter_utr: "Enter Transaction ID (UTR)",
+      pay_via_upi: "Pay via UPI & enter UTR",
+      complete_payment: "Complete Payment",
+      cancel: "Cancel",
+      join_play_win: "Join • Play • Win Real Cash",
+      refund_note: "Refunds processed within 20 minutes.",
+      policy_text: "This game involves risk. Play at your own risk. Refunds processed within 20 minutes."
+    },
+    hi: {
+      join: "मैच में शामिल हों",
+      waiting: "प्रतीक्षा",
+      upcoming: "जल्द शुरू",
+      live: "लाइव",
+      submit_payment: "भुगतान जमा करें",
+      enter_utr: "लेन-देन आईडी डालें (UTR)",
+      pay_via_upi: "UPI द्वारा भुगतान करें और UTR डालें",
+      complete_payment: "भुगतान पूरा करें",
+      cancel: "रद्द करें",
+      join_play_win: "शामिल हों • खेलें • असली नकद जीतें",
+      refund_note: "रिफंड 20 मिनट के अंदर प्रोसेस होते हैं।",
+      policy_text: "यह गेम जोखिम से जुड़ा है। अपने जोखिम पर खेलें। रिफंड 20 मिनट में प्रोसेस।"
+    },
+    ur: {
+      join: "میچ میں شامل ہوں",
+      waiting: "انتظار",
+      upcoming: "جلد شروع",
+      live: "لائیو",
+      submit_payment: "ادائیگی جمع کریں",
+      enter_utr: "ٹریکنکشن آئی ڈی درج کریں (UTR)",
+      pay_via_upi: "UPI کے ذریعے ادائیگی کریں اور UTR درج کریں",
+      complete_payment: "ادائیگی مکمل کریں",
+      cancel: "منسوخ کریں",
+      join_play_win: "شامل ہوں • کھیلیں • اصلی نقد جیتیں",
+      refund_note: "رقم 20 منٹ کے اندر جمع کر دی جاتی ہے۔",
+      policy_text: "یہ کھیل خطرے سے منسلک ہے۔ اپنے خطرے پر کھیلیں۔ ریفنڈ 20 منٹ میں پروسیس۔"
+    }
+  };
+
+  function t(k){ return (T[window.lang] && T[window.lang][k]) || T.en[k] || k; }
+
+  // ---------- Auth handling ----------
+  onAuthStateChanged(auth, user => {
+    window.currentUser = user;
+    // update UI
+    if(user){
+      $('#user-email').innerText = user.email || 'User';
+      $('#btn-login').style.display = 'none';
+      $('#btn-logout').style.display = 'inline-block';
+    } else {
+      $('#user-email').innerText = '';
+      $('#btn-login').style.display = 'inline-block';
+      $('#btn-logout').style.display = 'none';
+    }
   });
 
-  function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
-  function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
-  function toggleMenu() {
-    const menu = document.getElementById('menu');
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-  }
-  function logoutUser() {
-    auth.signOut();
-  }
-  document.getElementById('loginBtn').onclick = function() {
-    const email = document.getElementById('emailInput').value;
-    const pass = document.getElementById('passInput').value;
-    auth.signInWithEmailAndPassword(email, pass)
-      .then(() => { closeModal('loginModal'); })
-      .catch(err => alert(err.message));
+  window.showLogin = () => {
+    $('#login-modal').style.display = 'flex';
   };
-
-  // Load matches dynamically on page load
-  window.onload = function() {
-    db.collection("matches").orderBy("startTime")
-      .onSnapshot(snapshot => {
-        const container = document.getElementById('matches-container');
-        container.innerHTML = '';  // clear existing
-        snapshot.forEach(doc => {
-          const match = doc.data();
-          // Create card element
-          const card = document.createElement('div');
-          card.className = 'match-card';
-          card.innerHTML = `
-            <h3>${match.type} Match</h3>
-            <div class="match-info">
-              <span>Entry: ₹${match.entry}</span>
-              <span>Win: ₹${match.win}</span>
-            </div>
-            <div class="match-info">
-              <span>Players: ${match.joined}/${match.required}</span>
-              <span id="timer-${doc.id}"></span>
-            </div>
-            <div>Status: <span class="status">${match.status}</span></div>
-            <button id="btn-${doc.id}" class="btn-join">JOIN MATCH</button>
-            <div id="room-${doc.id}" style="margin-top:10px; font-style: italic;">
-              Room: ${match.status === 'open' ? 'Waiting for Payment Approval' : 'N/A'}
-            </div>
-          `;
-          container.appendChild(card);
-
-          // Countdown timer
-          const startTime = match.startTime.toDate();
-          const timerEl = document.getElementById('timer-' + doc.id);
-          const interval = setInterval(() => {
-            const now = new Date().getTime();
-            const diff = startTime - now;
-            if (diff < 0) {
-              timerEl.textContent = 'Started';
-              clearInterval(interval);
-            } else {
-              const hours = Math.floor((diff % (1000*60*60*24))/(1000*60*60));
-              const mins = Math.floor((diff % (1000*60*60))/(1000*60));
-              const secs = Math.floor((diff % (1000*60))/1000);
-              timerEl.textContent = hours+'h '+mins+'m '+secs+'s';
-            }
-          }, 1000);
-
-          // Configure Join button
-          const btn = document.getElementById('btn-' + doc.id);
-          if (match.status === 'open') {
-            btn.onclick = () => { openJoinModal(doc.id); };
-          } else {
-            btn.classList.add('disabled');
-            btn.disabled = true;
-          }
-        });
-      });
-  };
-
-  // Open payment modal for a specific match
-  function openJoinModal(matchId) {
-    if (!auth.currentUser) {
-      alert("Please login first.");
-      return;
+  window.hideLogin = () => { $('#login-modal').style.display = 'none'; };
+  window.login = async () => {
+    const em = $('#login-email').value.trim();
+    const pw = $('#login-pass').value;
+    if(!em || !pw) return alert('Enter email + password');
+    try{
+      await signInWithEmailAndPassword(auth, em, pw);
+      hideLogin();
+      alert('Logged in');
+    }catch(e){
+      // Try sign up if not found? Prompt user.
+      if(confirm('Login failed. Create new account with these credentials?')){
+        try{
+          await createUserWithEmailAndPassword(auth, em, pw);
+          hideLogin();
+          alert('Account created and signed in.');
+        }catch(er){ alert('Error: ' + er.message); }
+      } else alert('Login error: ' + e.message);
     }
-    currentMatchId = matchId;
-    document.getElementById('paymentModal').style.display = 'flex';
+  };
+  window.doLogout = async () => {
+    await signOut(auth);
+    alert('Logged out');
+  };
+
+  // ---------- Matches listener ----------
+  function renderStatusLabel(status){
+    const s = (''+status).toLowerCase();
+    if(s.includes('live') || s.includes('running') || s.includes('started') || s.includes('approved')) return `<span class="status tag green">${status}</span>`;
+    if(s.includes('upcom') || s.includes('upcoming')) return `<span class="status tag gold">${status}</span>`;
+    if(s.includes('wait') || s.includes('pending')) return `<span class="status tag faded">${status}</span>`;
+    return `<span class="status tag faded">${status}</span>`;
   }
 
-  // Submit UTR and create payment request
-  document.getElementById('submitUtrBtn').onclick = function() {
-    const utr = document.getElementById('utrInput').value.trim();
-    if (!utr) { alert("Please enter UTR"); return; }
-    // Create payment document
-    db.collection("payments").add({
-      userId: auth.currentUser.uid,
-      matchId: currentMatchId,
-      UTR: utr,
-      status: "pending",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(docRef => {
-      closeModal('paymentModal');
-      alert("Payment submitted! Redirecting to status page.");
-      // Redirect to payment status page
-      window.location = 'status.html?id=' + docRef.id;
-    }).catch(err => {
-      alert("Error submitting payment: " + err.message);
+  function startMatchesListener(){
+    const col = collection(db, 'matches');
+    onSnapshot(col, snap => {
+      const box = $('#matches');
+      box.innerHTML = '';
+      snap.forEach(d => {
+        const m = d.data();
+        const docId = d.id;
+        // defaults
+        const entry = m.entry ?? m.entryFee ?? 0;
+        const win = m.win ?? m.winAmount ?? 0;
+        const joined = Number(m.joinedPlayers ?? 0);
+        const maxPlayers = Number(m.maxPlayers ?? m.slots ?? 0);
+        const joinEnabled = (m.joinEnabled === undefined ? true : !!m.joinEnabled);
+        const now = Date.now();
+        // timer if startTimestamp field present
+        let timerHtml = '';
+        if(m.startTimestamp){
+          const diff = Number(m.startTimestamp) - now;
+          timerHtml = `<div class="timer" data-start="${m.startTimestamp}" id="timer-${docId}">${diff>0?msToTime(diff):'Starting'}</div>`;
+        } else if(m.durationMinutes){
+          // optional: compute later
+        }
+        // decide join button state
+        const full = maxPlayers && (joined >= maxPlayers);
+        const showJoin = joinEnabled && !full && !(m.status && m.status.toLowerCase().includes('started'));
+        const joinBtn = showJoin ? `<button class="join-btn" data-id="${docId}" data-amt="${entry}">${t('join')}</button>` : `<button class="join-btn disabled" disabled>${full ? 'Full' : 'Join Closed'}</button>`;
+
+        // room display: show only if payment approved OR match status approved/live
+        const showRoom = (m.roomId && m.password && (m.status && (m.status.toLowerCase().includes('approved') || m.status.toLowerCase().includes('started') || m.status.toLowerCase().includes('live'))));
+        const roomHtml = showRoom ? `<div class="room"><strong>Room ID:</strong> ${m.roomId}<br/><strong>Password:</strong> ${m.password}</div>` : `<div class="room waiting"><em>Room: ${t('waiting')} — payment approval required</em></div>`;
+
+        // card
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-left">
+            <h3 class="mtype">${m.type ?? docId}</h3>
+            <p><strong>Entry:</strong> ${formatRupee(entry)}</p>
+            <p><strong>Win:</strong> ${formatRupee(win)}</p>
+            <p><strong>Players:</strong> <span class="players-count">${joined}</span> / <span class="players-max">${maxPlayers||'—'}</span></p>
+            <p><strong>Status:</strong> ${renderStatusLabel(m.status ?? 'waiting')}</p>
+            ${timerHtml}
+          </div>
+          <div class="card-right">
+            ${roomHtml}
+            ${joinBtn}
+          </div>
+        `;
+        box.appendChild(card);
+      });
+
+      // attach join button listeners (delegation)
+      document.querySelectorAll('.join-btn').forEach(b=>{
+        if(!b.classList.contains('disabled')){
+          b.onclick = (ev)=>{
+            const id = b.getAttribute('data-id');
+            const amt = b.getAttribute('data-amt');
+            // require login
+            if(!window.currentUser){
+              if(confirm('You must login to join. Go to login?')) showLogin();
+              return;
+            }
+            // set currentMatch and open payment modal
+            window.currentMatch = { id, amt: Number(amt) };
+            openPay(Number(amt));
+          };
+        }
+      });
+
+      // start timers
+      document.querySelectorAll('.timer').forEach(el=>{
+        const start = Number(el.dataset.start);
+        const id = el.id;
+        if(window[id]) clearInterval(window[id]);
+        window[id] = setInterval(()=> {
+          const diff = start - Date.now();
+          el.innerText = diff>0 ? msToTime(diff) : 'Starting';
+          if(diff<=0) clearInterval(window[id]);
+        }, 800);
+      });
+
+    }, err => {
+      console.error('matches snapshot error', err);
     });
+  } // end startMatchesListener
+
+  // convert ms to hh:mm:ss or mm:ss
+  function msToTime(ms){
+    if(ms<=0) return '00:00';
+    let s = Math.floor(ms/1000);
+    const h = Math.floor(s/3600);
+    s = s%3600;
+    const m = Math.floor(s/60);
+    const sec = s%60;
+    if(h>0) return `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+  }
+
+  // ---------- Payment Modal (styled) ----------
+  // UPI address (you gave earlier) - used for gpay/phonepe/paytm
+  const UPI_ADDR = 'rizwanhasan90122778623@ybl';
+
+  window.openPay = (amt) => {
+    $('#pay-modal').style.display = 'flex';
+    $('#p-amt').innerText = `Total: ₹${amt}`;
+    const upi = `upi://pay?pa=${encodeURIComponent(UPI_ADDR)}&am=${amt}&cu=INR`;
+    $('#gpay').href = upi;
+    $('#ppay').href = upi;
+    $('#paytm').href = upi;
+    $('#txid').value = '';
+    $('#v-btn').innerText = t('submit_payment');
+    $('#v-btn').style.background = '#00ff88';
   };
+  window.closePay = () => { $('#pay-modal').style.display = 'none'; };
+
+  window.copyA = (a, t) => {
+    navigator.clipboard.writeText(a);
+    alert(t + ' Address Copied!');
+  };
+
+  // On submit payment: create payments doc then navigate to payment status "page"
+  window.submitPayment = async () => {
+    const tx = $('#txid').value.trim();
+    if(!tx) return alert(t('enter_utr'));
+    if(!window.currentUser) return alert('Login required.');
+    // create payments doc
+    try{
+      const pcol = collection(db, 'payments');
+      const docRef = await addDoc(pcol, {
+        matchId: window.currentMatch.id,
+        uid: window.currentUser.uid,
+        email: window.currentUser.email,
+        amount: Number(window.currentMatch.amt),
+        utr: tx,
+        status: 'pending',
+        createdAt: Date.now()
+      });
+      closePay();
+      // open payment status view (stable)
+      window.location.hash = '#payment-' + docRef.id;
+      showPaymentStatus(docRef.id);
+    }catch(e){ alert('Error submitting payment: ' + e.message); }
+  };
+
+  // ---------- Payment Status View ----------
+  async function showPaymentStatus(paymentId){
+    if(!paymentId) return;
+    // switch view
+    $('#home-view').style.display = 'none';
+    $('#status-view').style.display = 'block';
+    $('#status-payment-id').innerText = paymentId;
+    // listen payment doc
+    const dref = doc(db, 'payments', paymentId);
+    onSnapshot(dref, snap => {
+      if(!snap.exists()) { $('#status-body').innerText = 'No payment found'; return;}
+      const p = snap.data();
+      $('#status-body').innerHTML = `
+        <p><strong>Match:</strong> ${p.matchId}</p>
+        <p><strong>Amount:</strong> ${formatRupee(p.amount)}</p>
+        <p><strong>UTR:</strong> ${p.utr}</p>
+        <p><strong>Status:</strong> ${p.status}</p>
+      `;
+      if(p.status === 'approved'){
+        // fetch match doc to show room
+        getDoc(doc(db,'matches', p.matchId)).then(md=>{
+          if(md.exists()){
+            const mm = md.data();
+            $('#status-room').innerHTML = `<div class="room approved"><strong>Room ID: </strong>${mm.roomId || '—'}<br/><strong>Password: </strong>${mm.password || '—'}</div>`;
+          }
+        }).catch(()=>{});
+      } else {
+        $('#status-room').innerHTML = `<div class="room waiting"><em>Room will show after admin approval</em></div>`;
+      }
+    });
+  }
+
+  // On load: start matches listener and route handling
+  window.addEventListener('load', ()=>{
+    startMatchesListener();
+    // hash routing for payment view
+    if(location.hash && location.hash.startsWith('#payment-')){
+      const pid = location.hash.replace('#payment-','');
+      showPaymentStatus(pid);
+    }
+    // translation toggle UI text
+    updateStaticText();
+  });
+
+  // simple language switch
+  window.setLang = (L) => {
+    window.lang = L;
+    updateStaticText();
+  };
+  function updateStaticText(){
+    $('.subtitle').innerText = t('join_play_win');
+    $('#copyright').innerText = `© 2026 SQL — Premium Tournament System`;
+    // translate modal buttons
+    $('#v-btn').innerText = t('submit_payment');
+    $('#p-amt').innerText = $('#p-amt').innerText || '';
+    // policy text displayed in menu
+    $('#policy-text').innerText = t('policy_text');
+  }
+
+  // small helper to navigate home
+  window.goHome = () => {
+    $('#home-view').style.display = 'block';
+    $('#status-view').style.display = 'none';
+    location.hash = '';
+  };
+
+  // WhatsApp link
+  window.openWhatsApp = () => {
+    const num = '+919012277862';
+    window.open('https://wa.me/' + num.replace('+',''), '_blank');
+  };
+
 </script>
+
+<style>
+  :root{
+    --bg:#050505;
+    --card:#0f0f0f;
+    --muted:#999;
+    --gold:#f6c21a;
+    --accent:#00ff88;
+    --green:#00d25b;
+    --dark:#0b0b0b;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:Inter,Arial,Helvetica,sans-serif}
+  header{padding:20px 16px;border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .logo {font-size:28px;font-weight:900;color:var(--gold);letter-spacing:1px}
+  .subtitle{color:var(--muted);margin-top:4px;font-size:14px}
+  #menu-btn{background:transparent;border:none;color:var(--accent);font-size:28px;padding:8px;cursor:pointer}
+  main{padding:18px;max-width:720px;margin:0 auto}
+  #matches{padding-top:4px}
+  .card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:18px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+  .card-left{flex:1}
+  .card-right{width:250px;min-width:200px;text-align:right}
+  .mtype{color:var(--accent);margin:0 0 10px 0}
+  .card p{margin:6px 0;color:#ddd}
+  .tag{padding:6px 8px;border-radius:8px;font-weight:700}
+  .tag.green{background:rgba(0,210,91,0.08);color:var(--green);border:1px solid rgba(0,210,91,0.12)}
+  .tag.gold{background:rgba(246,194,26,0.06);color:var(--gold);border:1px solid rgba(246,194,26,0.12)}
+  .tag.faded{background:rgba(255,255,255,0.02);color:#bbb;border:1px solid rgba(255,255,255,0.03)}
+  .room{background:#070707;padding:10px;border-radius:8px;color:var(--accent);margin-bottom:10px;text-align:left}
+  .room.waiting{color:#aaa}
+  .join-btn{display:inline-block;width:100%;background:var(--gold);color:#000;padding:10px;border-radius:10px;border:none;font-weight:900;cursor:pointer}
+  .join-btn.disabled{opacity:0.45;cursor:not-allowed}
+  .timer{margin-top:8px;color:#ddd;font-weight:700}
+
+  /* menu (right side drawer) */
+  #drawer{position:fixed;right:0;top:0;height:100%;width:0;background:#070707;color:#fff;overflow:hidden;transition:width .22s;box-shadow:-6px 0 24px rgba(0,0,0,0.8);z-index:9999;padding-top:80px}
+  #drawer.open{width:320px}
+  #drawer .menu-inner{padding:20px}
+  .menu-item{padding:14px 10px;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer}
+  .menu-item:hover{background:rgba(255,255,255,0.02)}
+  .icon{width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+  .menu-title{font-weight:700}
+  #policy-text{color:var(--muted);padding:10px 0}
+
+  /* payment modal (your style, cleaned: no BTC/USDT) */
+  #pay-modal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.98);display:none;align-items:center;justify-content:center;padding:20px;z-index:10000}
+  .pay-box{background:#111;padding:25px;border:2px solid var(--gold);border-radius:22px;width:100%;max-width:420px;text-align:center}
+  .p-btn{background:#1a1a1a;margin:10px 0;padding:12px;border-radius:12px;display:flex;align-items:center;gap:15px;color:white;text-decoration:none;border:1px solid #333;font-weight:bold;cursor:pointer}
+  .p-btn img{width:28px;height:28px;border-radius:5px}
+  .v-input{width:100%;padding:12px;background:#000;border:1px solid #444;color:var(--accent);text-align:center;border-radius:10px;margin:10px 0;font-weight:bold}
+  .v-btn{background:var(--accent);color:black;border:none;padding:14px;width:100%;border-radius:10px;font-weight:900;cursor:pointer}
+  .close-small{background:none;border:none;color:#f55;margin-top:12px;cursor:pointer}
+
+  /* status view */
+  #status-view{display:none;padding:20px;max-width:720px;margin:0 auto}
+  #status-body{background:var(--card);padding:16px;border-radius:12px}
+
+  footer{padding:20px;text-align:center;color:#777;border-top:1px solid rgba(255,255,255,0.02)}
+  .small{font-size:13px;color:#9a9a9a}
+
+  /* login modal */
+  #login-modal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:10001}
+  .login-box{background:#111;padding:22px;border-radius:12px;border:2px solid var(--gold);max-width:360px;width:100%;text-align:center}
+  .login-box input{width:100%;padding:10px;margin:8px 0;border-radius:8px;background:#000;color:var(--accent);border:1px solid #333}
+
+  @media (max-width:600px){
+    #drawer{width:0}
+    #drawer.open{width:100%}
+    .card-right{width:40%}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">FREE FIRE TOURNAMENT</div>
+    <div class="subtitle">Join • Play • Win Real Cash</div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <div id="user-email" style="font-weight:700;color:var(--accent)"></div>
+    <button id="btn-login" onclick="showLogin()" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent);padding:8px;border-radius:8px">Login</button>
+    <button id="btn-logout" onclick="doLogout()" style="display:none;background:#ff4d4d;border:none;padding:8px;border-radius:8px;color:#fff">Logout</button>
+    <button id="menu-btn" onclick="document.getElementById('drawer').classList.toggle('open')">☰</button>
+  </div>
+</header>
+
+<!-- DRAWER menu (right) -->
+<div id="drawer" aria-hidden="true">
+  <div class="menu-inner">
+    <div class="menu-item" onclick="goHome();document.getElementById('drawer').classList.remove('open')">
+      <div class="icon">🏠</div><div><div class="menu-title">Home</div><div class="small">Return to matches</div></div>
+    </div>
+
+    <div class="menu-item" onclick="document.getElementById('policy-modal').style.display='block'">
+      <div class="icon">📜</div><div><div class="menu-title">Policy</div><div class="small">Game risks & refunds</div></div>
+    </div>
+
+    <div class="menu-item" onclick="openWhatsApp()">
+      <div class="icon">💬</div><div><div class="menu-title">WhatsApp</div><div class="small">+91 9012277862</div></div>
+    </div>
+
+    <div class="menu-item" onclick="setLang('en')">
+      <div class="icon">EN</div><div><div class="menu-title">English</div></div>
+    </div>
+    <div class="menu-item" onclick="setLang('hi')">
+      <div class="icon">HI</div><div><div class="menu-title">Hindi (Roman)</div></div>
+    </div>
+    <div class="menu-item" onclick="setLang('ur')">
+      <div class="icon">UR</div><div><div class="menu-title">Urdu (Roman)</div></div>
+    </div>
+
+    <div class="menu-item" onclick="document.getElementById('drawer').classList.remove('open'); showLogin()">
+      <div class="icon">🔑</div><div><div class="menu-title">Login</div><div class="small">Sign in / create account</div></div>
+    </div>
+
+    <div id="policy-text" style="margin-top:20px;color:var(--muted)">Policy text here</div>
+  </div>
+</div>
+
+<!-- MAIN / HOME VIEW -->
+<div id="home-view">
+  <main>
+    <div id="matches"></div>
+    <footer><div id="copyright">© 2026 SQL — Premium Tournament System</div><div class="small">© All rights reserved</div></footer>
+  </main>
+</div>
+
+<!-- PAYMENT MODAL (styled) -->
+<div id="pay-modal">
+  <div class="pay-box">
+    <h2 style="color:var(--gold); margin-bottom:10px;">CHECKOUT</h2>
+    <p id="p-amt" style="color:var(--accent); font-weight:900; margin-bottom:15px; font-size:1.2rem;"></p>
+
+    <a id="gpay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/google-pay.png" alt="gpay"/> Google Pay</a>
+    <a id="ppay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="phonepe"/> PhonePe</a>
+    <a id="paytm" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/paytm.png" alt="paytm"/> Paytm</a>
+
+    <div style="height:12px"></div>
+    <input id="txid" class="v-input" placeholder="Enter Transaction ID (UTR)"/>
+    <button id="v-btn" class="v-btn" onclick="submitPayment()">SUBMIT PAYMENT</button>
+    <button class="close-small" onclick="closePay()">CANCEL</button>
+  </div>
+</div>
+
+<!-- Payment status page (stable) -->
+<div id="status-view">
+  <main style="max-width:720px;margin:30px auto">
+    <h2>Payment Status</h2>
+    <div id="status-body" style="margin-bottom:12px"></div>
+    <div id="status-room"></div>
+    <div style="margin-top:18px"><button onclick="goHome()" style="padding:10px 12px;border-radius:8px;background:var(--gold);border:none;font-weight:700">Back to matches</button></div>
+  </main>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal">
+  <div class="login-box">
+    <h3 style="color:var(--gold)">Account</h3>
+    <input id="login-email" placeholder="Email" />
+    <input id="login-pass" type="password" placeholder="Password" />
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="login()" style="flex:1;background:var(--accent);border:none;padding:10px;border-radius:8px;font-weight:800">Sign in / Sign up</button>
+      <button onclick="hideLogin()" style="flex:1;background:#222;border:none;padding:10px;border-radius:8px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- POLICY Modal -->
+<div id="policy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:12000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#111;padding:20px;border-radius:12px;border:2px solid var(--gold);max-width:640px;margin:40px auto">
+    <h2 style="color:var(--gold)">Policy</h2>
+    <p id="policy-text" style="color:#ddd">Policy text placeholder</p>
+    <p style="color:var(--muted)"><strong>Refund:</strong> Refunds processed within 20 minutes.</p>
+    <div style="margin-top:12px;text-align:right">
+      <button onclick="document.getElementById('policy-modal').style.display='none'" style="padding:8px 12px;border-radius:8px;background:#222;border:none;color:#fff">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts: small helpers loaded earlier are in module -->
+<script>
+  // small DOM utilities available in module as well: but for safety attach $
+  window.$ = (s)=> document.querySelector(s);
+
+  // Close drawer by clicking outside
+  document.addEventListener('click', (e)=>{
+    const drawer = document.getElementById('drawer');
+    const menuBtn = document.getElementById('menu-btn');
+    if(drawer.classList.contains('open')){
+      // if clicked outside drawer and not menu button
+      if(!drawer.contains(e.target) && e.target !== menuBtn){
+        drawer.classList.remove('open');
+      }
+    }
+  });
+
+  // simple hash routing: if user opens direct payment hash
+  window.addEventListener('hashchange', ()=>{
+    if(location.hash && location.hash.startsWith('#payment-')){
+      const pid = location.hash.replace('#payment-','');
+      // call function from module - we defined showPaymentStatus there
+      if(window.showPaymentStatus) window.showPaymentStatus(pid);
+    } else {
+      // go home
+      if(window.goHome) window.goHome();
+    }
+  });
+</script>
+
 </body>
-    </html>
+  </html>
