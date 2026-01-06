@@ -1,549 +1,433 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>FREE FIRE TOURNAMENT</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
-  
-  <script type="text/javascript">
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-    }
-  </script>
-  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <meta charset="UTF-8" />
+    <title>Free Fire Tournament</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      onSnapshot,
-      addDoc,
-      query,
-      where,
-      orderBy,
-      limit,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    // ---------- FIREBASE CONFIG
-    const firebaseConfig = {
-      apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-      authDomain: "sqladmin-ff04d.firebaseapp.com",
-      projectId: "sqladmin-ff04d",
-      storageBucket: "sqladmin-ff04d.firebasestorage.app",
-      messagingSenderId: "539086978850",
-      appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
-      measurementId: "G-KH4J0CZ9M5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // ---------- UI state
-    let currentMatch = null;
-    let lastPaymentDocId = null;
-
-    // ---------- Authentication / UI hooks
-    const ui = {
-      headerEmail: null,
-      menuOverlay: null,
-      matchesBox: null,
-      payModal: null,
-      utrInput: null,
-      paymentStatusView: null,
-      authEmail: null,
-      authPass: null
-    };
-
-    window.addEventListener('DOMContentLoaded', () => {
-      ui.headerEmail = document.getElementById('hdr-email');
-      ui.menuOverlay = document.getElementById('menu-overlay');
-      ui.matchesBox = document.getElementById('matches');
-      ui.payModal = document.getElementById('pay');
-      ui.utrInput = document.getElementById('utr');
-      ui.paymentStatusView = document.getElementById('payment-status');
-      ui.authEmail = document.getElementById('auth-email');
-      ui.authPass = document.getElementById('auth-pass');
-
-      // wire buttons
-      document.getElementById('auth-register').onclick = registerUser;
-      document.getElementById('auth-login').onclick = loginUser;
-
-      // menu outside-click close
-      document.getElementById('menu-overlay').addEventListener('click', (e)=>{
-        if(e.target === ui.menuOverlay) closeMenu();
-      });
-
-      // listen auth
-      onAuthStateChanged(auth, user => {
-        if(user){
-          // Mobile header me email hide rahega CSS se, lekin yahan set kar rahe hain
-          ui.headerEmail.textContent = user.email;
-          document.body.classList.add('logged-in');
-        } else {
-          ui.headerEmail.textContent = '';
-          document.body.classList.remove('logged-in');
+    <style>
+        /* CSS Variables & Reset */
+        :root {
+            --primary: #00ff88; /* Green for Admin Data */
+            --gold: #ffd700;
+            --bg: #050505;
+            --card-bg: #111;
+            --text-muted: #aaa;
+            --danger: #ff4444;
         }
-      });
-    });
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow-x: hidden; }
+        
+        /* Header & Menu */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #000; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; }
+        header h1 { color: var(--gold); margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+        .menu-btn { font-size: 1.5rem; color: var(--gold); cursor: pointer; }
 
-    // ---------- Matches realtime listener
-    function renderMatchesSnapshot(snapshot){
-      ui.matchesBox.innerHTML = '';
-      snapshot.forEach(docSnap => {
-        const m = docSnap.data() || {};
-        const id = docSnap.id;
-        const entry = m.entry ?? 0;
-        const win = m.win ?? 0;
-        const status = (m.status || '').toString().toLowerCase();
-        const joined = m.joinedPlayers ?? 0;
-        const max = m.maxPlayers ?? m.slots ?? '—';
-        const roomId = m.roomId ?? '';
-        const password = m.password ?? '';
-        const startAt = m.startTime || null; 
-        const isFull = (typeof max === 'number') && joined >= max;
-
-        const statusClass = {
-          'waiting': 'st-wait',
-          'upcoming': 'st-upc',
-          'running': 'st-live',
-          'approved': 'st-approve',
-          'open': 'st-open'
-        }[status] || 'st-wait';
-
-        let timerHtml = '';
-        if(startAt){
-          timerHtml = `<div class="timer" data-start="${startAt}" id="timer-${id}">--:--</div>`;
+        /* Side Menu (Drawer) */
+        #side-menu {
+            position: fixed; top: 0; right: -100%; width: 280px; height: 100%;
+            background: #0a0a0a; border-left: 2px solid var(--gold);
+            transition: 0.3s ease; z-index: 200; padding-top: 60px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.8);
         }
+        #side-menu.active { right: 0; }
+        .close-btn { position: absolute; top: 15px; left: 20px; font-size: 1.5rem; color: #fff; cursor: pointer; }
+        
+        .menu-item { display: flex; align-items: center; padding: 15px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid #222; transition: 0.2s; }
+        .menu-item:hover { background: #222; color: var(--gold); }
+        .menu-item i { width: 30px; color: var(--primary); }
+        .menu-item.logout { color: var(--danger); }
 
-        const roomBox = (status === 'approved' && roomId && password)
-          ? `<div class="room ok"><strong>Room:</strong> ${escapeHtml(roomId)}<br><strong>Password:</strong> ${escapeHtml(password)}</div>`
-          : `<div class="room hint">Room: waiting — payment approval required</div>`;
+        /* Main Content */
+        #matches { padding: 15px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
 
-        let actionBtn = '';
-        if(isFull) {
-          actionBtn = `<button class="btn full" disabled>Full</button>`;
-        } else if(status === 'open' || status === 'waiting' || status === 'upcoming') {
-          actionBtn = `<button class="btn join" onclick="openPay(${entry}, '${id}')">JOIN MATCH</button>`;
-        } else {
-          actionBtn = `<button class="btn closed" disabled>Join Closed</button>`;
+        /* Match Card Design */
+        .card {
+            background: var(--card-bg); border: 1px solid #333; border-radius: 15px;
+            margin-bottom: 20px; overflow: hidden; position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-left">
-            <h3 class="match-type">${escapeHtml(m.type ?? id)}</h3>
-            <p><strong>Entry:</strong> ₹${entry}</p>
-            <p><strong>Win:</strong> ₹${win}</p>
-            <p><strong>Players:</strong> ${joined} / ${max}</p>
-            <p><strong>Status:</strong> <span class="status ${statusClass}">${escapeHtml(capitalize(status || 'waiting'))}</span></p>
-          </div>
-          <div class="card-right">
-            ${timerHtml}
-            ${roomBox}
-            ${actionBtn}
-          </div>
-        `;
-        ui.matchesBox.appendChild(card);
-
-        if(startAt){
-          startTimerFor(id, startAt);
+        .card-header {
+            background: #1a1a1a; padding: 10px 15px; border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
         }
-      });
-    }
+        .match-id { color: #777; font-size: 0.8rem; }
+        .status-badge { font-size: 0.8rem; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; font-weight: bold; }
+        .status-open { color: #000; background: var(--primary); }
+        .status-full { color: #fff; background: var(--danger); }
 
-    function startTimerFor(id, startAtMs){
-      const el = document.getElementById('timer-'+id);
-      if(!el) return;
-      const update = () => {
-        const now = Date.now();
-        let diff = startAtMs - now;
-        if(diff <= 0){
-          el.textContent = 'Starting';
-          el.classList.add('started');
-          clearInterval(el._int);
-          return;
+        .card-body { display: flex; padding: 15px; gap: 10px; }
+        
+        /* Left Side (Data) */
+        .left-info { flex: 1; border-right: 1px solid #333; padding-right: 10px; }
+        .info-row { margin-bottom: 8px; font-size: 0.9rem; color: #ccc; }
+        .info-row span { color: var(--primary); font-weight: bold; float: right; } /* Admin Data in Green */
+
+        /* Right Side (Actions) */
+        .right-action { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        
+        .timer { font-size: 1.1rem; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
+        .timer small { display: block; font-size: 0.7rem; color: #777; font-weight: normal; }
+
+        .slots-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; margin: 8px 0; overflow: hidden; }
+        .slots-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.5s; }
+        .slots-text { font-size: 0.75rem; color: #aaa; margin-bottom: 8px; }
+
+        /* Buttons */
+        .join-btn {
+            background: linear-gradient(45deg, var(--gold), #ffaa00);
+            border: none; padding: 10px 20px; color: #000; font-weight: bold;
+            border-radius: 20px; cursor: pointer; width: 100%;
+            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3); animation: pulse 2s infinite;
         }
-        const mins = Math.floor(diff / 60000);
-        const secs = Math.floor((diff % 60000) / 1000);
-        el.textContent = `${pad(mins)}:${pad(secs)}`;
-      };
-      update();
-      el._int = setInterval(update, 1000);
-    }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
+        .join-btn:disabled { background: #444; color: #888; cursor: not-allowed; animation: none; box-shadow: none; }
 
-    function pad(n){ return n<10? '0'+n: n; }
-    function capitalize(s){ if(!s) return s; return s.charAt(0).toUpperCase()+s.slice(1); }
-    function escapeHtml(str){ if(!str && str!==0) return ''; return String(str).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
-
-    onSnapshot(collection(db, "matches"), snap => {
-      renderMatchesSnapshot(snap);
-    });
-
-    // ---------- Payment modal
-    window.openPay = (amt, matchId) => {
-      if(!auth.currentUser) {
-        openMenu();
-        alert('Please login or register first.');
-        return;
-      }
-      currentMatch = { id: matchId, amt };
-      document.getElementById('p-amt').innerText = `Total: ₹${amt}`;
-      
-      const upi = encodeURI(`upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR`);
-      // Fixed: removed target blank so it opens app directly
-      document.getElementById('gpay').href = upi;
-      document.getElementById('ppay').href = upi;
-      document.getElementById('paytm').href = upi;
-      
-      ui.utrInput.value = '';
-      ui.payModal.style.display = 'flex';
-      ui.paymentStatusView.style.display = 'none';
-    };
-
-    window.closePay = ()=>{
-      ui.payModal.style.display = 'none';
-    };
-
-    window.submitPayment = async () => {
-      const utr = ui.utrInput.value.trim();
-      if(!currentMatch) return alert('No match selected.');
-      if(!utr) return alert('Please enter UTR.');
-      const user = auth.currentUser;
-      if(!user) return alert('Login required.');
-      
-      const payload = {
-        userId: user.uid,
-        userEmail: user.email,
-        matchId: currentMatch.id,
-        amount: currentMatch.amt,
-        utr,
-        status: 'pending',
-        createdAt: Date.now()
-      };
-      try {
-        const r = await addDoc(collection(db, 'payments'), payload);
-        lastPaymentDocId = r.id;
-        alert('Payment submitted! Wait for approval.');
-        ui.payModal.style.display = 'none';
-        openPaymentStatusView(currentMatch.id);
-      } catch(e){
-        console.error(e);
-        alert('Error submitting payment. Try again.');
-      }
-    };
-
-    async function openPaymentStatusView(matchId){
-      ui.paymentStatusView.style.display = 'block';
-      ui.paymentStatusView.innerHTML = `<h2>Payment Status</h2><div id="ps-box">Checking payment...</div><button class="back" onclick="backToMatches()">Back to matches</button>`;
-      const user = auth.currentUser;
-      if(!user) return document.getElementById('ps-box').innerText = 'Login required.';
-
-      const q = query(collection(db, 'payments'),
-        where('userId', '==', user.uid),
-        where('matchId', '==', matchId),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
-
-      const unsub = onSnapshot(q, async snap => {
-        if(snap.empty){
-          document.getElementById('ps-box').innerHTML = `<div class="status-box">Payment in progress — please wait</div>`;
-          return;
+        /* Room ID Box */
+        .room-box {
+            background: rgba(0, 255, 136, 0.1); border: 1px solid var(--primary);
+            padding: 10px; border-radius: 10px; width: 100%; margin-top: 10px;
         }
-        const pDoc = snap.docs[0];
-        const p = pDoc.data();
-        const status = p.status || 'pending';
-        const box = document.getElementById('ps-box');
+        .room-box p { margin: 2px 0; font-size: 0.9rem; color: var(--primary); word-break: break-all; }
+        .pending-box { color: var(--gold); font-size: 0.85rem; border: 1px dashed var(--gold); padding: 8px; border-radius: 8px; width: 100%; }
 
-        const mRef = doc(db, 'matches', matchId);
-        const mSnap = await getDoc(mRef);
-        const match = mSnap.exists()? mSnap.data() : null;
-
-        let html = `<div class="status-box">Status: <strong>${escapeHtml(capitalize(status))}</strong></div>`;
-        html += `<div class="p-info"><strong>Match:</strong> ${escapeHtml(match?.type ?? matchId)}<br>`;
-        html += `<strong>Amount:</strong> ₹${p.amount}<br>`;
-        html += `<strong>UTR:</strong> ${escapeHtml(p.utr)}<br>`;
-        if(status === 'approved' && match){
-          html += `<div class="room ok">Room ID: ${escapeHtml(match.roomId || '')}<br>Password: ${escapeHtml(match.password || '')}</div>`;
-        } else {
-          html += `<div class="room note">Room: waiting — payment approval required</div>`;
+        /* Payment Modal */
+        #pay-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
-        box.innerHTML = html;
-      });
+        .pay-content {
+            background: #151515; border: 2px solid var(--gold); padding: 25px;
+            border-radius: 20px; width: 90%; max-width: 350px; text-align: center;
+        }
+        .pay-content h2 { color: var(--gold); margin-top: 0; }
+        .pay-qr-placeholder { background: #fff; width: 150px; height: 150px; margin: 10px auto; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
+        
+        input { width: 90%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #444; color: var(--primary); border-radius: 8px; text-align: center; outline: none; }
+        input:focus { border-color: var(--primary); }
 
-      ui.paymentStatusView._unsub = unsub;
-    }
+        .submit-btn { background: var(--primary); color: #000; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-bottom: 10px; }
+        .cancel-btn { background: transparent; color: #aaa; border: none; cursor: pointer; text-decoration: underline; }
 
-    window.backToMatches = ()=>{
-      ui.paymentStatusView.style.display = 'none';
-      if(ui.paymentStatusView._unsub) ui.paymentStatusView._unsub();
-    };
+        /* Footer & Translate */
+        #google_translate_element { position: fixed; bottom: 50px; right: 10px; z-index: 90; opacity: 0.8; }
+        footer { text-align: center; color: #555; padding: 20px; font-size: 0.8rem; border-top: 1px solid #222; margin-top: 20px; }
 
-    async function registerUser(){
-      const email = ui.authEmail.value.trim();
-      const pass = ui.authPass.value.trim();
-      if(!email || !pass) return alert('Enter email & password.');
-      try {
-        await createUserWithEmailAndPassword(auth, email, pass);
-        alert('Account created & logged in.');
-        ui.authEmail.value = '';
-        ui.authPass.value = '';
-        closeMenu();
-      } catch(e){
-        console.error(e);
-        alert('Error creating account: ' + (e.message||e));
-      }
-    }
-
-    async function loginUser(){
-      const email = ui.authEmail.value.trim();
-      const pass = ui.authPass.value.trim();
-      if(!email || !pass) return alert('Enter email & password.');
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        alert('Logged in.');
-        ui.authEmail.value = '';
-        ui.authPass.value = '';
-        closeMenu();
-      } catch(e){
-        console.error(e);
-        alert('Login failed: ' + (e.message||e));
-      }
-    }
-
-    window.doLogout = async ()=>{
-      await signOut(auth);
-      alert('Logged out.');
-      closeMenu();
-    };
-
-    window.openMenu = ()=>{
-      ui.menuOverlay.style.display = 'block';
-      ui.menuOverlay.classList.add('open');
-    };
-    window.closeMenu = ()=>{
-      ui.menuOverlay.style.display = 'none';
-      ui.menuOverlay.classList.remove('open');
-    };
-  </script>
-
-  <style>
-    :root{
-      --bg:#050505;
-      --card:#0f0f0f;
-      --muted:#999;
-      --accent: #f2c94c;
-      --green:#00ff88;
-      --panel: #111;
-      --btn-bg: #f3c83d;
-      --btn-text: #111;
-    }
-    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-    header.site {
-      padding:12px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border-bottom:3px solid rgba(255,200,20,0.06);
-      position:sticky;
-      top:0;
-      z-index:50;
-      background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.7));
-      backdrop-filter: blur(4px);
-    }
-    .hdr-left{display:flex;align-items:center;gap:12px}
-    /* Changed Left icon to trophy so it doesn't look like a menu */
-    #hdr-icon{font-size:24px;} 
-    #hdr-title{font-size:20px;color:var(--accent);font-weight:800;letter-spacing:0.5px}
-    #hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
-    
-    /* Email only visible on desktop */
-    #hdr-email{color:var(--green);font-weight:700;font-size:13px;margin-left:12px; display:none;}
-    @media(min-width: 600px) {
-        #hdr-email{ display: block; }
-    }
-
-    .hdr-right{display:flex;gap:10px;align-items:center}
-    #hamb{width:40px;height:32px;border-radius:6px;background:transparent;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--green)}
-    #logout-btn{background:#ff5454;color:#fff;padding:6px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;display:none;font-size:12px}
-    body.logged-in #logout-btn{display:inline-block}
-
-    main{padding:18px;max-width:820px;margin:0 auto}
-    
-    /* Removed the broken banner image box completely */
-    
-    .matches-grid{display:flex;flex-direction:column;gap:14px;margin-top:6px}
-    .card{display:flex;justify-content:space-between;gap:12px;background:var(--card);padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.02)}
-    .card-left{flex:1}
-    .card-right{width:220px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
-    .match-type{color:var(--green);margin:0 0 8px 0}
-    .card p{margin:6px 0;color:#ddd}
-    .status{display:inline-block;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-weight:700}
-    .st-wait{background:rgba(255,255,255,0.03);color:#ddd}
-    .st-upc{background:rgba(255,200,20,0.12);color:var(--accent)}
-    .st-live{background:rgba(0,255,136,0.12);color:var(--green)}
-    .st-open{background:rgba(0,200,200,0.06);color:#9ff}
-    .room{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:#ddd;font-size:13px}
-    .room.ok{background:rgba(0,255,136,0.06);color:var(--green)}
-    .room.hint{opacity:0.9}
-    .btn{border:none;padding:11px 14px;border-radius:10px;font-weight:800;cursor:pointer}
-    .btn.join{background:var(--btn-bg);color:var(--btn-text);width:180px}
-    .btn.full{background:#b08a2b;color:#fff;width:140px}
-    .btn.closed{background:#444;color:#ddd;width:140px}
-    .timer{font-weight:700;color:var(--muted);padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.02)}
-    .status-box{padding:12px;background:var(--panel);border-radius:10px;margin-bottom:12px}
-    .back{background:#222;color:#fff;padding:8px 12px;border-radius:8px;border:1px solid #333;cursor:pointer}
-    footer{padding:20px;text-align:center;color:var(--muted);font-size:13px}
-
-    /* payment modal */
-    #pay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);z-index:120}
-    .paybox{background:var(--panel);padding:22px;border-radius:18px;width:92%;max-width:420px;border:3px solid var(--accent);text-align:center}
-    .paybox h2{color:var(--accent);margin:8px 0 10px 0}
-    .p-btn{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin:8px 0;background:#0a0a0a;border:1px solid #212121;cursor:pointer;color:#fff;text-decoration:none}
-    .p-btn img{width:28px;height:28px;border-radius:6px}
-    .v-input{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#030303;color:var(--green);font-weight:800;text-align:center}
-    .v-btn{background:var(--green);border:none;padding:12px;border-radius:10px;font-weight:900;color:#000;cursor:pointer;margin-top:10px;width:100%}
-    .small-note{color:var(--muted);font-size:13px;margin-top:8px}
-
-    /* menu overlay */
-    #menu-overlay{position:fixed;inset:0;display:none;z-index:200}
-    #menu-panel{position:absolute;right:0;top:0;width:86%;max-width:320px;height:100%;background:#080808;border-left:1px solid rgba(255,255,255,0.03);padding:18px;overflow:auto; box-shadow:-5px 0 20px rgba(0,0,0,0.5)}
-    .menu-item{display:flex;gap:12px;align-items:center;padding:14px;border-radius:8px;cursor:pointer;margin-bottom:4px}
-    .menu-item:hover{background:rgba(255,255,255,0.03)}
-    .menu-item .icon{width:32px;height:32px;border-radius:8px;background:#111;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:18px}
-    .menu-footer{margin-top:30px;color:var(--muted);font-size:13px}
-
-    #login-panel{margin-top:12px;padding:15px;background:#111;border-radius:10px;border:1px solid #222}
-    #login-panel input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #333;background:#000;color:#fff}
-    #login-panel button{padding:10px 14px;border-radius:8px;background:var(--btn-bg);border:none;color:#111;font-weight:800;cursor:pointer;margin-right:8px; margin-top:5px}
-
-    /* Google Translate Styling */
-    .goog-te-gadget-simple {
-        background-color: #111 !important;
-        border: 1px solid #333 !important;
-        padding: 8px !important;
-        border-radius: 8px !important;
-        color: #fff !important;
-    }
-    .goog-te-gadget-simple span { color: #fff !important; }
-
-    @media (min-width:900px){
-      main{padding:30px}
-      .card-right{width:300px;align-items:flex-end}
-    }
-  </style>
+    </style>
 </head>
+
 <body>
 
-  <header class="site">
-    <div class="hdr-left">
-      <div id="hdr-icon">🏆</div> <div>
-        <div id="hdr-title">FREE FIRE</div>
-        <div id="hdr-sub">Tournament</div>
-      </div>
-      <div id="hdr-email"></div>
-    </div>
+    <header>
+        <h1>FF TOURNAMENT</h1>
+        <div class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+    </header>
 
-    <div class="hdr-right">
-      <button id="logout-btn" onclick="doLogout()">Logout</button>
-      <div id="hamb" title="Menu" onclick="openMenu()">☰</div>
-    </div>
-  </header>
+    <div id="side-menu">
+        <div class="close-btn" onclick="toggleMenu()">&times;</div>
+        
+        <div id="auth-section">
+            </div>
 
-  <div id="menu-overlay" aria-hidden="true">
-    <div id="menu-panel">
-      <div style="display:flex;align-items:center;justify-content:space-between; margin-bottom:20px;">
-        <div style="display:flex;gap:12px;align-items:center">
-          <div style="width:40px;height:40px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:20px">⚑</div>
-          <div>
-            <div style="font-weight:800; font-size:16px;">Menu</div>
-          </div>
-        </div>
-        <div style="cursor:pointer; font-size:20px; padding:5px" onclick="closeMenu()">✕</div>
-      </div>
-
-      <div>
-        <div class="menu-item" onclick="backToMatches(); closeMenu();">
-          <div class="icon">🏠</div>
-          <div><strong>Home</strong></div>
-        </div>
-
-        <div class="menu-item" onclick="alert('This game involves risk. Play at your own risk.')">
-          <div class="icon">📜</div>
-          <div><strong>Policy</strong></div>
-        </div>
-
-        <a class="menu-item" href="https://wa.me/919012277862" target="_blank" style="text-decoration:none;color:inherit">
-          <div class="icon">💬</div>
-          <div><strong>WhatsApp</strong><div style="font-size:11px;color:var(--muted)">+91 9012277862</div></div>
+        <a href="#" onclick="location.reload()" class="menu-item">
+            <i class="fas fa-home"></i> Home
         </a>
-
-        <div style="margin: 20px 0; padding:0 5px;">
-            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">Select Language:</div>
-            <div id="google_translate_element"></div>
+        <a href="#" onclick="showPolicy()" class="menu-item">
+            <i class="fas fa-shield-alt"></i> Policy & Risks
+        </a>
+        <a href="https://wa.me/919012277862" target="_blank" class="menu-item">
+            <i class="fab fa-whatsapp"></i> WhatsApp Help
+        </a>
+        
+        <div style="padding: 20px; color: #666; font-size: 0.8rem; line-height: 1.4;">
+            <p><strong>Language Support:</strong><br>Use the button below to translate.</p>
         </div>
-
-        <div id="login-panel">
-          <div style="font-weight:800;margin-bottom:10px; color:var(--accent)">Login / Register</div>
-          <input id="auth-email" placeholder="Email" type="email" />
-          <input id="auth-pass" placeholder="Password" type="password" />
-          <div style="display:flex;gap:8px">
-            <button id="auth-register">Register</button>
-            <button id="auth-login">Login</button>
-          </div>
-        </div>
-
-        <div class="menu-footer" style="margin-top:18px">
-          <div style="font-weight:700;color:var(--muted)">Refunds processed within 20 minutes.</div>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <main>
-    <div id="matches" class="matches-grid">
-      </div>
+    <div id="matches">
+        <p style="text-align:center; color:#555;">Loading Tournaments...</p>
+    </div>
 
-    <div id="payment-status" style="display:none;margin-top:18px"></div>
+    <div id="pay-modal">
+        <div class="pay-content">
+            <h2><i class="fas fa-wallet"></i> Complete Payment</h2>
+            <p style="color:#ccc;">Pay Amount: <span id="pay-amount" style="color:var(--gold); font-weight:bold;">₹0</span></p>
+            
+            <div class="pay-qr-placeholder">
+                QR CODE HERE<br>(UPI)
+            </div>
+            
+            <p style="font-size:0.8rem; color:#aaa;">Pay via GPay/PhonePe & Enter UTR</p>
+            <input type="text" id="utr-input" placeholder="Enter 12-digit UTR Number" />
+            
+            <button class="submit-btn" onclick="submitPayment()">VERIFY & JOIN</button>
+            <button class="cancel-btn" onclick="closePay()">Cancel Transaction</button>
+        </div>
+    </div>
 
     <footer>
-      © 2026 SQL — Premium Tournament System
+        <p>© 2026 SQL Gaming - Premium eSports</p>
+        <div id="google_translate_element"></div>
     </footer>
-  </main>
 
-  <div id="pay">
-    <div class="paybox">
-      <h2 id="p-amt">Total: ₹0</h2>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+        import { getFirestore, collection, onSnapshot, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-      <a id="gpay" class="p-btn" href="#"><img src="https://img.icons8.com/color/48/google-pay.png" alt="GPay"> Google Pay</a>
-      <a id="ppay" class="p-btn" href="#"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="PhonePe"> PhonePe</a>
-      <a id="paytm" class="p-btn" href="#"><img src="https://img.icons8.com/color/48/paytm.png" alt="Paytm"> Paytm</a>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+            authDomain: "sqladmin-ff04d.firebaseapp.com",
+            projectId: "sqladmin-ff04d",
+            storageBucket: "sqladmin-ff04d.firebasestorage.app",
+            messagingSenderId: "539086978850",
+            appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
+            measurementId: "G-KH4J0CZ9M5"
+        };
 
-      <input id="utr" class="v-input" placeholder="Enter UTR / TXID" />
-      <button class="v-btn" onclick="submitPayment()">SUBMIT PAYMENT</button>
-      <button onclick="closePay()" style="color:#ff6666;border:none;background:none;margin-top:12px;cursor:pointer;font-weight:700">Cancel</button>
-      <div class="small-note" style="margin-top:10px">Refunds processed within 20 minutes.</div>
-    </div>
-  </div>
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-  <script>
-    // Keep layout stable
-    window.addEventListener('resize', () => {
-      document.documentElement.style.fontSize = '100%';
-    });
-  </script>
+        let currentUser = null;
+        let userPayments = {}; // Stores payment status for each matchId
+
+        // --- AUTH LOGIC ---
+        const authSection = document.getElementById('auth-section');
+
+        function updateAuthUI(user) {
+            if (user) {
+                currentUser = user;
+                authSection.innerHTML = `
+                    <div style="padding:20px; text-align:center;">
+                        <img src="${user.photoURL}" style="width:50px;border-radius:50%;border:2px solid gold;">
+                        <p style="margin:5px 0;">${user.displayName}</p>
+                        <button onclick="window.logoutUser()" class="menu-item logout" style="background:none;border:none;width:100%;justify-content:center;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                `;
+                loadUserPayments(); // Load payments when user logs in
+            } else {
+                currentUser = null;
+                userPayments = {};
+                authSection.innerHTML = `
+                    <button onclick="window.loginUser()" class="menu-item" style="background:none;border:none;width:100%;cursor:pointer;">
+                        <i class="fas fa-sign-in-alt"></i> Login with Google
+                    </button>
+                `;
+                renderMatches([]); // Re-render to show "Join" buttons
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            updateAuthUI(user);
+        });
+
+        window.loginUser = () => {
+            signInWithPopup(auth, provider).catch((error) => alert("Login Failed: " + error.message));
+        };
+        window.logoutUser = () => {
+            signOut(auth).then(() => {
+                alert("Logged out successfully");
+                toggleMenu();
+            });
+        };
+
+        // --- DATA LOGIC ---
+        
+        // Listen to Matches
+        let allMatches = [];
+        onSnapshot(collection(db, "matches"), snap => {
+            allMatches = [];
+            snap.forEach(d => {
+                allMatches.push({ id: d.id, ...d.data() });
+            });
+            renderMatches();
+        });
+
+        // Listen to User Payments (Real-time Status Updates)
+        function loadUserPayments() {
+            if(!currentUser) return;
+            const q = query(collection(db, "payments"), where("userId", "==", currentUser.uid));
+            onSnapshot(q, (snap) => {
+                userPayments = {};
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    // Store status by matchId
+                    userPayments[data.matchId] = {
+                        status: data.status, // 'pending' or 'approved'
+                        roomId: data.roomId || "Wait...",
+                        password: data.password || "Wait..."
+                    };
+                });
+                renderMatches(); // Re-render matches with new status
+            });
+        }
+
+        // Timer Logic
+        setInterval(() => {
+            allMatches.forEach(m => {
+                const timerEl = document.getElementById(`timer-${m.id}`);
+                if (timerEl && m.startTime) {
+                    const now = new Date().getTime();
+                    // Convert admin string time or timestamp to JS Date. 
+                    // Assumed admin saves as timestamp or ISO string.
+                    // For demo stability, assuming m.startTime is a future timestamp number.
+                    // If you manage time manually, parse it here.
+                    const distance = m.startTime - now;
+                    
+                    if (distance < 0) {
+                        timerEl.innerHTML = "LIVE";
+                        timerEl.style.color = "red";
+                    } else {
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                        timerEl.innerHTML = `${minutes}m ${seconds}s`;
+                    }
+                }
+            });
+        }, 1000);
+
+
+        // --- RENDER UI ---
+        function renderMatches() {
+            const box = document.getElementById('matches');
+            box.innerHTML = "";
+            
+            allMatches.forEach(m => {
+                // Calculate Slots
+                const totalSlots = m.totalSlots || 48;
+                const joinedCount = m.joinedCount || 0; // Update this from admin panel
+                const fillPercent = (joinedCount / totalSlots) * 100;
+                
+                // Determine Button/Status State
+                let actionHTML = '';
+                
+                if (!currentUser) {
+                    actionHTML = `<button class="join-btn" onclick="alert('Please Login First from Menu!')">LOGIN TO JOIN</button>`;
+                } else {
+                    const payment = userPayments[m.id];
+                    
+                    if (payment) {
+                        // User has paid
+                        if (payment.status === 'approved') {
+                            // Approved: Show Room ID (Using admin panel data via payments logic if linked, or direct match data if generic)
+                            // Here assuming Admin updates the specific Payment Doc with RoomID or Match Doc has it.
+                            // Let's use Match Doc generic RoomID for simplicity if approved.
+                            const rId = m.roomId || "Coming Soon";
+                            const rPass = m.password || "Wait";
+                            actionHTML = `
+                                <div class="room-box">
+                                    <p>ID: ${rId}</p>
+                                    <p>Pass: ${rPass}</p>
+                                </div>`;
+                        } else {
+                            // Pending
+                            actionHTML = `<div class="pending-box"><i class="fas fa-clock"></i> Verification Pending</div>`;
+                        }
+                    } else {
+                        // User hasn't paid
+                        if(m.status === 'open') {
+                             actionHTML = `<button class="join-btn" onclick="openPay('${m.id}', ${m.entry})">JOIN ₹${m.entry}</button>`;
+                        } else {
+                             actionHTML = `<button class="join-btn" disabled style="background:#333;">FULL / CLOSED</button>`;
+                        }
+                    }
+                }
+
+                box.innerHTML += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="match-id">#${m.id.substring(0,6)}</span>
+                        <span class="status-badge ${m.status === 'open' ? 'status-open' : 'status-full'}">${m.status}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="left-info">
+                            <div class="info-row">Map: <span>${m.map || 'Bermuda'}</span></div>
+                            <div class="info-row">Type: <span>${m.type || 'Solo'}</span></div>
+                            <div class="info-row">Entry: <span>₹${m.entry}</span></div>
+                            <div class="info-row">Per Kill: <span>₹${m.kill || 0}</span></div>
+                            <div class="info-row">Win: <span>₹${m.win}</span></div>
+                        </div>
+
+                        <div class="right-action">
+                            <div class="timer" id="timer-${m.id}">
+                                Loading...
+                                <small>Starts In</small>
+                            </div>
+                            
+                            <div class="slots-bar">
+                                <div class="slots-fill" style="width: ${fillPercent}%"></div>
+                            </div>
+                            <div class="slots-text">${joinedCount}/${totalSlots} Joined</div>
+                            
+                            ${actionHTML}
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // --- PAYMENT LOGIC ---
+        let currentMatchId = null;
+
+        window.openPay = (mid, amount) => {
+            currentMatchId = mid;
+            document.getElementById('pay-amount').innerText = "₹" + amount;
+            document.getElementById('pay-modal').style.display = 'flex';
+        };
+
+        window.closePay = () => {
+            document.getElementById('pay-modal').style.display = 'none';
+            document.getElementById('utr-input').value = "";
+        };
+
+        window.submitPayment = async () => {
+            const utr = document.getElementById('utr-input').value;
+            if (!utr || utr.length < 8) return alert("Please enter valid UTR/Reference No.");
+            
+            try {
+                await addDoc(collection(db, 'payments'), {
+                    matchId: currentMatchId,
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName,
+                    utr: utr,
+                    amount: document.getElementById('pay-amount').innerText,
+                    status: 'pending', // Needs admin approval
+                    timestamp: Date.now()
+                });
+                
+                alert("Payment Submitted! Wait for Admin Approval.");
+                closePay();
+                // Logic automatically updates because of onSnapshot in loadUserPayments
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+
+        // --- MENU & POLICY ---
+        window.toggleMenu = () => {
+            document.getElementById('side-menu').classList.toggle('active');
+        };
+
+        window.showPolicy = () => {
+            alert(`⚠️ चेतावनी: इस गेम में वित्तीय जोखिम शामिल है और इसकी आदत लग सकती है। कृपया जिम्मेदारी से और अपने जोखिम पर खेलें।\n\nRefund Policy: मैच शुरू होने से 20 मिनट पहले रिफंड उपलब्ध है। उसके बाद कोई रिफंड नहीं दिया जाएगा।`);
+        };
+
+    </script>
+    
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
-  </html>
+</html>
