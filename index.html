@@ -1,92 +1,97 @@
 <!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>SQL Tournaments</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase -->  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<meta charset="UTF-8">
+<title>SQL Matches – Premium</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- Firebase --><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-      authDomain: "sqladmin-ff04d.firebaseapp.com",
-      projectId: "sqladmin-ff04d",
-      storageBucket: "sqladmin-ff04d.firebasestorage.app",
-      messagingSenderId: "539086978850",
-      appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+  authDomain: "sqladmin-ff04d.firebaseapp.com",
+  projectId: "sqladmin-ff04d",
+  storageBucket: "sqladmin-ff04d.firebasestorage.app",
+  messagingSenderId: "539086978850",
+  appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    // ---------- WORD NORMALIZER (ANTI MISMATCH) ----------
-    function norm(v) {
-      return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    }
+window.openPay = (id, amt) => {
+  window.matchId = id;
+  document.getElementById('payAmt').innerText = "₹"+amt;
+  document.getElementById('payModal').style.display='flex';
+};
 
-    // ---------- LOAD MATCHES ----------
-    async function loadMatches() {
-      matches.innerHTML = '';
-      const snap = await getDocs(collection(db, 'matches'));
-      snap.forEach(d => {
-        const m = d.data();
+window.submitPayment = async () => {
+  const utr = document.getElementById('utr').value.trim();
+  if(!utr) return alert('Enter UTR');
+  await addDoc(collection(db,'payments'),{
+    matchId: matchId,
+    utr: utr,
+    status:'pending',
+    time: Date.now()
+  });
+  alert('Payment submitted for approval');
+  document.getElementById('payModal').style.display='none';
+};
 
-        if (!m.joinEnabled) return;
-        if (norm(m.status) !== 'upcoming' && norm(m.status) !== 'waiting') return;
+onSnapshot(collection(db,'matches'), snap=>{
+  const box=document.getElementById('matches');
+  box.innerHTML='';
+  snap.forEach(d=>{
+    const m=d.data();
+    box.innerHTML+=`
+    <div class="card">
+      <div class="top">
+        <span class="type">${m.type}</span>
+        <span class="status ${m.status}">${m.status}</span>
+      </div>
+      <div class="mid">
+        <div>Entry <b>₹${m.entry}</b></div>
+        <div>Win <b>₹${m.win}</b></div>
+      </div>
+      ${m.status==='open'?`<button onclick="openPay('${d.id}',${m.entry})">JOIN MATCH</button>`:''}
+      ${m.status==='approved'?`<div class="room">Room: ${m.roomId}<br>Pass: ${m.password}</div>`:''}
+    </div>`;
+  })
+});
+</script><style>
+:root{
+ --bg:#050505; --card:#0f0f0f; --gold:#ffb300; --green:#00ff88; --red:#ff4444;
+}
+body{margin:0;background:linear-gradient(180deg,#050505,#000);color:#fff;font-family:Inter,Arial}
+header{padding:20px;text-align:center;font-size:1.6rem;font-weight:900;color:var(--gold)}
+#matches{padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 0 30px rgba(255,179,0,.05)}
+.top{display:flex;justify-content:space-between;margin-bottom:10px}
+.type{font-weight:800}
+.status{font-size:.8rem;padding:4px 10px;border-radius:20px}
+.status.open{background:#222;color:var(--green)}
+.status.approved{background:var(--green);color:#000}
+.mid{display:flex;justify-content:space-between;margin:10px 0;color:#ccc}
+button{width:100%;padding:12px;border:none;border-radius:12px;font-weight:900;background:var(--gold);cursor:pointer}
+.room{margin-top:10px;background:#000;padding:10px;border-radius:10px;color:var(--green);font-weight:700;text-align:center}
 
-        matches.innerHTML += `
-          <div class="card">
-            <h3>${m.type}</h3>
-            <p>Entry: ₹${m.entry} | Win: ₹${m.win}</p>
-            <p>Players: ${m.approvedPlayers || 0} / ${m.maxPlayers}</p>
-            <button onclick="openPay('${d.id}', ${m.entry})">Join</button>
-          </div>`;
-      });
-    }
-
-    // ---------- PAYMENT ----------
-    window.openPay = (matchId, amt) => {
-      window._matchId = matchId;
-      payModal.style.display = 'flex';
-      payAmt.innerText = `Pay ₹${amt}`;
-      const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR`;
-      gpay.href = ppay.href = paytm.href = upi;
-    };
-
-    window.verifyPayment = async () => {
-      const txid = txidInput.value.trim();
-      if (!txid) return alert('Enter TXID');
-
-      await addDoc(collection(db, 'payments'), {
-        matchId: window._matchId,
-        txid,
-        status: 'pending',
-        createdAt: Date.now()
-      });
-
-      alert('Payment submitted. Wait for approval.');
-      payModal.style.display = 'none';
-    };
-
-    window.onload = loadMatches;
-  </script>  <style>
-    body { margin:0; background:#0b0b0b; color:#fff; font-family:Arial }
-    h1 { color:#00ff88; text-align:center }
-    .card { background:#111; border:1px solid #333; margin:15px; padding:15px; border-radius:14px }
-    button { background:#00ff88; border:none; padding:10px 14px; font-weight:bold; cursor:pointer }
-    #payModal { position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; justify-content:center; align-items:center }
-    .payBox { background:#111; padding:25px; border-radius:20px; width:90%; max-width:380px }
-    input { width:100%; padding:10px; margin-top:10px; background:#000; color:#0f0; border:1px solid #333 }
-  </style></head>
-<body><h1>Live Tournaments</h1>
-<div id="matches"></div><!-- PAYMENT MODAL --><div id="payModal">
+/* Payment modal */
+#payModal{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center}
+.payBox{background:#111;border-radius:22px;padding:22px;width:90%;max-width:360px;text-align:center;border:1px solid var(--gold)}
+.payBox h2{color:var(--gold)}
+input{width:100%;padding:12px;margin:12px 0;border-radius:10px;border:1px solid #333;background:#000;color:var(--green);text-align:center}
+.payBtn{background:var(--green);padding:14px;border-radius:12px;font-weight:900;border:none;width:100%}
+.cancel{margin-top:12px;background:none;color:var(--red);border:none;font-weight:bold}
+</style></head>
+<body>
+<header>SQL PREMIUM MATCHES</header>
+<div id="matches"></div><div id="payModal">
   <div class="payBox">
-    <h3 id="payAmt"></h3>
-    <a id="gpay">Google Pay</a><br>
-    <a id="ppay">PhonePe</a><br>
-    <a id="paytm">Paytm</a><br>
-    <input id="txidInput" placeholder="Enter Transaction ID" />
-    <button onclick="verifyPayment()">Submit</button>
-    <button onclick="payModal.style.display='none'">Cancel</button>
+    <h2>PAY ₹<span id="payAmt"></span></h2>
+    <p style="color:#aaa">Pay via UPI & enter UTR</p>
+    <input id="utr" placeholder="UTR Number">
+    <button class="payBtn" onclick="submitPayment()">SUBMIT PAYMENT</button>
+    <button class="cancel" onclick="payModal.style.display='none'">CANCEL</button>
   </div>
-</div></body>
+</div>
+</body>
 </html>
