@@ -1,569 +1,671 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FREE FIRE TOURNAMENT</title>
+  <meta charset="utf-8" />
+  <title>FREE FIRE TOURNAMENT — SQL</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+  <!-- Firebase (v10 modules) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      onSnapshot,
+      addDoc,
+      query,
+      where,
+      orderBy,
+      limit,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<!-- Firebase (modular) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, onSnapshot, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // ---------- FIREBASE CONFIG (provided)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+      authDomain: "sqladmin-ff04d.firebaseapp.com",
+      projectId: "sqladmin-ff04d",
+      storageBucket: "sqladmin-ff04d.firebasestorage.app",
+      messagingSenderId: "539086978850",
+      appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
+      measurementId: "G-KH4J0CZ9M5"
+    };
 
-  // ---------- YOUR FIREBASE CONFIG (you provided) ----------
-  const firebaseConfig = {
-    apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-    authDomain: "sqladmin-ff04d.firebaseapp.com",
-    projectId: "sqladmin-ff04d",
-    storageBucket: "sqladmin-ff04d.firebasestorage.app",
-    messagingSenderId: "539086978850",
-    appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
-    measurementId: "G-KH4J0CZ9M5"
-  };
-  const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){ /* analytics optional */ }
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  // ---------- App State ----------
-  window.currentMatch = null;
-  window.currentUser = null;
-  window.lang = 'en'; // 'en' | 'hi' | 'ur'  (simple toggle translations)
+    // ---------- UI state
+    let currentMatch = null;     // { id, amt }
+    let lastPaymentDocId = null; // track user's last payment for status view
+    let lang = 'en';             // en / hi / ur (roman) simple switch
 
-  // ---------- Utilities ----------
-  function $(s){ return document.querySelector(s); }
-  function setText(sel, txt){ const el = document.querySelector(sel); if(el) el.innerText = txt; }
-  function formatRupee(n){ return (isNaN(n)||n===undefined)? '—' : '₹' + Number(n); }
+    // ---------- Helpers for translations (simple strings)
+    const STR = {
+      en: {
+        title: 'FREE FIRE TOURNAMENT',
+        subtitle: 'Join • Play • Win Real Cash',
+        join: 'JOIN MATCH',
+        joinClosed: 'Join Closed',
+        full: 'Full',
+        proceedPayment: 'Complete Payment',
+        enterUTR: 'Enter UTR / TXID',
+        submitPayment: 'SUBMIT PAYMENT',
+        cancel: 'Cancel',
+        waitingApproval: 'waiting — payment approval required',
+        paymentSubmitted: 'Payment submitted — waiting approval',
+        paymentInProgress: 'Payment in progress — please wait',
+        roomWaiting: 'Room: waiting — payment approval required',
+        refundMsg: 'Refunds processed within 20 minutes.',
+        policyTitle: 'Policy',
+        policyText: 'This game involves risk. Play at your own risk.',
+        whatsappLabel: 'WhatsApp',
+        loginLabel: 'Login / Register',
+        homeLabel: 'Home'
+      },
+      hi: {
+        title: 'FREE FIRE TOURNAMENT',
+        subtitle: 'Join • Play • Win Real Cash',
+        join: 'मैच जॉइन करें',
+        joinClosed: 'जॉइन बंद',
+        full: 'फुल',
+        proceedPayment: 'भुगतान पूरा करें',
+        enterUTR: 'UTR / TXID डालें',
+        submitPayment: 'भुगतान दर्ज करें',
+        cancel: 'रद्द करें',
+        waitingApproval: 'इंतज़ार — भुगतान अनुमोदन आवश्यक',
+        paymentSubmitted: 'भुगतान सबमिट हुआ — अनुमोदन प्रतीक्षा',
+        paymentInProgress: 'भुगतान प्रक्रिया चल रही है — कृपया प्रतीक्षा करें',
+        roomWaiting: 'रूम: प्रतीक्षा — भुगतान अनुमोदन आवश्यक',
+        refundMsg: 'रिफंड 20 मिनट के अंदर प्रोसेस हो जाते हैं।',
+        policyTitle: 'नीतियाँ',
+        policyText: 'यह खेल जोखिम शामिल करता है। अपनी जिम्मेदारी पर खेलें।',
+        whatsappLabel: 'WhatsApp',
+        loginLabel: 'लॉगिन / रजिस्टर',
+        homeLabel: 'होम'
+      },
+      ur: {
+        title: 'FREE FIRE TOURNAMENT',
+        subtitle: 'Join • Play • Win Real Cash',
+        join: 'میچ جوائن کریں',
+        joinClosed: 'جوائن بند',
+        full: 'فل',
+        proceedPayment: 'ادائیگی مکمل کریں',
+        enterUTR: 'UTR / TXID درج کریں',
+        submitPayment: 'ادائیگی جمع کریں',
+        cancel: 'منسوخ کریں',
+        waitingApproval: 'انتظار — ادائیگی کی منظوری درکار ہے',
+        paymentSubmitted: 'ادائیگی جمع ہوگئی — منظوری کا انتظار',
+        paymentInProgress: 'ادائیگی جاری ہے — براہِ کرم انتظار کریں',
+        roomWaiting: 'کمرہ: انتظار — ادائیگی کی منظوری درکار ہے',
+        refundMsg: 'رقم واپسی 20 منٹ کے اندر پروسیس ہوتی ہے۔',
+        policyTitle: 'پالیسی',
+        policyText: 'یہ گیم خطرات شامل کرتا ہے۔ اپنی ذمہ داری پر کھیلیں۔',
+        whatsappLabel: 'WhatsApp',
+        loginLabel: 'لاگ ان / رجسٹر',
+        homeLabel: 'ہوم'
+      }
+    };
 
-  // small translator (few labels)
-  const T = {
-    en: {
-      join: "JOIN MATCH",
-      waiting: "waiting",
-      upcoming: "upcoming",
-      live: "live",
-      submit_payment: "SUBMIT PAYMENT",
-      enter_utr: "Enter Transaction ID (UTR)",
-      pay_via_upi: "Pay via UPI & enter UTR",
-      complete_payment: "Complete Payment",
-      cancel: "Cancel",
-      join_play_win: "Join • Play • Win Real Cash",
-      refund_note: "Refunds processed within 20 minutes.",
-      policy_text: "This game involves risk. Play at your own risk. Refunds processed within 20 minutes."
-    },
-    hi: {
-      join: "मैच में शामिल हों",
-      waiting: "प्रतीक्षा",
-      upcoming: "जल्द शुरू",
-      live: "लाइव",
-      submit_payment: "भुगतान जमा करें",
-      enter_utr: "लेन-देन आईडी डालें (UTR)",
-      pay_via_upi: "UPI द्वारा भुगतान करें और UTR डालें",
-      complete_payment: "भुगतान पूरा करें",
-      cancel: "रद्द करें",
-      join_play_win: "शामिल हों • खेलें • असली नकद जीतें",
-      refund_note: "रिफंड 20 मिनट के अंदर प्रोसेस होते हैं।",
-      policy_text: "यह गेम जोखिम से जुड़ा है। अपने जोखिम पर खेलें। रिफंड 20 मिनट में प्रोसेस।"
-    },
-    ur: {
-      join: "میچ میں شامل ہوں",
-      waiting: "انتظار",
-      upcoming: "جلد شروع",
-      live: "لائیو",
-      submit_payment: "ادائیگی جمع کریں",
-      enter_utr: "ٹریکنکشن آئی ڈی درج کریں (UTR)",
-      pay_via_upi: "UPI کے ذریعے ادائیگی کریں اور UTR درج کریں",
-      complete_payment: "ادائیگی مکمل کریں",
-      cancel: "منسوخ کریں",
-      join_play_win: "شامل ہوں • کھیلیں • اصلی نقد جیتیں",
-      refund_note: "رقم 20 منٹ کے اندر جمع کر دی جاتی ہے۔",
-      policy_text: "یہ کھیل خطرے سے منسلک ہے۔ اپنے خطرے پر کھیلیں۔ ریفنڈ 20 منٹ میں پروسیس۔"
+    function t(k){
+      return STR[lang][k] ?? STR.en[k];
     }
-  };
 
-  function t(k){ return (T[window.lang] && T[window.lang][k]) || T.en[k] || k; }
+    // ---------- Authentication / UI hooks
+    const ui = {
+      headerTitle: null,
+      headerEmail: null,
+      menuOverlay: null,
+      matchesBox: null,
+      payModal: null,
+      utrInput: null,
+      paymentStatusView: null,
+      loginPanel: null,
+      authEmail: null,
+      authPass: null,
+      authRegisterBtn: null,
+      authLoginBtn: null
+    };
 
-  // ---------- Auth handling ----------
-  onAuthStateChanged(auth, user => {
-    window.currentUser = user;
-    // update UI
-    if(user){
-      $('#user-email').innerText = user.email || 'User';
-      $('#btn-login').style.display = 'none';
-      $('#btn-logout').style.display = 'inline-block';
-    } else {
-      $('#user-email').innerText = '';
-      $('#btn-login').style.display = 'inline-block';
-      $('#btn-logout').style.display = 'none';
-    }
-  });
+    window.addEventListener('DOMContentLoaded', () => {
+      ui.headerTitle = document.getElementById('hdr-title');
+      ui.headerEmail = document.getElementById('hdr-email');
+      ui.menuOverlay = document.getElementById('menu-overlay');
+      ui.matchesBox = document.getElementById('matches');
+      ui.payModal = document.getElementById('pay');
+      ui.utrInput = document.getElementById('utr');
+      ui.paymentStatusView = document.getElementById('payment-status');
+      ui.loginPanel = document.getElementById('login-panel');
+      ui.authEmail = document.getElementById('auth-email');
+      ui.authPass = document.getElementById('auth-pass');
+      ui.authRegisterBtn = document.getElementById('auth-register');
+      ui.authLoginBtn = document.getElementById('auth-login');
 
-  window.showLogin = () => {
-    $('#login-modal').style.display = 'flex';
-  };
-  window.hideLogin = () => { $('#login-modal').style.display = 'none'; };
-  window.login = async () => {
-    const em = $('#login-email').value.trim();
-    const pw = $('#login-pass').value;
-    if(!em || !pw) return alert('Enter email + password');
-    try{
-      await signInWithEmailAndPassword(auth, em, pw);
-      hideLogin();
-      alert('Logged in');
-    }catch(e){
-      // Try sign up if not found? Prompt user.
-      if(confirm('Login failed. Create new account with these credentials?')){
-        try{
-          await createUserWithEmailAndPassword(auth, em, pw);
-          hideLogin();
-          alert('Account created and signed in.');
-        }catch(er){ alert('Error: ' + er.message); }
-      } else alert('Login error: ' + e.message);
-    }
-  };
-  window.doLogout = async () => {
-    await signOut(auth);
-    alert('Logged out');
-  };
+      // wire register/login UI
+      ui.authRegisterBtn.onclick = registerUser;
+      ui.authLoginBtn.onclick = loginUser;
 
-  // ---------- Matches listener ----------
-  function renderStatusLabel(status){
-    const s = (''+status).toLowerCase();
-    if(s.includes('live') || s.includes('running') || s.includes('started') || s.includes('approved')) return `<span class="status tag green">${status}</span>`;
-    if(s.includes('upcom') || s.includes('upcoming')) return `<span class="status tag gold">${status}</span>`;
-    if(s.includes('wait') || s.includes('pending')) return `<span class="status tag faded">${status}</span>`;
-    return `<span class="status tag faded">${status}</span>`;
-  }
+      // menu outside-click close
+      document.getElementById('menu-overlay').addEventListener('click', (e)=>{
+        if(e.target === ui.menuOverlay) closeMenu();
+      });
 
-  function startMatchesListener(){
-    const col = collection(db, 'matches');
-    onSnapshot(col, snap => {
-      const box = $('#matches');
-      box.innerHTML = '';
-      snap.forEach(d => {
-        const m = d.data();
-        const docId = d.id;
-        // defaults
-        const entry = m.entry ?? m.entryFee ?? 0;
-        const win = m.win ?? m.winAmount ?? 0;
-        const joined = Number(m.joinedPlayers ?? 0);
-        const maxPlayers = Number(m.maxPlayers ?? m.slots ?? 0);
-        const joinEnabled = (m.joinEnabled === undefined ? true : !!m.joinEnabled);
-        const now = Date.now();
-        // timer if startTimestamp field present
-        let timerHtml = '';
-        if(m.startTimestamp){
-          const diff = Number(m.startTimestamp) - now;
-          timerHtml = `<div class="timer" data-start="${m.startTimestamp}" id="timer-${docId}">${diff>0?msToTime(diff):'Starting'}</div>`;
-        } else if(m.durationMinutes){
-          // optional: compute later
+      // listen auth
+      onAuthStateChanged(auth, user => {
+        if(user){
+          ui.headerEmail.textContent = user.email;
+          document.body.classList.add('logged-in');
+        } else {
+          ui.headerEmail.textContent = '';
+          document.body.classList.remove('logged-in');
         }
-        // decide join button state
-        const full = maxPlayers && (joined >= maxPlayers);
-        const showJoin = joinEnabled && !full && !(m.status && m.status.toLowerCase().includes('started'));
-        const joinBtn = showJoin ? `<button class="join-btn" data-id="${docId}" data-amt="${entry}">${t('join')}</button>` : `<button class="join-btn disabled" disabled>${full ? 'Full' : 'Join Closed'}</button>`;
+      });
 
-        // room display: show only if payment approved OR match status approved/live
-        const showRoom = (m.roomId && m.password && (m.status && (m.status.toLowerCase().includes('approved') || m.status.toLowerCase().includes('started') || m.status.toLowerCase().includes('live'))));
-        const roomHtml = showRoom ? `<div class="room"><strong>Room ID:</strong> ${m.roomId}<br/><strong>Password:</strong> ${m.password}</div>` : `<div class="room waiting"><em>Room: ${t('waiting')} — payment approval required</em></div>`;
+      // initial render text
+      renderHeaderText();
+    });
 
-        // card
+    function renderHeaderText(){
+      document.getElementById('hdr-title').textContent = t('title');
+      document.getElementById('hdr-sub').textContent = t('subtitle');
+    }
+
+    // ---------- Matches realtime listener
+    function renderMatchesSnapshot(snapshot){
+      ui.matchesBox.innerHTML = '';
+      snapshot.forEach(docSnap => {
+        const m = docSnap.data() || {};
+        const id = docSnap.id;
+        const entry = m.entry ?? 0;
+        const win = m.win ?? 0;
+        const status = (m.status || '').toString().toLowerCase();
+        const joined = m.joinedPlayers ?? 0;
+        const max = m.maxPlayers ?? m.slots ?? '—';
+        const roomId = m.roomId ?? '';
+        const password = m.password ?? '';
+        const startAt = m.startTime || null; // timestamp number ms expected
+        const isFull = (typeof max === 'number') && joined >= max;
+
+        // status class color
+        const statusClass = {
+          'waiting': 'st-wait',
+          'upcoming': 'st-upc',
+          'running': 'st-live',
+          'approved': 'st-approve',
+          'open': 'st-open'
+        }[status] || 'st-wait';
+
+        // Timer HTML (if startTime exists)
+        let timerHtml = '';
+        if(startAt){
+          timerHtml = `<div class="timer" data-start="${startAt}" id="timer-${id}">--:--</div>`;
+        }
+
+        // Room / payment hint box
+        const roomBox = (status === 'approved' && roomId && password)
+          ? `<div class="room ok"><strong>Room:</strong> ${escapeHtml(roomId)}<br><strong>Password:</strong> ${escapeHtml(password)}</div>`
+          : `<div class="room hint">${escapeHtml(t('roomWaiting') )}</div>`;
+
+        // Join button logic: if status is 'open' and not full show join; if full show Full button; else show Join Closed
+        let actionBtn = '';
+        if(isFull) {
+          actionBtn = `<button class="btn full" disabled>${t('full')}</button>`;
+        } else if(status === 'open' || status === 'waiting' || status === 'upcoming') {
+          actionBtn = `<button class="btn join" onclick="openPay(${entry}, '${id}')">${t('join')}</button>`;
+        } else {
+          actionBtn = `<button class="btn closed" disabled>${t('joinClosed')}</button>`;
+        }
+
+        // markup
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <div class="card-left">
-            <h3 class="mtype">${m.type ?? docId}</h3>
-            <p><strong>Entry:</strong> ${formatRupee(entry)}</p>
-            <p><strong>Win:</strong> ${formatRupee(win)}</p>
-            <p><strong>Players:</strong> <span class="players-count">${joined}</span> / <span class="players-max">${maxPlayers||'—'}</span></p>
-            <p><strong>Status:</strong> ${renderStatusLabel(m.status ?? 'waiting')}</p>
-            ${timerHtml}
+            <h3 class="match-type">${escapeHtml(m.type ?? id)}</h3>
+            <p><strong>Entry:</strong> ₹${entry}</p>
+            <p><strong>Win:</strong> ₹${win}</p>
+            <p><strong>Players:</strong> ${joined} / ${max}</p>
+            <p><strong>Status:</strong> <span class="status ${statusClass}">${escapeHtml(capitalize(status || 'waiting'))}</span></p>
           </div>
           <div class="card-right">
-            ${roomHtml}
-            ${joinBtn}
+            ${timerHtml}
+            ${roomBox}
+            ${actionBtn}
           </div>
         `;
-        box.appendChild(card);
-      });
+        ui.matchesBox.appendChild(card);
 
-      // attach join button listeners (delegation)
-      document.querySelectorAll('.join-btn').forEach(b=>{
-        if(!b.classList.contains('disabled')){
-          b.onclick = (ev)=>{
-            const id = b.getAttribute('data-id');
-            const amt = b.getAttribute('data-amt');
-            // require login
-            if(!window.currentUser){
-              if(confirm('You must login to join. Go to login?')) showLogin();
-              return;
-            }
-            // set currentMatch and open payment modal
-            window.currentMatch = { id, amt: Number(amt) };
-            openPay(Number(amt));
-          };
+        // start timers for cards with startTime
+        if(startAt){
+          startTimerFor(id, startAt);
         }
       });
+    }
 
-      // start timers
-      document.querySelectorAll('.timer').forEach(el=>{
-        const start = Number(el.dataset.start);
-        const id = el.id;
-        if(window[id]) clearInterval(window[id]);
-        window[id] = setInterval(()=> {
-          const diff = start - Date.now();
-          el.innerText = diff>0 ? msToTime(diff) : 'Starting';
-          if(diff<=0) clearInterval(window[id]);
-        }, 800);
-      });
+    // Start countdown for a particular match id
+    function startTimerFor(id, startAtMs){
+      const el = document.getElementById('timer-'+id);
+      if(!el) return;
+      const update = () => {
+        const now = Date.now();
+        let diff = startAtMs - now;
+        if(diff <= 0){
+          el.textContent = 'Starting';
+          el.classList.add('started');
+          clearInterval(el._int);
+          return;
+        }
+        const mins = Math.floor(diff / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        el.textContent = `${pad(mins)}:${pad(secs)}`;
+      };
+      update();
+      el._int = setInterval(update, 1000);
+    }
 
-    }, err => {
-      console.error('matches snapshot error', err);
+    function pad(n){ return n<10? '0'+n: n; }
+    function capitalize(s){ if(!s) return s; return s.charAt(0).toUpperCase()+s.slice(1); }
+
+    // safe escape
+    function escapeHtml(str){ if(!str && str!==0) return ''; return String(str).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+
+    // Subscribe to matches collection
+    onSnapshot(collection(db, "matches"), snap => {
+      renderMatchesSnapshot(snap);
     });
-  } // end startMatchesListener
 
-  // convert ms to hh:mm:ss or mm:ss
-  function msToTime(ms){
-    if(ms<=0) return '00:00';
-    let s = Math.floor(ms/1000);
-    const h = Math.floor(s/3600);
-    s = s%3600;
-    const m = Math.floor(s/60);
-    const sec = s%60;
-    if(h>0) return `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-    return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-  }
+    // ---------- Payment modal and flow
+    window.openPay = (amt, matchId) => {
+      if(!auth.currentUser) {
+        openMenu(); // encourage login/register
+        alert('Please login or register first.');
+        return;
+      }
+      currentMatch = { id: matchId, amt };
+      // Set amount text and UPI links
+      document.getElementById('p-amt').innerText = `Total: ₹${amt}`;
+      const upi = encodeURI(`upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR`);
+      document.getElementById('gpay').href = upi;
+      document.getElementById('ppay').href = upi;
+      document.getElementById('paytm').href = upi;
+      ui.utrInput.value = '';
+      ui.payModal.style.display = 'flex';
+      ui.paymentStatusView.style.display = 'none';
+    };
 
-  // ---------- Payment Modal (styled) ----------
-  // UPI address (you gave earlier) - used for gpay/phonepe/paytm
-  const UPI_ADDR = 'rizwanhasan90122778623@ybl';
+    window.closePay = ()=>{
+      ui.payModal.style.display = 'none';
+    };
 
-  window.openPay = (amt) => {
-    $('#pay-modal').style.display = 'flex';
-    $('#p-amt').innerText = `Total: ₹${amt}`;
-    const upi = `upi://pay?pa=${encodeURIComponent(UPI_ADDR)}&am=${amt}&cu=INR`;
-    $('#gpay').href = upi;
-    $('#ppay').href = upi;
-    $('#paytm').href = upi;
-    $('#txid').value = '';
-    $('#v-btn').innerText = t('submit_payment');
-    $('#v-btn').style.background = '#00ff88';
-  };
-  window.closePay = () => { $('#pay-modal').style.display = 'none'; };
+    window.copyA = (a,t) => {
+      navigator.clipboard.writeText(a).then(()=> alert(t+' Address Copied!'));
+    };
 
-  window.copyA = (a, t) => {
-    navigator.clipboard.writeText(a);
-    alert(t + ' Address Copied!');
-  };
-
-  // On submit payment: create payments doc then navigate to payment status "page"
-  window.submitPayment = async () => {
-    const tx = $('#txid').value.trim();
-    if(!tx) return alert(t('enter_utr'));
-    if(!window.currentUser) return alert('Login required.');
-    // create payments doc
-    try{
-      const pcol = collection(db, 'payments');
-      const docRef = await addDoc(pcol, {
-        matchId: window.currentMatch.id,
-        uid: window.currentUser.uid,
-        email: window.currentUser.email,
-        amount: Number(window.currentMatch.amt),
-        utr: tx,
+    // submit payment (adds document to 'payments')
+    window.submitPayment = async () => {
+      const utr = ui.utrInput.value.trim();
+      if(!currentMatch) return alert('No match selected.');
+      if(!utr) return alert(t('enterUTR'));
+      const user = auth.currentUser;
+      if(!user) return alert('Login required.');
+      // create payments doc
+      const payload = {
+        userId: user.uid,
+        userEmail: user.email,
+        matchId: currentMatch.id,
+        amount: currentMatch.amt,
+        utr,
         status: 'pending',
         createdAt: Date.now()
-      });
-      closePay();
-      // open payment status view (stable)
-      window.location.hash = '#payment-' + docRef.id;
-      showPaymentStatus(docRef.id);
-    }catch(e){ alert('Error submitting payment: ' + e.message); }
-  };
-
-  // ---------- Payment Status View ----------
-  async function showPaymentStatus(paymentId){
-    if(!paymentId) return;
-    // switch view
-    $('#home-view').style.display = 'none';
-    $('#status-view').style.display = 'block';
-    $('#status-payment-id').innerText = paymentId;
-    // listen payment doc
-    const dref = doc(db, 'payments', paymentId);
-    onSnapshot(dref, snap => {
-      if(!snap.exists()) { $('#status-body').innerText = 'No payment found'; return;}
-      const p = snap.data();
-      $('#status-body').innerHTML = `
-        <p><strong>Match:</strong> ${p.matchId}</p>
-        <p><strong>Amount:</strong> ${formatRupee(p.amount)}</p>
-        <p><strong>UTR:</strong> ${p.utr}</p>
-        <p><strong>Status:</strong> ${p.status}</p>
-      `;
-      if(p.status === 'approved'){
-        // fetch match doc to show room
-        getDoc(doc(db,'matches', p.matchId)).then(md=>{
-          if(md.exists()){
-            const mm = md.data();
-            $('#status-room').innerHTML = `<div class="room approved"><strong>Room ID: </strong>${mm.roomId || '—'}<br/><strong>Password: </strong>${mm.password || '—'}</div>`;
-          }
-        }).catch(()=>{});
-      } else {
-        $('#status-room').innerHTML = `<div class="room waiting"><em>Room will show after admin approval</em></div>`;
+      };
+      try {
+        const r = await addDoc(collection(db, 'payments'), payload);
+        lastPaymentDocId = r.id;
+        alert(t('paymentSubmitted'));
+        ui.payModal.style.display = 'none';
+        // open status view for this payment
+        openPaymentStatusView(currentMatch.id);
+      } catch(e){
+        console.error(e);
+        alert('Error submitting payment. Try again.');
       }
-    });
-  }
+    };
 
-  // On load: start matches listener and route handling
-  window.addEventListener('load', ()=>{
-    startMatchesListener();
-    // hash routing for payment view
-    if(location.hash && location.hash.startsWith('#payment-')){
-      const pid = location.hash.replace('#payment-','');
-      showPaymentStatus(pid);
+    // open payment status view and listen for user's payment for this match
+    async function openPaymentStatusView(matchId){
+      ui.paymentStatusView.style.display = 'block';
+      ui.paymentStatusView.innerHTML = `<h2>Payment Status</h2><div id="ps-box">Checking payment...</div><button class="back" onclick="backToMatches()">Back to matches</button>`;
+      const user = auth.currentUser;
+      if(!user) return document.getElementById('ps-box').innerText = 'Login required.';
+
+      // query latest payment by this user for this match
+      const q = query(collection(db, 'payments'),
+        where('userId', '==', user.uid),
+        where('matchId', '==', matchId),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+      );
+
+      const unsub = onSnapshot(q, async snap => {
+        if(snap.empty){
+          document.getElementById('ps-box').innerHTML = `<div class="status-box">${escapeHtml(t('paymentInProgress'))}</div>`;
+          return;
+        }
+        const pDoc = snap.docs[0];
+        const p = pDoc.data();
+        const status = p.status || 'pending';
+        const box = document.getElementById('ps-box');
+
+        // fetch match doc for room info
+        const mRef = doc(db, 'matches', matchId);
+        const mSnap = await getDoc(mRef);
+        const match = mSnap.exists()? mSnap.data() : null;
+
+        // show info
+        let html = `<div class="status-box">Status: <strong>${escapeHtml(capitalize(status))}</strong></div>`;
+        html += `<div class="p-info"><strong>Match:</strong> ${escapeHtml(match?.type ?? matchId)}<br>`;
+        html += `<strong>Amount:</strong> ₹${p.amount}<br>`;
+        html += `<strong>UTR:</strong> ${escapeHtml(p.utr)}<br>`;
+        if(status === 'approved' && match){
+          html += `<div class="room ok">Room ID: ${escapeHtml(match.roomId || '')}<br>Password: ${escapeHtml(match.password || '')}</div>`;
+        } else {
+          html += `<div class="room note">${escapeHtml(t('roomWaiting'))}</div>`;
+        }
+        box.innerHTML = html;
+      });
+
+      // auto-unsubscribe when leaving status view
+      ui.paymentStatusView._unsub = unsub;
     }
-    // translation toggle UI text
-    updateStaticText();
-  });
 
-  // simple language switch
-  window.setLang = (L) => {
-    window.lang = L;
-    updateStaticText();
-  };
-  function updateStaticText(){
-    $('.subtitle').innerText = t('join_play_win');
-    $('#copyright').innerText = `© 2026 SQL — Premium Tournament System`;
-    // translate modal buttons
-    $('#v-btn').innerText = t('submit_payment');
-    $('#p-amt').innerText = $('#p-amt').innerText || '';
-    // policy text displayed in menu
-    $('#policy-text').innerText = t('policy_text');
-  }
+    window.backToMatches = ()=>{
+      ui.paymentStatusView.style.display = 'none';
+      if(ui.paymentStatusView._unsub) ui.paymentStatusView._unsub();
+    };
 
-  // small helper to navigate home
-  window.goHome = () => {
-    $('#home-view').style.display = 'block';
-    $('#status-view').style.display = 'none';
-    location.hash = '';
-  };
+    // ---------- Login / Register flows
+    async function registerUser(){
+      const email = ui.authEmail.value.trim();
+      const pass = ui.authPass.value.trim();
+      if(!email || !pass) return alert('Enter email & password.');
+      try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        alert('Account created & logged in.');
+        ui.authEmail.value = '';
+        ui.authPass.value = '';
+        closeMenu();
+      } catch(e){
+        console.error(e);
+        alert('Error creating account: ' + (e.message||e));
+      }
+    }
 
-  // WhatsApp link
-  window.openWhatsApp = () => {
-    const num = '+919012277862';
-    window.open('https://wa.me/' + num.replace('+',''), '_blank');
-  };
+    async function loginUser(){
+      const email = ui.authEmail.value.trim();
+      const pass = ui.authPass.value.trim();
+      if(!email || !pass) return alert('Enter email & password.');
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        alert('Logged in.');
+        ui.authEmail.value = '';
+        ui.authPass.value = '';
+        closeMenu();
+      } catch(e){
+        console.error(e);
+        alert('Login failed: ' + (e.message||e));
+      }
+    }
 
-</script>
+    window.doLogout = async ()=>{
+      await signOut(auth);
+      alert('Logged out.');
+      closeMenu();
+    };
 
-<style>
-  :root{
-    --bg:#050505;
-    --card:#0f0f0f;
-    --muted:#999;
-    --gold:#f6c21a;
-    --accent:#00ff88;
-    --green:#00d25b;
-    --dark:#0b0b0b;
-  }
-  html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:Inter,Arial,Helvetica,sans-serif}
-  header{padding:20px 16px;border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .logo {font-size:28px;font-weight:900;color:var(--gold);letter-spacing:1px}
-  .subtitle{color:var(--muted);margin-top:4px;font-size:14px}
-  #menu-btn{background:transparent;border:none;color:var(--accent);font-size:28px;padding:8px;cursor:pointer}
-  main{padding:18px;max-width:720px;margin:0 auto}
-  #matches{padding-top:4px}
-  .card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:18px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
-  .card-left{flex:1}
-  .card-right{width:250px;min-width:200px;text-align:right}
-  .mtype{color:var(--accent);margin:0 0 10px 0}
-  .card p{margin:6px 0;color:#ddd}
-  .tag{padding:6px 8px;border-radius:8px;font-weight:700}
-  .tag.green{background:rgba(0,210,91,0.08);color:var(--green);border:1px solid rgba(0,210,91,0.12)}
-  .tag.gold{background:rgba(246,194,26,0.06);color:var(--gold);border:1px solid rgba(246,194,26,0.12)}
-  .tag.faded{background:rgba(255,255,255,0.02);color:#bbb;border:1px solid rgba(255,255,255,0.03)}
-  .room{background:#070707;padding:10px;border-radius:8px;color:var(--accent);margin-bottom:10px;text-align:left}
-  .room.waiting{color:#aaa}
-  .join-btn{display:inline-block;width:100%;background:var(--gold);color:#000;padding:10px;border-radius:10px;border:none;font-weight:900;cursor:pointer}
-  .join-btn.disabled{opacity:0.45;cursor:not-allowed}
-  .timer{margin-top:8px;color:#ddd;font-weight:700}
+    // ---------- Menu controls
+    window.openMenu = ()=>{
+      ui.menuOverlay.style.display = 'block';
+      ui.menuOverlay.classList.add('open');
+    };
+    window.closeMenu = ()=>{
+      ui.menuOverlay.style.display = 'none';
+      ui.menuOverlay.classList.remove('open');
+    };
 
-  /* menu (right side drawer) */
-  #drawer{position:fixed;right:0;top:0;height:100%;width:0;background:#070707;color:#fff;overflow:hidden;transition:width .22s;box-shadow:-6px 0 24px rgba(0,0,0,0.8);z-index:9999;padding-top:80px}
-  #drawer.open{width:320px}
-  #drawer .menu-inner{padding:20px}
-  .menu-item{padding:14px 10px;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer}
-  .menu-item:hover{background:rgba(255,255,255,0.02)}
-  .icon{width:34px;height:34px;border-radius:6px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;color:var(--accent)}
-  .menu-title{font-weight:700}
-  #policy-text{color:var(--muted);padding:10px 0}
+    // language switch
+    window.setLang = (L)=>{
+      lang = L;
+      renderHeaderText();
+      closeMenu();
+    };
 
-  /* payment modal (your style, cleaned: no BTC/USDT) */
-  #pay-modal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.98);display:none;align-items:center;justify-content:center;padding:20px;z-index:10000}
-  .pay-box{background:#111;padding:25px;border:2px solid var(--gold);border-radius:22px;width:100%;max-width:420px;text-align:center}
-  .p-btn{background:#1a1a1a;margin:10px 0;padding:12px;border-radius:12px;display:flex;align-items:center;gap:15px;color:white;text-decoration:none;border:1px solid #333;font-weight:bold;cursor:pointer}
-  .p-btn img{width:28px;height:28px;border-radius:5px}
-  .v-input{width:100%;padding:12px;background:#000;border:1px solid #444;color:var(--accent);text-align:center;border-radius:10px;margin:10px 0;font-weight:bold}
-  .v-btn{background:var(--accent);color:black;border:none;padding:14px;width:100%;border-radius:10px;font-weight:900;cursor:pointer}
-  .close-small{background:none;border:none;color:#f55;margin-top:12px;cursor:pointer}
+    // ---------- small utility to ensure header banner / email area behavior
+    window.showBannerImage = (show=true) => {
+      document.getElementById('header-banner').style.display = show ? 'block' : 'none';
+    };
 
-  /* status view */
-  #status-view{display:none;padding:20px;max-width:720px;margin:0 auto}
-  #status-body{background:var(--card);padding:16px;border-radius:12px}
+    // ---------- initialize small UI pieces on load (hook)
+    // Nothing else to do here; listeners above handle reactivity
 
-  footer{padding:20px;text-align:center;color:#777;border-top:1px solid rgba(255,255,255,0.02)}
-  .small{font-size:13px;color:#9a9a9a}
+  </script>
 
-  /* login modal */
-  #login-modal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:10001}
-  .login-box{background:#111;padding:22px;border-radius:12px;border:2px solid var(--gold);max-width:360px;width:100%;text-align:center}
-  .login-box input{width:100%;padding:10px;margin:8px 0;border-radius:8px;background:#000;color:var(--accent);border:1px solid #333}
+  <style>
+    :root{
+      --bg:#050505;
+      --card:#0f0f0f;
+      --muted:#999;
+      --accent: #f2c94c; /* gold */
+      --green:#00ff88;
+      --panel: #111;
+      --btn-bg: #f3c83d;
+      --btn-text: #111;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+    header.site {
+      padding:12px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:3px solid rgba(255,200,20,0.06);
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.7));
+      backdrop-filter: blur(4px);
+    }
+    .hdr-left{display:flex;align-items:center;gap:12px}
+    #hdr-icon{cursor:pointer;font-size:26px;color:var(--green)}
+    #hdr-title{font-size:22px;color:var(--accent);font-weight:800;letter-spacing:0.5px}
+    #hdr-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    #hdr-email{color:var(--green);font-weight:700;font-size:13px;margin-left:12px}
+    .hdr-right{display:flex;gap:10px;align-items:center}
+    #hamb{width:40px;height:32px;border-radius:6px;background:transparent;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--green)}
+    #logout-btn{background:#ff5454;color:#fff;padding:6px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;display:none}
+    body.logged-in #logout-btn{display:inline-block}
 
-  @media (max-width:600px){
-    #drawer{width:0}
-    #drawer.open{width:100%}
-    .card-right{width:40%}
-  }
-</style>
+    main{padding:18px;max-width:820px;margin:0 auto}
+    #header-banner{width:100%;height:120px;background:url('') center/cover no-repeat;border-radius:6px;display:none;margin-bottom:12px}
+    .matches-grid{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+    .card{display:flex;justify-content:space-between;gap:12px;background:var(--card);padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.02)}
+    .card-left{flex:1}
+    .card-right{width:220px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+    .match-type{color:var(--green);margin:0 0 8px 0}
+    .card p{margin:6px 0;color:#ddd}
+    .status{display:inline-block;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-weight:700}
+    .st-wait{background:rgba(255,255,255,0.03);color:#ddd}
+    .st-upc{background:rgba(255,200,20,0.12);color:var(--accent)}
+    .st-live{background:rgba(0,255,136,0.12);color:var(--green)}
+    .st-open{background:rgba(0,200,200,0.06);color:#9ff}
+    .room{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:#ddd;font-size:13px}
+    .room.ok{background:rgba(0,255,136,0.06);color:var(--green)}
+    .room.hint{opacity:0.9}
+    .btn{border:none;padding:11px 14px;border-radius:10px;font-weight:800;cursor:pointer}
+    .btn.join{background:var(--btn-bg);color:var(--btn-text);width:180px}
+    .btn.full{background:#b08a2b;color:#fff;width:140px}
+    .btn.closed{background:#444;color:#ddd;width:140px}
+    .timer{font-weight:700;color:var(--muted);padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.02)}
+    .status-box{padding:12px;background:var(--panel);border-radius:10px;margin-bottom:12px}
+    .back{background:#222;color:#fff;padding:8px 12px;border-radius:8px;border:1px solid #333;cursor:pointer}
+    footer{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* payment modal */
+    #pay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);z-index:120}
+    .paybox{background:var(--panel);padding:22px;border-radius:18px;width:92%;max-width:420px;border:3px solid var(--accent);text-align:center}
+    .paybox h2{color:var(--accent);margin:8px 0 10px 0}
+    .p-btn{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin:8px 0;background:#0a0a0a;border:1px solid #212121;cursor:pointer;color:#fff;text-decoration:none}
+    .p-btn img{width:28px;height:28px;border-radius:6px}
+    .v-input{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#030303;color:var(--green);font-weight:800;text-align:center}
+    .v-btn{background:var(--green);border:none;padding:12px;border-radius:10px;font-weight:900;color:#000;cursor:pointer;margin-top:10px;width:100%}
+    .small-note{color:var(--muted);font-size:13px;margin-top:8px}
+
+    /* menu overlay (right side) */
+    #menu-overlay{position:fixed;inset:0;display:none;z-index:200}
+    #menu-panel{position:absolute;right:0;top:0;width:86%;max-width:360px;height:100%;background:#080808;border-left:1px solid rgba(255,255,255,0.03);padding:18px;overflow:auto}
+    .menu-item{display:flex;gap:12px;align-items:center;padding:16px;border-radius:8px;cursor:pointer}
+    .menu-item:hover{background:rgba(255,255,255,0.01)}
+    .menu-item .icon{width:36px;height:36px;border-radius:8px;background:#0b0b0b;display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:800}
+    .menu-footer{margin-top:30px;color:var(--muted);font-size:13px}
+
+    /* login form inside menu */
+    #login-panel{margin-top:12px;padding:12px;background:#0b0b0b;border-radius:8px}
+    #login-panel input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #222;background:#020202;color:#fff}
+    #login-panel button{padding:8px 10px;border-radius:8px;background:var(--btn-bg);border:none;color:#111;font-weight:800;cursor:pointer;margin-right:8px}
+
+    /* small screens fix */
+    @media (min-width:900px){
+      main{padding:30px}
+      .card-right{width:300px;align-items:flex-end}
+    }
+  </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div>
-    <div class="logo">FREE FIRE TOURNAMENT</div>
-    <div class="subtitle">Join • Play • Win Real Cash</div>
+  <!-- HEADER -->
+  <header class="site">
+    <div class="hdr-left">
+      <div id="hdr-icon" onclick="location.reload()">☰</div>
+      <div>
+        <div id="hdr-title">FREE FIRE TOURNAMENT</div>
+        <div id="hdr-sub">Join • Play • Win Real Cash</div>
+      </div>
+      <div id="hdr-email" style="margin-left:12px;color:var(--green)"></div>
+    </div>
+
+    <div class="hdr-right">
+      <button id="logout-btn" onclick="doLogout()">Logout</button>
+      <div id="hamb" title="Menu" onclick="openMenu()">☰</div>
+    </div>
+  </header>
+
+  <!-- Menu overlay panel -->
+  <div id="menu-overlay" aria-hidden="true">
+    <div id="menu-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="width:46px;height:46px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--green)">⚑</div>
+          <div>
+            <div style="font-weight:800" id="menu-title">Home</div>
+            <div style="font-size:12px;color:var(--muted)">Return to matches</div>
+          </div>
+        </div>
+        <div style="cursor:pointer" onclick="closeMenu()">✕</div>
+      </div>
+
+      <div style="margin-top:18px">
+        <div class="menu-item" onclick="backToMatches(); closeMenu();">
+          <div class="icon">🏠</div>
+          <div><strong>Home</strong><div style="font-size:12px;color:var(--muted)">Return to matches</div></div>
+        </div>
+
+        <div class="menu-item" onclick="alert(t('policyText'))">
+          <div class="icon">📜</div>
+          <div><strong>Policy</strong><div style="font-size:12px;color:var(--muted)">${/* placeholder */''}</div></div>
+        </div>
+
+        <a class="menu-item" href="https://wa.me/919012277862" target="_blank" style="text-decoration:none;color:inherit">
+          <div class="icon">💬</div>
+          <div><strong>WhatsApp</strong><div style="font-size:12px;color:var(--muted)">+91 9012277862</div></div>
+        </a>
+
+        <div style="height:8px"></div>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="menu-item" onclick="setLang('en')"><div class="icon">EN</div><div><strong>English</strong></div></div>
+          <div class="menu-item" onclick="setLang('hi')"><div class="icon">HI</div><div><strong>Hindi (Roman)</strong></div></div>
+          <div class="menu-item" onclick="setLang('ur')"><div class="icon">UR</div><div><strong>Urdu (Roman)</strong></div></div>
+        </div>
+
+        <div id="login-panel">
+          <div style="font-weight:800;margin-bottom:6px">Login / Register</div>
+          <input id="auth-email" placeholder="Email" type="email" />
+          <input id="auth-pass" placeholder="Password" type="password" />
+          <div style="display:flex;gap:8px">
+            <button id="auth-register">Register</button>
+            <button id="auth-login">Login</button>
+          </div>
+          <div style="margin-top:8px;color:var(--muted);font-size:13px">
+            { Registration creates a simple email/password account for quick demo. }
+          </div>
+        </div>
+
+        <div class="menu-footer" style="margin-top:18px">
+          <div style="font-weight:700;color:var(--muted)">${STR.en.refundMsg}</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="display:flex;gap:12px;align-items:center">
-    <div id="user-email" style="font-weight:700;color:var(--accent)"></div>
-    <button id="btn-login" onclick="showLogin()" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent);padding:8px;border-radius:8px">Login</button>
-    <button id="btn-logout" onclick="doLogout()" style="display:none;background:#ff4d4d;border:none;padding:8px;border-radius:8px;color:#fff">Logout</button>
-    <button id="menu-btn" onclick="document.getElementById('drawer').classList.toggle('open')">☰</button>
-  </div>
-</header>
 
-<!-- DRAWER menu (right) -->
-<div id="drawer" aria-hidden="true">
-  <div class="menu-inner">
-    <div class="menu-item" onclick="goHome();document.getElementById('drawer').classList.remove('open')">
-      <div class="icon">🏠</div><div><div class="menu-title">Home</div><div class="small">Return to matches</div></div>
-    </div>
-
-    <div class="menu-item" onclick="document.getElementById('policy-modal').style.display='block'">
-      <div class="icon">📜</div><div><div class="menu-title">Policy</div><div class="small">Game risks & refunds</div></div>
-    </div>
-
-    <div class="menu-item" onclick="openWhatsApp()">
-      <div class="icon">💬</div><div><div class="menu-title">WhatsApp</div><div class="small">+91 9012277862</div></div>
-    </div>
-
-    <div class="menu-item" onclick="setLang('en')">
-      <div class="icon">EN</div><div><div class="menu-title">English</div></div>
-    </div>
-    <div class="menu-item" onclick="setLang('hi')">
-      <div class="icon">HI</div><div><div class="menu-title">Hindi (Roman)</div></div>
-    </div>
-    <div class="menu-item" onclick="setLang('ur')">
-      <div class="icon">UR</div><div><div class="menu-title">Urdu (Roman)</div></div>
-    </div>
-
-    <div class="menu-item" onclick="document.getElementById('drawer').classList.remove('open'); showLogin()">
-      <div class="icon">🔑</div><div><div class="menu-title">Login</div><div class="small">Sign in / create account</div></div>
-    </div>
-
-    <div id="policy-text" style="margin-top:20px;color:var(--muted)">Policy text here</div>
-  </div>
-</div>
-
-<!-- MAIN / HOME VIEW -->
-<div id="home-view">
+  <!-- MAIN -->
   <main>
-    <div id="matches"></div>
-    <footer><div id="copyright">© 2026 SQL — Premium Tournament System</div><div class="small">© All rights reserved</div></footer>
+    <div id="header-banner" style="background-image:url('https://i.imgur.com/6r0bVZC.jpg');display:block"></div>
+
+    <div id="matches" class="matches-grid">
+      <!-- cards injected here -->
+    </div>
+
+    <!-- Payment status view (hidden by default) -->
+    <div id="payment-status" style="display:none;margin-top:18px"></div>
+
+    <footer>
+      © 2026 SQL — Premium Tournament System<br/>© All rights reserved
+    </footer>
   </main>
-</div>
 
-<!-- PAYMENT MODAL (styled) -->
-<div id="pay-modal">
-  <div class="pay-box">
-    <h2 style="color:var(--gold); margin-bottom:10px;">CHECKOUT</h2>
-    <p id="p-amt" style="color:var(--accent); font-weight:900; margin-bottom:15px; font-size:1.2rem;"></p>
+  <!-- Payment modal (UPI + UTR) -->
+  <div id="pay">
+    <div class="paybox">
+      <h2 id="p-amt">Total: ₹0</h2>
 
-    <a id="gpay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/google-pay.png" alt="gpay"/> Google Pay</a>
-    <a id="ppay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="phonepe"/> PhonePe</a>
-    <a id="paytm" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/paytm.png" alt="paytm"/> Paytm</a>
+      <a id="gpay" class="p-btn" href="#" target="_blank"><img src="https://img.icons8.com/color/48/google-pay.png" alt="GPay"> Google Pay</a>
+      <a id="ppay" class="p-btn" href="#" target="_blank"><img src="https://img.icons8.com/color/48/phone-pe.png" alt="PhonePe"> PhonePe</a>
+      <a id="paytm" class="p-btn" href="#" target="_blank"><img src="https://img.icons8.com/color/48/paytm.png" alt="Paytm"> Paytm</a>
 
-    <div style="height:12px"></div>
-    <input id="txid" class="v-input" placeholder="Enter Transaction ID (UTR)"/>
-    <button id="v-btn" class="v-btn" onclick="submitPayment()">SUBMIT PAYMENT</button>
-    <button class="close-small" onclick="closePay()">CANCEL</button>
-  </div>
-</div>
-
-<!-- Payment status page (stable) -->
-<div id="status-view">
-  <main style="max-width:720px;margin:30px auto">
-    <h2>Payment Status</h2>
-    <div id="status-body" style="margin-bottom:12px"></div>
-    <div id="status-room"></div>
-    <div style="margin-top:18px"><button onclick="goHome()" style="padding:10px 12px;border-radius:8px;background:var(--gold);border:none;font-weight:700">Back to matches</button></div>
-  </main>
-</div>
-
-<!-- LOGIN MODAL -->
-<div id="login-modal">
-  <div class="login-box">
-    <h3 style="color:var(--gold)">Account</h3>
-    <input id="login-email" placeholder="Email" />
-    <input id="login-pass" type="password" placeholder="Password" />
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button onclick="login()" style="flex:1;background:var(--accent);border:none;padding:10px;border-radius:8px;font-weight:800">Sign in / Sign up</button>
-      <button onclick="hideLogin()" style="flex:1;background:#222;border:none;padding:10px;border-radius:8px">Cancel</button>
+      <input id="utr" class="v-input" placeholder="Enter UTR / TXID" />
+      <button class="v-btn" onclick="submitPayment()">${STR.en.submitPayment}</button>
+      <button onclick="closePay()" style="color:#ff6666;border:none;background:none;margin-top:12px;cursor:pointer;font-weight:700">${STR.en.cancel}</button>
+      <div class="small-note" style="margin-top:10px">${STR.en.refundMsg}</div>
     </div>
   </div>
-</div>
 
-<!-- POLICY Modal -->
-<div id="policy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:12000;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#111;padding:20px;border-radius:12px;border:2px solid var(--gold);max-width:640px;margin:40px auto">
-    <h2 style="color:var(--gold)">Policy</h2>
-    <p id="policy-text" style="color:#ddd">Policy text placeholder</p>
-    <p style="color:var(--muted)"><strong>Refund:</strong> Refunds processed within 20 minutes.</p>
-    <div style="margin-top:12px;text-align:right">
-      <button onclick="document.getElementById('policy-modal').style.display='none'" style="padding:8px 12px;border-radius:8px;background:#222;border:none;color:#fff">Close</button>
-    </div>
-  </div>
-</div>
+  <!-- SCRIPTS: small UI utilities (non-Firebase) -->
+  <script>
+    // Keep header banner email area aligned & stable: avoid layout shifts
+    // Ensure menu overlay sizing
+    window.addEventListener('resize', () => {
+      // keep things stable, no zooming shifts
+      document.documentElement.style.fontSize = '100%';
+    });
 
-<!-- Scripts: small helpers loaded earlier are in module -->
-<script>
-  // small DOM utilities available in module as well: but for safety attach $
-  window.$ = (s)=> document.querySelector(s);
-
-  // Close drawer by clicking outside
-  document.addEventListener('click', (e)=>{
-    const drawer = document.getElementById('drawer');
-    const menuBtn = document.getElementById('menu-btn');
-    if(drawer.classList.contains('open')){
-      // if clicked outside drawer and not menu button
-      if(!drawer.contains(e.target) && e.target !== menuBtn){
-        drawer.classList.remove('open');
-      }
-    }
-  });
-
-  // simple hash routing: if user opens direct payment hash
-  window.addEventListener('hashchange', ()=>{
-    if(location.hash && location.hash.startsWith('#payment-')){
-      const pid = location.hash.replace('#payment-','');
-      // call function from module - we defined showPaymentStatus there
-      if(window.showPaymentStatus) window.showPaymentStatus(pid);
-    } else {
-      // go home
-      if(window.goHome) window.goHome();
-    }
-  });
-</script>
+    // Ensure header banner visible with fast load (user wanted banner instead of email)
+    document.getElementById('header-banner').style.display = 'block';
+  </script>
 
 </body>
-  </html>
+            </html>
