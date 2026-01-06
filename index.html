@@ -1,78 +1,92 @@
 <!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Match Lobby</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body{margin:0;font-family:Arial;background:#0b1220;color:#fff}
-    h1{text-align:center}
-    .match{background:#111827;padding:15px;border-radius:10px;margin-bottom:15px}
-    .row{display:flex;justify-content:space-between;margin:6px 0}
-    button{padding:8px 14px;border-radius:6px;border:none}
-    .join{background:#22c55e;color:#000}
-    .closed{background:#374151;color:#9ca3af}
-    .room{margin-top:10px;background:#020617;padding:10px;border-radius:6px}
-  </style>
-</head>
-<body><h1>Live Matches</h1>
-<div id="matches"></div><script type="module">
-  // 🔹 Firebase SDK (web)
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <title>SQL Tournaments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase -->  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // 🔹 YOUR FIREBASE CONFIG (ALREADY FILLED)
-  const firebaseConfig = {
-    apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-    authDomain: "sqladmin-ff04d.firebaseapp.com",
-    projectId: "sqladmin-ff04d",
-    storageBucket: "sqladmin-ff04d.firebasestorage.app",
-    messagingSenderId: "539086978850",
-    appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+      authDomain: "sqladmin-ff04d.firebaseapp.com",
+      projectId: "sqladmin-ff04d",
+      storageBucket: "sqladmin-ff04d.firebasestorage.app",
+      messagingSenderId: "539086978850",
+      appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b"
+    };
 
-  // 🔹 Init Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const container = document.getElementById('matches');
+    // ---------- WORD NORMALIZER (ANTI MISMATCH) ----------
+    function norm(v) {
+      return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
 
-  async function loadMatches(){
-    container.innerHTML = '';
-    const snap = await getDocs(collection(db, 'matches'));
+    // ---------- LOAD MATCHES ----------
+    async function loadMatches() {
+      matches.innerHTML = '';
+      const snap = await getDocs(collection(db, 'matches'));
+      snap.forEach(d => {
+        const m = d.data();
 
-    snap.forEach(doc => {
-      const m = doc.data();
-      const box = document.createElement('div');
-      box.className = 'match';
+        if (!m.joinEnabled) return;
+        if (norm(m.status) !== 'upcoming' && norm(m.status) !== 'waiting') return;
 
-      let html = `
-        <div class="row"><b>Type</b><span>${m.type}</span></div>
-        <div class="row"><b>Entry</b><span>₹${m.entryFee}</span></div>
-        <div class="row"><b>Win</b><span>₹${m.winAmount}</span></div>
-        <div class="row"><b>Players</b><span>${m.joinedPlayers}/${m.slots}</span></div>
-        <div class="row"><b>Status</b><span>${m.status}</span></div>
-      `;
+        matches.innerHTML += `
+          <div class="card">
+            <h3>${m.type}</h3>
+            <p>Entry: ₹${m.entry} | Win: ₹${m.win}</p>
+            <p>Players: ${m.approvedPlayers || 0} / ${m.maxPlayers}</p>
+            <button onclick="openPay('${d.id}', ${m.entry})">Join</button>
+          </div>`;
+      });
+    }
 
-      if(m.status === 'waiting'){
-        html += `<button class="join">Join</button>`;
-      }else{
-        html += `<button class="closed">Join Closed</button>`;
-      }
+    // ---------- PAYMENT ----------
+    window.openPay = (matchId, amt) => {
+      window._matchId = matchId;
+      payModal.style.display = 'flex';
+      payAmt.innerText = `Pay ₹${amt}`;
+      const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR`;
+      gpay.href = ppay.href = paytm.href = upi;
+    };
 
-      if(m.status === 'started'){
-        html += `
-          <div class="room">
-            <div><b>Room ID:</b> ${m.roomId}</div>
-            <div><b>Password:</b> ${m.roomPassword}</div>
-          </div>
-        `;
-      }
+    window.verifyPayment = async () => {
+      const txid = txidInput.value.trim();
+      if (!txid) return alert('Enter TXID');
 
-      box.innerHTML = html;
-      container.appendChild(box);
-    });
-  }
+      await addDoc(collection(db, 'payments'), {
+        matchId: window._matchId,
+        txid,
+        status: 'pending',
+        createdAt: Date.now()
+      });
 
-  loadMatches();
-</script></body>
+      alert('Payment submitted. Wait for approval.');
+      payModal.style.display = 'none';
+    };
+
+    window.onload = loadMatches;
+  </script>  <style>
+    body { margin:0; background:#0b0b0b; color:#fff; font-family:Arial }
+    h1 { color:#00ff88; text-align:center }
+    .card { background:#111; border:1px solid #333; margin:15px; padding:15px; border-radius:14px }
+    button { background:#00ff88; border:none; padding:10px 14px; font-weight:bold; cursor:pointer }
+    #payModal { position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; justify-content:center; align-items:center }
+    .payBox { background:#111; padding:25px; border-radius:20px; width:90%; max-width:380px }
+    input { width:100%; padding:10px; margin-top:10px; background:#000; color:#0f0; border:1px solid #333 }
+  </style></head>
+<body><h1>Live Tournaments</h1>
+<div id="matches"></div><!-- PAYMENT MODAL --><div id="payModal">
+  <div class="payBox">
+    <h3 id="payAmt"></h3>
+    <a id="gpay">Google Pay</a><br>
+    <a id="ppay">PhonePe</a><br>
+    <a id="paytm">Paytm</a><br>
+    <input id="txidInput" placeholder="Enter Transaction ID" />
+    <button onclick="verifyPayment()">Submit</button>
+    <button onclick="payModal.style.display='none'">Cancel</button>
+  </div>
+</div></body>
 </html>
