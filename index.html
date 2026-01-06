@@ -2,124 +2,157 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>SQL TOURNAMENT SYSTEM</title>
+    <title>SQL TOURNAMENT | PRO PLAYER HUB</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;500;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --accent: #00ff88; 
-            --gold: #ffd700;
-            --bg: #000000;
-            --card: #0a0a0a;
-            --border: #1a1a1a;
-            --red: #ff4444;
+            --accent: #00ff88; --gold: #ffd700; --bg: #050505;
+            --card: #0f0f0f; --border: #1f1f1f; --red: #ff4444;
         }
 
-        body { margin: 0; background: var(--bg); color: #ffffff; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { 
+            margin: 0; background: var(--bg); color: #fff; 
+            font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; 
+            overflow-x: hidden; scroll-behavior: smooth;
+        }
+
+        /* Animated Background */
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% -20%, #00ff8822, transparent 50%); z-index: -1; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 
         /* Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--bg); border-bottom: 1px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
-        .branding h1 { color: var(--gold); margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; }
-        .branding p { color: #888; margin: 0; font-size: 0.75rem; }
-        .menu-icon { font-size: 1.6rem; color: var(--gold); cursor: pointer; }
-
-        /* --- NEW GAMING BANNER --- */
-        .match-banner { 
-            width: 92%; 
-            margin: 15px auto 5px; 
-            height: 110px; 
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), url('https://images.wallpapersden.com/image/download/garena-free-fire-battlegrounds-official_a2lsa2aUmZqaraWkpJRmbmdlrWZnZWU.jpg'); 
-            background-size: cover; 
-            background-position: center; 
-            border-radius: 15px; 
-            border: 2px solid #222; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            text-align: center;
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 20px; background: rgba(0,0,0,0.8); 
+            backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); 
+            position: sticky; top: 0; z-index: 1000; 
         }
-        .match-banner h2 { font-size: 1.1rem; color: #fff; text-shadow: 2px 2px 8px #000; letter-spacing: 2px; margin: 0; font-weight: 900; }
-        .match-banner span { font-size: 0.7rem; color: var(--accent); font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 20px; margin-top: 5px; }
+        .logo { font-family: 'Orbitron', sans-serif; color: var(--gold); font-weight: 900; font-size: 1.4rem; letter-spacing: 2px; }
+        .logo span { color: #fff; font-size: 0.8rem; display: block; letter-spacing: 0; font-family: 'Inter'; }
+
+        /* Hero Banner */
+        .hero { 
+            width: 92%; margin: 15px auto; height: 160px; 
+            border-radius: 20px; position: relative; overflow: hidden;
+            border: 1px solid var(--gold);
+        }
+        .hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+        .hero-text { position: absolute; bottom: 15px; left: 15px; }
+        .hero-text h2 { margin: 0; font-family: 'Orbitron'; color: var(--gold); text-shadow: 0 0 10px #000; }
+
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; justify-content: space-around; padding: 10px; background: #000; border-bottom: 1px solid #111; position: sticky; top: 70px; z-index: 999; }
+        .tab-btn { background: none; border: none; color: #666; font-weight: 800; font-size: 0.8rem; padding: 8px 15px; cursor: pointer; }
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+        /* Match Cards Advanced */
+        .match-list { padding: 15px; }
+        .m-card { 
+            background: var(--card); border-radius: 20px; border: 1px solid var(--border);
+            margin-bottom: 20px; overflow: hidden; transition: 0.3s;
+        }
+        .m-header { background: #151515; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        .m-title { font-family: 'Orbitron'; font-size: 0.9rem; color: var(--gold); }
+        .m-status { font-size: 0.6rem; padding: 3px 8px; border-radius: 5px; background: var(--accent); color: #000; font-weight: 900; }
+
+        .m-body { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-box { display: flex; align-items: center; gap: 10px; }
+        .info-box i { color: #555; font-size: 1.1rem; }
+        .info-label { font-size: 0.65rem; color: #888; display: block; }
+        .info-val { font-size: 0.9rem; font-weight: 800; }
+
+        .m-footer { padding: 0 15px 15px; }
+        .slot-container { margin-bottom: 15px; }
+        .slot-text { display: flex; justify-content: space-between; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+        .progress-bg { height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #00ccff); border-radius: 10px; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .btn-join { 
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background: linear-gradient(45deg, var(--accent), #00ccff);
+            color: #000; font-weight: 900; font-family: 'Orbitron'; font-size: 0.9rem;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+        .btn-full { background: #222 !important; color: #555 !important; box-shadow: none !important; cursor: not-allowed; }
+
+        /* Timer UI */
+        .timer-box { background: #111; border: 1px dashed var(--gold); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 15px; }
+        .timer-val { font-family: 'monospace'; font-size: 1.2rem; color: var(--gold); font-weight: 900; }
+
+        /* Room ID Area */
+        .room-box { background: #001a0d; border: 1px solid var(--accent); padding: 15px; border-radius: 12px; text-align: center; }
+        .room-box span { display: block; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+        .room-box b { color: var(--accent); font-size: 1.1rem; letter-spacing: 2px; }
 
         /* Side Drawer */
-        #drawer { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: #050505; border-left: 1px solid var(--gold); transition: 0.3s; z-index: 7000; padding-top: 60px; }
-        #drawer.active { right: 0; }
-        .close-drawer { position: absolute; top: 20px; left: 20px; font-size: 2rem; color: #fff; cursor: pointer; }
-        .nav-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-weight: 600; }
-        .nav-link i { margin-right: 15px; color: var(--gold); width: 20px; }
+        #drawer { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #000; z-index: 2000; transition: 0.4s; padding: 60px 20px; border-right: 1px solid var(--gold); }
+        #drawer.active { left: 0; }
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1999; }
+        .nav-link { display: block; padding: 15px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-weight: 600; }
 
-        /* Match Cards */
-        #matches-list { padding: 15px; }
-        .match-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .badge { position: absolute; top: 12px; right: 12px; font-size: 0.65rem; font-weight: 800; padding: 4px 12px; border-radius: 6px; color: #000; background: var(--accent); text-transform: uppercase; }
-        
-        .card-body { display: flex; padding: 20px 15px; gap: 12px; }
-        
-        .match-details { flex: 1.2; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #1a1a1a; }
-        .detail-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        .detail-item i { color: #666; width: 15px; text-align: center; }
-        .detail-item span { color: #aaa; flex: 1; }
-        .detail-item b { color: var(--accent); }
+        /* Checkout Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: #111; width: 100%; max-width: 400px; padding: 25px; border-radius: 25px; border: 1px solid var(--gold); text-align: center; }
+        .payment-options { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        .pay-btn { background: #1a1a1a; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; text-decoration: none; color: #fff; border: 1px solid #333; font-weight: bold; }
+        .pay-btn img { width: 30px; }
 
-        .match-action { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .countdown { color: var(--gold); text-align: center; margin-bottom: 8px; }
-        .time { font-size: 1.1rem; font-weight: 900; display: block; font-family: 'monospace'; }
-        
-        .slot-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 10px; margin: 8px 0; overflow: hidden; }
-        .slot-fill { height: 100%; background: var(--accent); transition: 1.5s ease; }
-
-        .btn-main { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 255, 136, 0.2); }
-        .room-access { background: #001a0d; border: 1px solid var(--accent); border-radius: 10px; padding: 8px; width: 100%; color: var(--accent); font-size: 0.8rem; line-height: 1.4; box-sizing: border-box; }
-
-        /* Payment Modal */
-        #pay-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 6000; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .pay-box { background: #111; padding: 25px; border: 2px solid var(--gold); border-radius: 25px; width: 100%; max-width: 400px; text-align: center; box-sizing: border-box; }
-        .p-btn { background: #1a1a1a; margin: 8px 0; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; color: white; text-decoration: none; border: 1px solid #333; font-weight: bold; cursor: pointer; }
-        .p-btn img { width: 25px; height: 25px; border-radius: 5px; }
-        .v-input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #00ff88; text-align: center; border-radius: 10px; margin: 10px 0; font-weight: bold; box-sizing: border-box; outline: none; }
-        .v-btn { background: #00ff88; color: black; border: none; padding: 14px; width: 100%; border-radius: 10px; font-weight: 900; cursor: pointer; }
-
+        .utr-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: var(--accent); border-radius: 12px; margin-bottom: 15px; font-weight: 800; text-align: center; outline: none; }
     </style>
 </head>
 <body>
 
+    <div class="bg-glow"></div>
+
     <header>
-        <div class="branding">
-            <h1>SQL TOURNAMENT</h1>
-            <p>Join Play Win Real Money 💰</p>
-        </div>
-        <div class="menu-icon" onclick="toggleMenu()"><i class="fas fa-bars-staggered"></i></div>
+        <div class="menu-btn" onclick="toggleDrawer()"><i class="fas fa-bars-staggered" style="font-size:1.5rem; color:var(--gold);"></i></div>
+        <div class="logo">SQL MASTER<span>TOURNAMENTS ONLINE</span></div>
+        <div class="user-icon" onclick="showTab('profile')"><i class="fas fa-circle-user" style="font-size:1.6rem; color:var(--accent);"></i></div>
     </header>
 
-    <div class="match-banner">
-        <h2><i class="fas fa-gun"></i> BATTLEGROUNDS</h2>
-        <span>FREE FIRE MOBILE TOURNAMENTS</span>
-    </div>
-
+    <div id="overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
     <div id="drawer">
-        <div class="close-drawer" onclick="toggleMenu()">&times;</div>
-        <a href="#" onclick="location.reload()" class="nav-link"><i class="fas fa-house"></i> HOME</a>
-        <a href="#" onclick="openPolicy()" class="nav-link"><i class="fas fa-file-contract"></i> POLICY & REFUND</a>
-        <a href="https://wa.me/919012277862" class="nav-link"><i class="fab fa-whatsapp"></i> WHATSAPP SUPPORT</a>
-        <div id="google_translate_element" style="margin:20px;"></div>
+        <h2 style="color:var(--gold); margin-top:0;">MENU</h2>
+        <a href="#" class="nav-link" onclick="location.reload()"><i class="fas fa-home"></i> HOME</a>
+        <a href="#" class="nav-link" onclick="alert('Join our WhatsApp for Daily Updates!')"><i class="fab fa-whatsapp"></i> WHATSAPP GROUP</a>
+        <a href="#" class="nav-link" onclick="openPolicy()"><i class="fas fa-shield-halved"></i> RULES & POLICY</a>
     </div>
 
-    <main id="matches-list"></main>
+    <div class="hero">
+        <img src="https://wallpaperaccess.com/full/1163618.jpg">
+        <div class="hero-text">
+            <h2>ESPORTS ARENA</h2>
+            <p style="margin:0; font-size:0.7rem; color:var(--accent);">PRO LEAGUE SEASON 1</p>
+        </div>
+    </div>
 
-    <div id="pay-modal">
-        <div class="pay-box">
-            <h2 style="color:var(--gold); margin-bottom:10px;">CHECKOUT</h2>
-            <p id="p-amt" style="color:#00ff88; font-weight:900; margin-bottom:15px; font-size:1.4rem;"></p>
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="tab-live" onclick="switchSection('live')">LIVE MATCHES</button>
+        <button class="tab-btn" id="tab-my" onclick="switchSection('my')">MY MATCHES</button>
+    </div>
+
+    <main id="match-container" class="match-list"></main>
+
+    <div id="pay-modal" class="modal">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:var(--gold);">SECURE CHECKOUT</h3>
+            <p id="pay-amt" style="font-size:1.8rem; font-weight:900; color:var(--accent); margin:10px 0;"></p>
             
-            <a id="gpay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/google-pay.png"> Google Pay</a>
-            <a id="ppay" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/phone-pe.png"> PhonePe</a>
-            <a id="paytm" href="#" class="p-btn"><img src="https://img.icons8.com/color/48/paytm.png"> Paytm</a>
-            
-            <input type="text" id="txid" class="v-input" placeholder="Enter Transaction ID / UTR">
-            <button onclick="verifyLogic()" id="v-btn" class="v-btn">VERIFY PAYMENT</button>
-            <button onclick="closePay()" style="color:var(--red); border:none; background:none; margin-top:15px; font-weight:bold; cursor:pointer; font-size: 0.9rem;">CANCEL</button>
+            <div class="payment-options">
+                <a id="upilink-g" href="#" class="pay-btn"><img src="https://img.icons8.com/color/48/google-pay.png"> Google Pay</a>
+                <a id="upilink-p" href="#" class="pay-btn"><img src="https://img.icons8.com/color/48/phone-pe.png"> PhonePe / Paytm</a>
+            </div>
+
+            <p style="font-size:0.6rem; color:#666;">PAY KARNE KE BAAD UTR YA TXN ID YAHA DALE</p>
+            <input type="text" id="utr-input" class="utr-input" placeholder="Enter 12 Digit UTR Number">
+            <button class="btn-join" id="verify-btn" onclick="submitPayment()">VERIFY & JOIN</button>
+            <button onclick="closePay()" style="background:none; border:none; color:var(--red); margin-top:15px; font-weight:bold;">CANCEL</button>
         </div>
     </div>
 
@@ -139,105 +172,135 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let selectedMatchId = null;
-        let checkCount = 0;
+        let activeMatchId = null;
+        let currentSection = 'live';
 
+        // Load Matches Realtime
         onSnapshot(collection(db, "matches"), snap => {
-            const list = document.getElementById('matches-list');
-            list.innerHTML = "";
-            snap.forEach(doc => {
-                const data = doc.data();
-                const id = doc.id;
-                const localStatus = localStorage.getItem(`status_${id}`);
+            renderMatches(snap);
+        });
 
-                let actionArea = '';
-                if(localStatus === 'approved') {
-                    actionArea = `<div class="room-access"><i class="fas fa-id-card"></i> ID: ${data.roomId || 'Wait...'}<br><i class="fas fa-key"></i> PS: ${data.password || 'Wait...'}</div>`;
-                } else if(localStatus === 'pending') {
-                    actionArea = `<div style="color:var(--gold); font-size:0.7rem; font-weight:bold;"><i class="fas fa-clock"></i> VERIFYING...</div>`;
+        function renderMatches(snap) {
+            const container = document.getElementById('match-container');
+            container.innerHTML = "";
+            
+            snap.forEach(doc => {
+                const m = doc.data();
+                const id = doc.id;
+                const payStatus = localStorage.getItem(`status_${id}`);
+
+                // Logic for "My Matches" tab filter
+                if(currentSection === 'my' && !payStatus) return;
+
+                const isFull = m.joined >= m.total;
+                const slotPercent = (m.joined / m.total) * 100;
+
+                let actionHtml = '';
+                if(payStatus === 'approved') {
+                    actionHtml = `
+                        <div class="room-box">
+                            <span>ROOM DETAILS REVEALED</span>
+                            <b>ID: ${m.roomId || 'Wait...'}</b><br>
+                            <b>PASS: ${m.password || 'Wait...'}</b>
+                        </div>`;
+                } else if(payStatus === 'pending') {
+                    actionHtml = `<button class="btn-join btn-full" disabled>VERIFYING PAYMENT...</button>`;
                 } else {
-                    actionArea = `<button class="btn-main" onclick="openPay('${id}', ${data.entry})"><i class="fas fa-play"></i> JOIN NOW</button>`;
+                    actionHtml = isFull 
+                        ? `<button class="btn-join btn-full">MATCH FULL</button>` 
+                        : `<button class="btn-join" onclick="openPay('${id}', ${m.entry})">JOIN NOW ₹${m.entry}</button>`;
                 }
 
-                list.innerHTML += `
-                <div class="match-card">
-                    <div class="badge">${data.status}</div>
-                    <div class="card-body">
-                        <div class="match-details">
-                            <div class="detail-item"><i class="fas fa-map"></i><span>Map</span> <b>${data.map}</b></div>
-                            <div class="detail-item"><i class="fas fa-user-group"></i><span>Type</span> <b>${data.type}</b></div>
-                            <div class="detail-item"><i class="fas fa-wallet"></i><span>Entry</span> <b>₹${data.entry}</b></div>
-                            <div class="detail-item"><i class="fas fa-trophy"></i><span>Prize</span> <b>₹${data.win}</b></div>
+                container.innerHTML += `
+                <div class="m-card">
+                    <div class="m-header">
+                        <div class="m-title">TOURNAMENT #${id.substring(0,5)}</div>
+                        <div class="m-status">${m.status.toUpperCase()}</div>
+                    </div>
+                    <div class="m-body">
+                        <div class="info-box"><i class="fas fa-map-location-dot"></i><div><span class="info-label">MAP</span><span class="info-val">${m.map}</span></div></div>
+                        <div class="info-box"><i class="fas fa-users"></i><div><span class="info-label">TYPE</span><span class="info-val">${m.type}</span></div></div>
+                        <div class="info-box"><i class="fas fa-trophy"></i><div><span class="info-label">WIN PRIZE</span><span class="info-val">₹${m.win}</span></div></div>
+                        <div class="info-box"><i class="fas fa-ticket"></i><div><span class="info-label">ENTRY</span><span class="info-val">₹${m.entry}</span></div></div>
+                    </div>
+                    <div class="m-footer">
+                        <div class="timer-box">
+                            <span class="info-label">MATCH STARTS IN</span>
+                            <div class="timer-val" id="timer-${id}">${calculateTime(m.startTime)}</div>
                         </div>
-                        <div class="match-action">
-                            <div class="countdown" id="timer-${id}"><small>Starts In</small><span class="time">00:00</span></div>
-                            <div class="slot-bar"><div class="slot-fill" style="width:${(data.joined/data.total)*100}%"></div></div>
-                            <div style="font-size:0.7rem; color:#666; margin-bottom:10px;">${data.joined}/${data.total} Slots Filled</div>
-                            ${actionArea}
+                        <div class="slot-container">
+                            <div class="slot-text"><span>Filled: ${m.joined}/${m.total}</span><span>${Math.round(slotPercent)}%</span></div>
+                            <div class="progress-bg"><div class="progress-fill" style="width:${slotPercent}%"></div></div>
                         </div>
+                        ${actionHtml}
                     </div>
                 </div>`;
             });
-        });
+        }
 
-        window.openPay = (id, amt) => {
-            selectedMatchId = id;
-            checkCount = 0;
-            document.getElementById('pay-modal').style.display = 'flex';
-            document.getElementById('p-amt').innerText = "Total: ₹" + amt;
-            
-            const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_Tournament_${id}`;
-            document.getElementById('gpay').href = upi;
-            document.getElementById('ppay').href = upi;
-            document.getElementById('paytm').href = upi;
+        // Timer Logic
+        function calculateTime(ts) {
+            const diff = ts - Date.now();
+            if(diff <= 0) return "STARTED";
+            const h = Math.floor(diff/3600000);
+            const m = Math.floor((diff%3600000)/60000);
+            const s = Math.floor((diff%60000)/1000);
+            return `${h}h : ${m}m : ${s}s`;
+        }
 
-            const b = document.getElementById('v-btn');
-            b.innerText = "VERIFY PAYMENT"; 
-            b.style.background = "#00ff88";
+        setInterval(() => {
+            document.querySelectorAll('[id^="timer-"]').forEach(el => {
+                const id = el.id.split('-')[1];
+                // Note: Re-fetching the full data for timer is heavy, 
+                // but for this simple version, we just let it refresh on next snapshot or manual update.
+            });
+        }, 1000);
+
+        // Section Switcher
+        window.switchSection = (sec) => {
+            currentSection = sec;
+            document.getElementById('tab-live').classList.toggle('active', sec === 'live');
+            document.getElementById('tab-my').classList.toggle('active', sec === 'my');
+            location.reload(); // Re-trigger snapshot render
         };
 
-        window.verifyLogic = async () => {
-            const utr = document.getElementById('txid').value;
-            if(!utr) return alert("Error: Please enter UTR/Transaction ID!");
+        // Payment Process
+        window.openPay = (id, amt) => {
+            activeMatchId = id;
+            document.getElementById('pay-modal').style.display = 'flex';
+            document.getElementById('pay-amt').innerText = "Pay ₹" + amt;
+            const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_${id}`;
+            document.getElementById('upilink-g').href = upi;
+            document.getElementById('upilink-p').href = upi;
+        };
 
-            const b = document.getElementById('v-btn');
-            b.innerText = "PROCESSING... ⏳";
-            
-            setTimeout(async () => {
-                if(checkCount === 0) {
-                    b.innerText = "MANUAL CHECK NEEDED ⚠️ SEND SCREENSHOT";
-                    b.style.background = "orange";
-                    checkCount++;
-                    
-                    await addDoc(collection(db, "payments"), {
-                        matchId: selectedMatchId,
-                        utr: utr,
-                        status: 'pending',
-                        timestamp: Date.now()
-                    });
-                    localStorage.setItem(`status_${selectedMatchId}`, 'pending');
+        window.submitPayment = async () => {
+            const utr = document.getElementById('utr-input').value;
+            if(utr.length < 10) return alert("Valid UTR Number Dalein!");
 
-                } else {
-                    const res = ["PAYMENT PENDING ⏳", "VERIFYING... ⏳", "MANUAL CHECK NEEDED ⚠️"];
-                    const finalMsg = res[Math.floor(Math.random()*res.length)];
-                    b.innerText = finalMsg;
-                    b.style.background = "orange";
-                }
-            }, 2000);
+            const btn = document.getElementById('verify-btn');
+            btn.innerText = "SENDING TO ADMIN...";
+            btn.disabled = true;
+
+            await addDoc(collection(db, "payments"), {
+                matchId: activeMatchId,
+                utr: utr,
+                status: 'pending',
+                timestamp: Date.now()
+            });
+
+            localStorage.setItem(`status_${activeMatchId}`, 'pending');
+            alert("Request Sent! Admin will verify in 10-20 mins.");
+            location.reload();
         };
 
         window.closePay = () => document.getElementById('pay-modal').style.display = 'none';
+        window.toggleDrawer = () => {
+            document.getElementById('drawer').classList.toggle('active');
+            document.getElementById('overlay').style.display = 
+                document.getElementById('drawer').classList.contains('active') ? 'block' : 'none';
+        };
 
     </script>
-
-    <script>
-        function toggleMenu() { document.getElementById('drawer').classList.toggle('active'); }
-        function openPolicy() { 
-            alert("SQL REFUND POLICY:\n\n1. Match cancel hone par 30 minat ke andar refund milega.\n2. Hacks use karne par entry fee wapas nahi hogi.\n3. Problem hone par WhatsApp par screenshot bhejein."); 
-        }
-        function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element'); }
-    </script>
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
 </body>
-    </html>
+</html>
