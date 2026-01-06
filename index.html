@@ -2,131 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>SQL Premium Tournament</title>
+    <title>SQL TOURNAMENT SYSTEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
         :root {
-            --primary: #00ff88; 
+            --accent: #00ff88; /* High Contrast Green */
             --gold: #ffd700;
-            --bg: #050505;
-            --card-bg: #111;
-            --danger: #ff4444;
+            --bg: #000000;
+            --card: #0a0a0a;
+            --border: #1a1a1a;
         }
 
-        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: #ffffff; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
 
-        /* Banner Slider Style */
-        .banner-container { width: 100%; height: 160px; overflow: hidden; position: relative; border-bottom: 2px solid var(--gold); }
-        .banner-slide { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
+        /* Header Area */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--bg); border-bottom: 1px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
+        .branding h1 { color: var(--gold); margin: 0; font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; }
+        .branding p { color: #888; margin: 0; font-size: 0.75rem; font-weight: 500; }
+        .menu-icon { font-size: 1.6rem; color: var(--gold); cursor: pointer; }
 
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.9); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-        header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        /* Match Banner (As per your request - Small & Placed Below Header) */
+        .match-banner { width: 92%; margin: 15px auto 5px; height: 90px; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://wallpaperaccess.com/full/1151163.jpg'); background-size: cover; background-position: center; border-radius: 12px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .match-banner h2 { font-size: 1rem; color: #fff; text-shadow: 2px 2px 4px #000; letter-spacing: 2px; }
 
-        /* Side Menu */
-        #side-menu {
-            position: fixed; top: 0; right: -100%; width: 260px; height: 100%;
-            background: #0d0d0d; border-left: 2px solid var(--gold);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; padding-top: 50px;
-        }
-        #side-menu.active { right: 0; }
-        .close-btn { position: absolute; top: 15px; left: 15px; font-size: 1.8rem; color: #fff; cursor: pointer; }
-
-        .menu-item { display: flex; align-items: center; padding: 15px 20px; color: #eee; text-decoration: none; border-bottom: 1px solid #1a1a1a; font-size: 0.95rem; }
-        .menu-item i { width: 30px; color: var(--gold); font-size: 1.1rem; }
-        #google_translate_element { padding: 15px; }
-
-        /* Match Cards */
-        #matches { padding: 15px; display: grid; gap: 15px; }
-        .card { background: var(--card-bg); border-radius: 12px; border: 1px solid #222; overflow: hidden; }
+        /* Drawer Menu */
+        #drawer { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: #050505; border-left: 1px solid var(--gold); transition: 0.3s ease-in-out; z-index: 2000; padding-top: 60px; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+        #drawer.active { right: 0; }
+        .close-drawer { position: absolute; top: 20px; left: 20px; font-size: 2rem; color: #fff; cursor: pointer; }
         
-        .card-top { background: #1a1a1a; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #282828; }
-        .status-tag { font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 4px; color: #000; background: var(--primary); }
+        .nav-link { display: flex; align-items: center; padding: 18px 25px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-weight: 600; }
+        .nav-link i { margin-right: 15px; color: var(--gold); width: 20px; text-align: center; }
+        #google_translate_element { margin: 20px; }
 
-        .card-content { display: flex; padding: 15px; gap: 10px; }
-        .left-data { flex: 1.2; }
-        .right-data { flex: 1; text-align: center; border-left: 1px solid #222; padding-left: 10px; }
-
-        .data-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; color: #999; }
-        .data-row b { color: var(--primary); }
-
-        .timer-box { color: var(--gold); font-weight: bold; font-size: 1rem; margin-bottom: 10px; }
-        .timer-box small { display: block; font-size: 0.6rem; color: #666; text-transform: uppercase; }
-
-        .slot-info { font-size: 0.7rem; color: #888; margin-top: 5px; }
-        .progress-bar { width: 100%; height: 5px; background: #222; border-radius: 10px; margin: 5px 0; }
-        .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; transition: 0.5s; }
-
-        .btn-join { 
-            background: linear-gradient(to bottom, #00ff88, #00cc6e); color: #000; 
-            border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; 
-            cursor: pointer; font-size: 0.85rem; margin-top: 5px;
-        }
-
-        /* Payment Modal */
-        #pay-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 300; display: none; align-items: center; justify-content: center; }
-        .pay-box { background: #111; border: 1px solid var(--gold); border-radius: 15px; width: 85%; max-width: 340px; padding: 20px; text-align: center; }
-        .qr-img { width: 180px; height: 180px; background: #fff; margin: 15px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-size: 0.8rem; }
+        /* Tournament Card Logic */
+        #matches-list { padding: 15px; }
+        .match-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; position: relative; overflow: hidden; }
         
-        input { width: 90%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: var(--primary); border-radius: 8px; text-align: center; outline: none; font-family: monospace; }
-        .btn-submit { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .badge { position: absolute; top: 12px; right: 12px; font-size: 0.65rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; color: #000; background: var(--accent); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
 
-        .room-info { background: #000; border: 1px solid var(--primary); border-radius: 8px; padding: 10px; margin-top: 10px; animation: glow 1.5s infinite; }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--primary); } 50% { box-shadow: 0 0 15px var(--primary); } }
+        .card-body { display: flex; padding: 20px 15px; gap: 12px; }
         
-        .whatsapp-float { position: fixed; bottom: 20px; left: 20px; background: #25d366; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 99; }
+        /* Left: Admin Data */
+        .match-details { flex: 1.2; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1a1a1a; }
+        .detail-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding-right: 10px; }
+        .detail-item span { color: #aaa; font-weight: 400; }
+        .detail-item b { color: var(--accent); font-weight: 700; }
+
+        /* Right: Interactive Area */
+        .match-action { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .countdown { color: var(--gold); margin-bottom: 10px; text-align: center; }
+        .countdown small { display: block; font-size: 0.6rem; color: #555; text-transform: uppercase; margin-bottom: 2px; }
+        .countdown .time { font-size: 1.1rem; font-weight: 900; font-family: 'Courier New', monospace; }
+
+        .slot-stat { font-size: 0.75rem; color: #777; width: 100%; text-align: center; margin-bottom: 5px; }
+        .slot-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .slot-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: 1s ease; }
+
+        /* Join Button Premium Styling */
+        .btn-main { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2); }
+        .btn-main:active { transform: scale(0.96); }
+        .btn-main:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
+
+        /* Room ID Details */
+        .room-access { background: #001a0d; border: 1px solid var(--accent); border-radius: 10px; padding: 10px; width: 100%; margin-top: 5px; }
+        .room-access div { font-size: 0.8rem; color: var(--accent); margin-bottom: 3px; }
+
+        /* Payment Interface */
+        #payment-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .pay-container { background: #0d0d0d; border: 1px solid var(--gold); border-radius: 20px; width: 100%; max-width: 350px; padding: 25px; text-align: center; }
+        .pay-header { color: var(--gold); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; }
+        .pay-input { width: 100%; padding: 15px; background: #000; border: 1px solid #222; border-radius: 12px; color: var(--accent); font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; text-align: center; }
+        .btn-submit { background: var(--gold); color: #000; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 1rem; cursor: pointer; }
 
     </style>
 </head>
 <body>
 
-    <div class="banner-container">
-        <img src="https://wallpaperaccess.com/full/1151163.jpg" alt="Free Fire Banner" class="banner-slide">
-    </div>
-
     <header>
-        <h1>SQL TOURNAMENT</h1>
-        <div onclick="toggleMenu()" style="color:var(--gold); font-size:1.4rem; cursor:pointer;"><i class="fas fa-bars"></i></div>
+        <div class="branding">
+            <h1>SQL TOURNAMENT</h1>
+            <p>Join Play Win Real Money 💰</p>
+        </div>
+        <div class="menu-icon" onclick="toggleMenu()"><i class="fas fa-bars-staggered"></i></div>
     </header>
 
-    <div id="side-menu">
-        <div class="close-btn" onclick="toggleMenu()">&times;</div>
-        <a href="#" onclick="location.reload()" class="menu-item"><i class="fas fa-home"></i> HOME</a>
-        <a href="#" onclick="showPolicy()" class="menu-item"><i class="fas fa-shield-alt"></i> REFUND POLICY</a>
-        <a href="https://wa.me/919012277862" class="menu-item"><i class="fab fa-whatsapp"></i> CONTACT ADMIN</a>
-        
-        <p style="padding:15px 20px 0 20px; font-size:0.7rem; color:#555; margin:0;">SELECT LANGUAGE:</p>
+    <div class="match-banner">
+        <h2><i class="fas fa-crosshairs"></i> FREE FIRE BATTLE</h2>
+    </div>
+
+    <div id="drawer">
+        <div class="close-drawer" onclick="toggleMenu()">&times;</div>
+        <a href="#" onclick="location.reload()" class="nav-link"><i class="fas fa-house"></i> HOME</a>
+        <a href="#" onclick="openPolicy()" class="nav-link"><i class="fas fa-file-contract"></i> POLICY & REFUND</a>
+        <a href="https://wa.me/919012277862" class="nav-link"><i class="fab fa-whatsapp"></i> WHATSAPP SUPPORT</a>
         <div id="google_translate_element"></div>
     </div>
 
-    <div id="matches">
-        </div>
+    <main id="matches-list">
+        </main>
 
-    <a href="https://wa.me/919012277862" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
-
-    <div id="pay-modal">
-        <div class="pay-box">
-            <h3 style="color:var(--gold); margin:0;">COMPLETE PAYMENT</h3>
-            <p style="font-size:0.8rem; color:#aaa;">Amount to Pay: <b id="p-amt" style="color:var(--primary);">₹0</b></p>
-            
-            <div class="qr-img">
+    <div id="payment-modal">
+        <div class="pay-container">
+            <div class="pay-header">UTR VERIFICATION</div>
+            <p style="font-size: 0.8rem; color: #888; margin-bottom: 15px;">Amount to pay: <span id="pay-amt" style="color:var(--accent); font-weight:800;">₹0</span></p>
+            <div style="background:#fff; width:180px; height:180px; margin: 0 auto 20px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#000;">
                 <i class="fas fa-qrcode fa-5x"></i>
             </div>
-            
-            <input type="text" id="utr-field" placeholder="ENTER 12-DIGIT UTR NO." maxlength="12">
-            <button class="btn-submit" onclick="submitUTR()">SUBMIT PAYMENT</button>
-            <button onclick="closePay()" style="background:none; border:none; color:#666; margin-top:10px; cursor:pointer;">Cancel</button>
+            <input type="text" id="utr-box" class="pay-input" placeholder="ENTER 12-DIGIT UTR" maxlength="12">
+            <button class="btn-submit" onclick="confirmPayment()">SUBMIT PAYMENT</button>
+            <p onclick="closePay()" style="margin-top:20px; color:#555; cursor:pointer; font-size:0.9rem;">Cancel Transaction</p>
         </div>
     </div>
 
-    <footer style="text-align:center; padding:30px; color:#333; font-size:0.7rem;">
-        © 2026 SQL PREMIUM SYSTEM — V4.0 STABLE
-    </footer>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
@@ -140,112 +132,100 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let activeMatchId = null;
+        let selectedId = null;
 
-        // Fetch Matches
         onSnapshot(collection(db, "matches"), snap => {
-            const container = document.getElementById('matches');
-            container.innerHTML = "";
+            const list = document.getElementById('matches-list');
+            list.innerHTML = "";
             snap.forEach(doc => {
-                const m = doc.data();
-                const mid = doc.id;
-                
-                // Logic to check local storage for payment status (since login is removed)
-                const isPaid = localStorage.getItem(`paid_${mid}`);
-                const status = localStorage.getItem(`status_${mid}`) || 'none';
+                const data = doc.data();
+                const id = doc.id;
+                const statusLocal = localStorage.getItem(`status_${id}`) || 'none';
 
-                let actionArea = '';
-                if(status === 'approved') {
-                    actionArea = `
-                        <div class="room-info">
-                            <span style="font-size:0.7rem; color:var(--primary);">ROOM DETAILS</span>
-                            <div style="font-size:0.85rem;">ID: ${m.roomId || 'Wait...'}</div>
-                            <div style="font-size:0.85rem;">Pass: ${m.password || 'Wait...'}</div>
+                let actionHtml = '';
+                if(statusLocal === 'approved') {
+                    actionHtml = `
+                        <div class="room-access">
+                            <div><i class="fas fa-id-badge"></i> ID: ${data.roomId || 'Wait...'}</div>
+                            <div><i class="fas fa-lock"></i> PS: ${data.password || 'Wait...'}</div>
                         </div>`;
-                } else if(status === 'pending') {
-                    actionArea = `<div style="color:var(--gold); font-size:0.8rem; margin-top:10px;">Verifying Payment...</div>`;
+                } else if(statusLocal === 'pending') {
+                    actionHtml = `<div style="color:var(--gold); font-size:0.75rem; text-align:center; margin-top:10px;"><i class="fas fa-spinner fa-spin"></i> Checking UTR...</div>`;
                 } else {
-                    actionArea = `<button class="btn-join" onclick="openPay('${mid}', ${m.entry})">JOIN NOW</button>`;
+                    actionHtml = `<button class="btn-main" onclick="openPayment('${id}', ${data.entry})"><i class="fas fa-bolt"></i> JOIN NOW</button>`;
                 }
 
-                container.innerHTML += `
-                <div class="card">
-                    <div class="card-top">
-                        <span style="font-size:0.75rem; color:#666;">Tournament #${mid.substring(0,5)}</span>
-                        <span class="status-tag">${m.status.toUpperCase()}</span>
-                    </div>
-                    <div class="card-content">
-                        <div class="left-data">
-                            <div class="data-row">Map: <b>${m.map}</b></div>
-                            <div class="data-row">Type: <b>${m.type}</b></div>
-                            <div class="data-row">Entry: <b>₹${m.entry}</b></div>
-                            <div class="data-row">Prize: <b>₹${m.win}</b></div>
+                list.innerHTML += `
+                <div class="match-card">
+                    <div class="badge">${data.status}</div>
+                    <div class="card-body">
+                        <div class="match-details">
+                            <div class="detail-item"><span><i class="fas fa-map-location-dot"></i> Map</span> <b>${data.map}</b></div>
+                            <div class="detail-item"><span><i class="fas fa-users"></i> Type</span> <b>${data.type}</b></div>
+                            <div class="detail-item"><span><i class="fas fa-ticket"></i> Entry</span> <b>₹${data.entry}</b></div>
+                            <div class="detail-item"><span><i class="fas fa-trophy"></i> Prize</span> <b>₹${data.win}</b></div>
                         </div>
-                        <div class="right-data">
-                            <div class="timer-box" id="t-${mid}">
+                        <div class="match-action">
+                            <div class="countdown" id="timer-${id}">
                                 <small>Starts In</small>
-                                <span class="time-val">--:--</span>
+                                <span class="time">00:00:00</span>
                             </div>
-                            <div class="progress-bar"><div class="progress-fill" style="width:${(m.joined/m.total)*100}%"></div></div>
-                            <div class="slot-info">${m.joined}/${m.total} Slots</div>
-                            ${actionArea}
+                            <div class="slot-stat">${data.joined}/${data.total} Slots</div>
+                            <div class="slot-bar"><div class="slot-fill" style="width:${(data.joined/data.total)*100}%"></div></div>
+                            ${actionHtml}
                         </div>
                     </div>
                 </div>`;
 
-                // Live Timer Logic
+                // Timer Update
                 setInterval(() => {
-                    const timerSpan = document.querySelector(`#t-${mid} .time-val`);
-                    if(timerSpan && m.startTime) {
-                        const diff = m.startTime - Date.now();
-                        if(diff <= 0) { timerSpan.innerText = "LIVE"; timerSpan.style.color = "#ff4444"; }
+                    const timerEl = document.querySelector(`#timer-${id} .time`);
+                    if(timerEl && data.startTime) {
+                        const now = Date.now();
+                        const diff = data.startTime - now;
+                        if(diff < 0) { timerEl.innerText = "STARTED"; timerEl.style.color = "red"; }
                         else {
-                            const min = Math.floor((diff % 3600000) / 60000);
-                            const sec = Math.floor((diff % 60000) / 1000);
-                            timerSpan.innerText = `${min}m ${sec}s`;
+                            const m = Math.floor((diff % 3600000) / 60000);
+                            const s = Math.floor((diff % 60000) / 1000);
+                            timerEl.innerText = `${m}m ${s}s`;
                         }
                     }
                 }, 1000);
             });
         });
 
-        // Payment Submitting
-        window.submitUTR = async () => {
-            const utr = document.getElementById('utr-field').value;
-            if(utr.length < 10) return alert("Invalid UTR");
+        window.openPayment = (id, amt) => {
+            selectedId = id;
+            document.getElementById('pay-amt').innerText = "₹" + amt;
+            document.getElementById('payment-modal').style.display = 'flex';
+        };
+
+        window.confirmPayment = async () => {
+            const utr = document.getElementById('utr-box').value;
+            if(utr.length < 12) return alert("Error: 12-Digit UTR is required!");
             
             await addDoc(collection(db, "payments"), {
-                matchId: activeMatchId,
+                matchId: selectedId,
                 utr: utr,
                 status: 'pending',
-                time: Date.now()
+                timestamp: Date.now()
             });
 
-            localStorage.setItem(`paid_${activeMatchId}`, 'true');
-            localStorage.setItem(`status_${activeMatchId}`, 'pending');
-            alert("Payment Sent to Admin! It will be approved soon.");
-            closePay();
+            localStorage.setItem(`status_${selectedId}`, 'pending');
+            alert("UTR submitted! Hamari team ise verify karke 5-10 min me approve kar degi.");
             location.reload();
         };
 
-        window.openPay = (id, amt) => {
-            activeMatchId = id;
-            document.getElementById('p-amt').innerText = "₹" + amt;
-            document.getElementById('pay-modal').style.display = 'flex';
-        };
-
-        window.closePay = () => { document.getElementById('pay-modal').style.display = 'none'; };
-
+        window.closePay = () => { document.getElementById('payment-modal').style.display = 'none'; };
     </script>
 
     <script>
-        function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
+        function toggleMenu() { document.getElementById('drawer').classList.toggle('active'); }
         
-        function showPolicy() {
-            alert("SQL REFUND POLICY:\n\n1. Agar match me players poore nahi hote, to match cancel kar diya jayega.\n2. Cancelled match ka paisa aapke account me 30 minute ke andar refund kar diya jayega.\n3. Kisi bhi takniki samasya (Technical Issue) ke liye WhatsApp support par message karen.");
+        function openPolicy() {
+            alert("SQL RULES & REFUND:\n\n1. Game mein Rules break karne par ban mil sakta hai.\n2. Agar match players ki kami se cancel hota hai, toh 30 minat (minutes) ke andar refund received ho jayega.\n3. Technical issues ya kisi bhi samasya par WhatsApp support par message karein.");
         }
 
-        // Google Translate
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
         }
@@ -253,4 +233,4 @@
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
-</html>
+    </html>
