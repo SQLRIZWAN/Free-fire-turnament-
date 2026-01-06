@@ -1,92 +1,249 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Free Fire Tournament</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" /><script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <meta charset="UTF-8">
+  <title>Free Fire Tournament</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <style>
+    /* Global styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #000; color: #fff; font-family: Arial, sans-serif; }
+    /* Header */
+    .header { display: flex; align-items: center; background: #111; padding: 10px; }
+    .hamburger { cursor: pointer; width: 30px; margin-right: 20px; }
+    .hamburger div { width: 100%; height: 4px; background: #39FF14; margin: 5px 0; }
+    .titles h1 { color: gold; font-size: 1.5em; }
+    .titles p { color: #39FF14; font-size: 1em; }
+    /* Matches container */
+    #matches { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
+    .match-card { background: #111; border: 1px solid #333; border-radius: 10px; padding: 15px; margin: 10px; width: 280px; }
+    .match-card h2 { color: #39FF14; font-size: 1.2em; margin-bottom: 10px; }
+    .match-card p { margin: 5px 0; }
+    .match-card .value { color: #39FF14; }
+    .match-card .status.open { color: #39FF14; }
+    .match-card .status.approved { color: gold; }
+    .match-card .status.waiting { color: #888; }
+    .match-card .room-info p { color: #fff; }
+    .join-btn { background: #39FF14; color: #000; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer; }
+    /* Overlay menu */
+    .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: #fff; display: none; text-align: center; z-index: 10; }
+    .menu-overlay ul { list-style: none; margin-top: 100px; }
+    .menu-overlay li { margin: 20px 0; font-size: 1.2em; cursor: pointer; }
+    .menu-overlay a { color: #39FF14; text-decoration: none; }
+    /* Modals */
+    .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border: 2px solid #39FF14; display: none; z-index: 20; }
+    .modal input { width: 90%; padding: 8px; margin: 5px 0; border: 1px solid #555; border-radius: 4px; background: #111; color: #fff; }
+    .modal button { padding: 8px 16px; margin: 5px; border: none; background: gold; color: #000; cursor: pointer; }
+    /* Confirmation */
+    #confirmation { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: #fff; }
+    /* Footer */
+    footer { text-align: center; padding: 10px; background: #111; font-size: 0.9em; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="mainContent">
+    <div class="header">
+      <div class="hamburger" onclick="toggleMenu()">
+        <div></div><div></div><div></div>
+      </div>
+      <div class="titles">
+        <h1>FREE FIRE TOURNAMENT</h1>
+        <p>Join &bull; Play &bull; Win Real Cash</p>
+      </div>
+    </div>
+    <div id="matches"></div>
+    <footer>© 2026 SQL — Premium Tournament System</footer>
+  </div>
 
+  <!-- Overlay Menu -->
+  <div id="menu" class="menu-overlay">
+    <ul>
+      <li onclick="location.reload()">Home</li>
+      <li>This game involves risk. Play at your own risk. Refunds processed within 20 minutes.</li>
+      <li><a href="https://wa.me/919012277862" target="_blank">WhatsApp</a></li>
+      <li id="loginMenu" onclick="showLogin()">Login</li>
+      <li id="logoutMenu" onclick="logout()" style="display:none;">Logout</li>
+    </ul>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <h2 style="color:#39FF14;">Login</h2>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <button onclick="closeLogin()">Cancel</button>
+    <button onclick="signUp()">Sign Up</button>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="modal">
+    <h2 style="color:#39FF14;">Submit Payment</h2>
+    <input type="text" id="utr" placeholder="Enter UTR"><br>
+    <button onclick="submitPayment()">Submit</button>
+    <button onclick="closePayment()">Cancel</button>
+  </div>
+
+  <!-- Payment Confirmation -->
+  <div id="confirmation">
+    <h1>Payment Submitted!</h1>
+  </div>
+
+  <script>
+    // TODO: Replace with your Firebase project configuration
+    var firebaseConfig = { /* // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
   authDomain: "sqladmin-ff04d.firebaseapp.com",
   projectId: "sqladmin-ff04d",
   storageBucket: "sqladmin-ff04d.firebasestorage.app",
   messagingSenderId: "539086978850",
-  appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b"
+  appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
+  measurementId: "G-KH4J0CZ9M5"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const analytics = getAnalytics(app); */ };
+    firebase.initializeApp(firebaseConfig);
+    var auth = firebase.auth();
+    var db = firebase.firestore();
 
-let currentMatch = null;
+    // Monitor auth state and toggle menu items
+    auth.onAuthStateChanged(function(user) {
+      document.getElementById('loginMenu').style.display = user ? 'none' : 'block';
+      document.getElementById('logoutMenu').style.display = user ? 'block' : 'none';
+    });
 
-onSnapshot(collection(db, "matches"), snap => {
-  const box = document.getElementById('matches');
-  box.innerHTML = "";
-  snap.forEach(d => {
-    const m = d.data();
-    box.innerHTML += `
-      <div class="card">
-        <h3>${m.type}</h3>
-        <p>Entry: ₹${m.entry}</p>
-        <p>Win: ₹${m.win}</p>
-        <p>Status: <span class="${m.status}">${m.status}</span></p>
-        ${m.status === 'open' ? `<button onclick="joinMatch('${d.id}', ${m.entry})">JOIN MATCH</button>` : ''}
-        ${m.status === 'approved' ? `<div class="room">Room ID: ${m.roomId}<br>Password: ${m.password}</div>` : ''}
-      </div>`;
-  });
-});
+    // Load matches from Firestore
+    var matchesDiv = document.getElementById('matches');
+    db.collection("matches").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        var data = doc.data();
+        var card = document.createElement('div');
+        card.className = 'match-card';
+        card.innerHTML = `
+          <h2>Match ${doc.id}</h2>
+          <p>Entry Fee: <span class="value">${data.entry || ''}</span></p>
+          <p>Prize: <span class="value">${data.win || ''}</span></p>
+          <p>Status: <span class="status ${data.status}">${data.status}</span></p>
+          <p>Time: <span id="timer-${doc.id}"></span></p>
+          <p>Players: <span class="value">${data.joined || 0}/${data.maxPlayers || 0}</span></p>
+          <div class="room-info"></div>
+        `;
+        matchesDiv.appendChild(card);
 
-window.joinMatch = (id, amt) => {
-  currentMatch = { id, amt };
-  openPay(amt);
-};
+        // Display room ID/password or waiting text
+        var roomInfo = card.querySelector('.room-info');
+        if (data.status === 'approved') {
+          roomInfo.innerHTML = `
+            <p class="value">Room ID: ${data.roomId || ''}</p>
+            <p class="value">Password: ${data.password || ''}</p>`;
+        } else {
+          roomInfo.innerHTML = `<p>Waiting for approval</p>`;
+        }
 
-window.submitPayment = async () => {
-  const utr = document.getElementById('utr').value;
-  if(!utr) return alert('Enter UTR');
-  await addDoc(collection(db, 'payments'), {
-    matchId: currentMatch.id,
-    utr,
-    status: 'pending',
-    time: Date.now()
-  });
-  alert('Payment Submitted. Wait for approval');
-  closePay();
-};
-</script><style>
-body{margin:0;background:#050505;color:#fff;font-family:Arial}
-header{text-align:center;padding:20px;background:#000;border-bottom:2px solid gold}
-header h1{color:gold;margin:0}
-header p{color:#aaa;margin-top:5px}
-#matches{padding:20px}
-.card{background:#0f0f0f;border:1px solid #333;padding:15px;border-radius:15px;margin-bottom:15px}
-.card h3{color:#00ff88}
-button{width:100%;padding:12px;margin-top:10px;background:gold;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-.open{color:#00ff88}
-.approved{color:gold}
-.room{margin-top:10px;background:#000;padding:10px;border-radius:10px;color:#00ff88}
-footer{text-align:center;padding:15px;color:#777;font-size:0.9rem}
-#pay{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center}
-.paybox{background:#111;padding:20px;border-radius:20px;width:90%;max-width:350px;text-align:center;border:2px solid gold}
-.paybox h2{color:gold}
-input{width:100%;padding:12px;margin-top:10px;background:#000;border:1px solid #444;color:#00ff88;border-radius:10px}
-</style></head>
-<body><header>
-  <h1>FREE FIRE TOURNAMENT</h1>
-  <p>Join • Play • Win Real Cash</p>
-</header><div id="matches"></div><footer>
-  © 2026 SQL — Premium Tournament System
-</footer><div id="pay">
-  <div class="paybox">
-    <h2>Complete Payment</h2>
-    <p>Pay via UPI & enter UTR</p>
-    <input id="utr" placeholder="Enter UTR" />
-    <button onclick="submitPayment()">SUBMIT PAYMENT</button>
-    <button onclick="closePay()" style="background:#222;color:#fff;margin-top:10px">Cancel</button>
-  </div>
-</div><script>
-function openPay(){ document.getElementById('pay').style.display='flex'; }
-function closePay(){ document.getElementById('pay').style.display='none'; }
-</script></body>
+        // Join button for open matches
+        if (data.status === 'open') {
+          var btn = document.createElement('button');
+          btn.textContent = 'Join';
+          btn.className = 'join-btn';
+          btn.onclick = function() { openPaymentModal(doc.id); };
+          // Hide join if not logged in
+          if (!auth.currentUser) btn.style.display = 'none';
+          card.appendChild(btn);
+        }
+
+        // Countdown timer if startTime provided (assumes Firestore Timestamp)
+        if (data.startTime) {
+          var target = data.startTime.toDate().getTime();
+          startTimer(doc.id, target);
+        }
+      });
+    });
+
+    // Toggle menu visibility
+    function toggleMenu() {
+      var m = document.getElementById('menu');
+      m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Show/Hide login modal
+    function showLogin(){ document.getElementById('loginModal').style.display = 'block'; }
+    function closeLogin(){ document.getElementById('loginModal').style.display = 'none'; }
+
+    // Login with email/password
+    function login() {
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => { closeLogin(); location.reload(); })
+        .catch(error => { alert(error.message); });
+    }
+    // Sign-up new user
+    function signUp() {
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => { alert("Account created, please log in."); })
+        .catch(error => { alert(error.message); });
+    }
+    // Logout user
+    function logout() {
+      auth.signOut().then(() => { location.reload(); });
+    }
+
+    // Payment modal logic
+    var currentMatchId = null;
+    function openPaymentModal(id) {
+      if (!auth.currentUser) { alert("Please login to join."); return; }
+      currentMatchId = id;
+      document.getElementById('paymentModal').style.display = 'block';
+    }
+    function closePayment() { document.getElementById('paymentModal').style.display = 'none'; }
+    function submitPayment() {
+      var utr = document.getElementById('utr').value.trim();
+      if (!utr) { alert("Enter UTR"); return; }
+      db.collection("payments").add({
+        matchId: currentMatchId,
+        utr: utr,
+        status: "pending",
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('paymentModal').style.display = 'none';
+        document.getElementById('confirmation').style.display = 'block';
+      }).catch(error => { alert(error.message); });
+    }
+
+    // Countdown timer function
+    function startTimer(id, targetTime) {
+      var pad = function(n){ return n<10 ? '0'+n : n; };
+      var interval = setInterval(function() {
+        var now = Date.now();
+        var dist = targetTime - now;
+        if (dist < 0) {
+          clearInterval(interval);
+          document.getElementById('timer-'+id).textContent = "00:00:00";
+          return;
+        }
+        var hours = pad(Math.floor((dist % (1000*60*60*24)) / (1000*60*60)));
+        var mins = pad(Math.floor((dist % (1000*60*60)) / (1000*60)));
+        var secs = pad(Math.floor((dist % (1000*60)) / 1000));
+        document.getElementById('timer-'+id).textContent = hours + ":" + mins + ":" + secs;
+      }, 1000);
+    }
+  </script>
+</body>
 </html>
