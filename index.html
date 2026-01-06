@@ -1,10 +1,10 @@
 <!DOCTYPE html><html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>SQL Matches – Premium</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- Firebase --><script type="module">
+<meta charset="UTF-8" />
+<title>Free Fire Tournament</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" /><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
@@ -18,80 +18,75 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.openPay = (id, amt) => {
-  window.matchId = id;
-  document.getElementById('payAmt').innerText = "₹"+amt;
-  document.getElementById('payModal').style.display='flex';
+let currentMatch = null;
+
+onSnapshot(collection(db, "matches"), snap => {
+  const box = document.getElementById('matches');
+  box.innerHTML = "";
+  snap.forEach(d => {
+    const m = d.data();
+    box.innerHTML += `
+      <div class="card">
+        <h3>${m.type}</h3>
+        <p>Entry: ₹${m.entry}</p>
+        <p>Win: ₹${m.win}</p>
+        <p>Status: <span class="${m.status}">${m.status}</span></p>
+        ${m.status === 'open' ? `<button onclick="joinMatch('${d.id}', ${m.entry})">JOIN MATCH</button>` : ''}
+        ${m.status === 'approved' ? `<div class="room">Room ID: ${m.roomId}<br>Password: ${m.password}</div>` : ''}
+      </div>`;
+  });
+});
+
+window.joinMatch = (id, amt) => {
+  currentMatch = { id, amt };
+  openPay(amt);
 };
 
 window.submitPayment = async () => {
-  const utr = document.getElementById('utr').value.trim();
+  const utr = document.getElementById('utr').value;
   if(!utr) return alert('Enter UTR');
-  await addDoc(collection(db,'payments'),{
-    matchId: matchId,
-    utr: utr,
-    status:'pending',
+  await addDoc(collection(db, 'payments'), {
+    matchId: currentMatch.id,
+    utr,
+    status: 'pending',
     time: Date.now()
   });
-  alert('Payment submitted for approval');
-  document.getElementById('payModal').style.display='none';
+  alert('Payment Submitted. Wait for approval');
+  closePay();
 };
-
-onSnapshot(collection(db,'matches'), snap=>{
-  const box=document.getElementById('matches');
-  box.innerHTML='';
-  snap.forEach(d=>{
-    const m=d.data();
-    box.innerHTML+=`
-    <div class="card">
-      <div class="top">
-        <span class="type">${m.type}</span>
-        <span class="status ${m.status}">${m.status}</span>
-      </div>
-      <div class="mid">
-        <div>Entry <b>₹${m.entry}</b></div>
-        <div>Win <b>₹${m.win}</b></div>
-      </div>
-      ${m.status==='open'?`<button onclick="openPay('${d.id}',${m.entry})">JOIN MATCH</button>`:''}
-      ${m.status==='approved'?`<div class="room">Room: ${m.roomId}<br>Pass: ${m.password}</div>`:''}
-    </div>`;
-  })
-});
 </script><style>
-:root{
- --bg:#050505; --card:#0f0f0f; --gold:#ffb300; --green:#00ff88; --red:#ff4444;
-}
-body{margin:0;background:linear-gradient(180deg,#050505,#000);color:#fff;font-family:Inter,Arial}
-header{padding:20px;text-align:center;font-size:1.6rem;font-weight:900;color:var(--gold)}
-#matches{padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
-.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 0 30px rgba(255,179,0,.05)}
-.top{display:flex;justify-content:space-between;margin-bottom:10px}
-.type{font-weight:800}
-.status{font-size:.8rem;padding:4px 10px;border-radius:20px}
-.status.open{background:#222;color:var(--green)}
-.status.approved{background:var(--green);color:#000}
-.mid{display:flex;justify-content:space-between;margin:10px 0;color:#ccc}
-button{width:100%;padding:12px;border:none;border-radius:12px;font-weight:900;background:var(--gold);cursor:pointer}
-.room{margin-top:10px;background:#000;padding:10px;border-radius:10px;color:var(--green);font-weight:700;text-align:center}
-
-/* Payment modal */
-#payModal{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center}
-.payBox{background:#111;border-radius:22px;padding:22px;width:90%;max-width:360px;text-align:center;border:1px solid var(--gold)}
-.payBox h2{color:var(--gold)}
-input{width:100%;padding:12px;margin:12px 0;border-radius:10px;border:1px solid #333;background:#000;color:var(--green);text-align:center}
-.payBtn{background:var(--green);padding:14px;border-radius:12px;font-weight:900;border:none;width:100%}
-.cancel{margin-top:12px;background:none;color:var(--red);border:none;font-weight:bold}
+body{margin:0;background:#050505;color:#fff;font-family:Arial}
+header{text-align:center;padding:20px;background:#000;border-bottom:2px solid gold}
+header h1{color:gold;margin:0}
+header p{color:#aaa;margin-top:5px}
+#matches{padding:20px}
+.card{background:#0f0f0f;border:1px solid #333;padding:15px;border-radius:15px;margin-bottom:15px}
+.card h3{color:#00ff88}
+button{width:100%;padding:12px;margin-top:10px;background:gold;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+.open{color:#00ff88}
+.approved{color:gold}
+.room{margin-top:10px;background:#000;padding:10px;border-radius:10px;color:#00ff88}
+footer{text-align:center;padding:15px;color:#777;font-size:0.9rem}
+#pay{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center}
+.paybox{background:#111;padding:20px;border-radius:20px;width:90%;max-width:350px;text-align:center;border:2px solid gold}
+.paybox h2{color:gold}
+input{width:100%;padding:12px;margin-top:10px;background:#000;border:1px solid #444;color:#00ff88;border-radius:10px}
 </style></head>
-<body>
-<header>SQL PREMIUM MATCHES</header>
-<div id="matches"></div><div id="payModal">
-  <div class="payBox">
-    <h2>PAY ₹<span id="payAmt"></span></h2>
-    <p style="color:#aaa">Pay via UPI & enter UTR</p>
-    <input id="utr" placeholder="UTR Number">
-    <button class="payBtn" onclick="submitPayment()">SUBMIT PAYMENT</button>
-    <button class="cancel" onclick="payModal.style.display='none'">CANCEL</button>
+<body><header>
+  <h1>FREE FIRE TOURNAMENT</h1>
+  <p>Join • Play • Win Real Cash</p>
+</header><div id="matches"></div><footer>
+  © 2026 SQL — Premium Tournament System
+</footer><div id="pay">
+  <div class="paybox">
+    <h2>Complete Payment</h2>
+    <p>Pay via UPI & enter UTR</p>
+    <input id="utr" placeholder="Enter UTR" />
+    <button onclick="submitPayment()">SUBMIT PAYMENT</button>
+    <button onclick="closePay()" style="background:#222;color:#fff;margin-top:10px">Cancel</button>
   </div>
-</div>
-</body>
+</div><script>
+function openPay(){ document.getElementById('pay').style.display='flex'; }
+function closePay(){ document.getElementById('pay').style.display='none'; }
+</script></body>
 </html>
