@@ -2,248 +2,232 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Free Fire Tournament</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FREE FIRE TOURNAMENT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <!-- Google Translate script -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" 
+    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+  </script>
   <style>
-    /* Global styles */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #000; color: #fff; font-family: Arial, sans-serif; }
-    /* Header */
-    .header { display: flex; align-items: center; background: #111; padding: 10px; }
-    .hamburger { cursor: pointer; width: 30px; margin-right: 20px; }
-    .hamburger div { width: 100%; height: 4px; background: #39FF14; margin: 5px 0; }
-    .titles h1 { color: gold; font-size: 1.5em; }
-    .titles p { color: #39FF14; font-size: 1em; }
-    /* Matches container */
-    #matches { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-    .match-card { background: #111; border: 1px solid #333; border-radius: 10px; padding: 15px; margin: 10px; width: 280px; }
-    .match-card h2 { color: #39FF14; font-size: 1.2em; margin-bottom: 10px; }
-    .match-card p { margin: 5px 0; }
-    .match-card .value { color: #39FF14; }
-    .match-card .status.open { color: #39FF14; }
-    .match-card .status.approved { color: gold; }
-    .match-card .status.waiting { color: #888; }
-    .match-card .room-info p { color: #fff; }
-    .join-btn { background: #39FF14; color: #000; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer; }
-    /* Overlay menu */
-    .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: #fff; display: none; text-align: center; z-index: 10; }
-    .menu-overlay ul { list-style: none; margin-top: 100px; }
-    .menu-overlay li { margin: 20px 0; font-size: 1.2em; cursor: pointer; }
-    .menu-overlay a { color: #39FF14; text-decoration: none; }
-    /* Modals */
-    .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border: 2px solid #39FF14; display: none; z-index: 20; }
-    .modal input { width: 90%; padding: 8px; margin: 5px 0; border: 1px solid #555; border-radius: 4px; background: #111; color: #fff; }
-    .modal button { padding: 8px 16px; margin: 5px; border: none; background: gold; color: #000; cursor: pointer; }
-    /* Confirmation */
-    #confirmation { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: #fff; }
-    /* Footer */
-    footer { text-align: center; padding: 10px; background: #111; font-size: 0.9em; margin-top: 20px; }
+    /* Dark theme styling */
+    body { margin: 0; font-family: Arial, sans-serif; background: #121212; color: #e0e0e0; }
+    header { background: #000; padding: 20px; text-align: center; position: relative; }
+    header h1 { margin: 0; color: #2ecc71; letter-spacing: 2px; }
+    header p { margin: 5px 0 0; color: #e0e0e0; font-size: 1.2em; }
+    #google_translate_element { position: absolute; top: 20px; right: 60px; }
+    /* Hamburger menu */
+    .hamburger { position: absolute; top: 25px; right: 20px; cursor: pointer; width: 30px; }
+    .hamburger span { display: block; height: 3px; margin: 5px 0; background: #e0e0e0; }
+    .menu { display: none; position: fixed; top: 0; right: 0; background: #1e1e1e; width: 200px; height: 100%; box-shadow: -2px 0 5px rgba(0,0,0,0.5); }
+    .menu a { display: block; padding: 15px; color: #e0e0e0; text-decoration: none; border-bottom: 1px solid #333; }
+    .menu a:hover { background: #2ecc71; color: #000; }
+    /* Match cards */
+    #matches-container { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
+    .match-card { background: #1e1e1e; border: 2px solid #2ecc71; border-radius: 8px; width: 300px; margin: 10px; padding: 15px; position: relative; }
+    .match-card h3 { margin: 0 0 10px; color: #2ecc71; }
+    .match-info { margin-bottom: 10px; }
+    .match-info span { display: inline-block; width: 50%; }
+    .status { font-weight: bold; color: #2ecc71; }
+    .btn-join { width: 100%; padding: 10px; background: #2ecc71; border: none; border-radius: 5px; color: #000; cursor: pointer; font-weight: bold; }
+    .btn-join.disabled { background: #555; color: #999; cursor: not-allowed; }
+    /* Modal styling */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+             background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+    .modal-content { background: #1e1e1e; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; }
+    .modal-content h2 { color: #2ecc71; margin-top: 0; }
+    .modal-content label { display: block; margin: 10px 0 5px; }
+    .modal-content input[type="text"] { width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #e0e0e0; }
+    .modal-content button { margin-top: 15px; padding: 10px; width: 100%; background: #2ecc71; border: none; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
+    .modal-content button.cancel { background: #e74c3c; }
   </style>
 </head>
 <body>
-  <div id="mainContent">
-    <div class="header">
-      <div class="hamburger" onclick="toggleMenu()">
-        <div></div><div></div><div></div>
-      </div>
-      <div class="titles">
-        <h1>FREE FIRE TOURNAMENT</h1>
-        <p>Join &bull; Play &bull; Win Real Cash</p>
-      </div>
-    </div>
-    <div id="matches"></div>
-    <footer>© 2026 SQL — Premium Tournament System</footer>
+
+<header>
+  <h1>FREE FIRE TOURNAMENT</h1>
+  <p>Join • Play • Win Real Cash</p>
+  <div id="google_translate_element"></div>
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
   </div>
+</header>
 
-  <!-- Overlay Menu -->
-  <div id="menu" class="menu-overlay">
-    <ul>
-      <li onclick="location.reload()">Home</li>
-      <li>This game involves risk. Play at your own risk. Refunds processed within 20 minutes.</li>
-      <li><a href="https://wa.me/919012277862" target="_blank">WhatsApp</a></li>
-      <li id="loginMenu" onclick="showLogin()">Login</li>
-      <li id="logoutMenu" onclick="logout()" style="display:none;">Logout</li>
-    </ul>
+<div id="matches-container">
+  <!-- Match cards will be injected here -->
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+  <div class="modal-content">
+    <h2>Enter Payment UTR</h2>
+    <label for="utrInput">UTR/Transaction ID:</label>
+    <input type="text" id="utrInput" placeholder="Enter UTR here">
+    <button id="submitUtrBtn">Submit Payment</button>
+    <button class="cancel" onclick="closeModal('paymentModal')">Cancel</button>
   </div>
+</div>
 
-  <!-- Login Modal -->
-  <div id="loginModal" class="modal">
-    <h2 style="color:#39FF14;">Login</h2>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
-    <button onclick="closeLogin()">Cancel</button>
-    <button onclick="signUp()">Sign Up</button>
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <h2>Login</h2>
+    <label for="emailInput">Email:</label>
+    <input type="text" id="emailInput" placeholder="Enter email">
+    <label for="passInput">Password:</label>
+    <input type="password" id="passInput" placeholder="Enter password">
+    <button id="loginBtn">Login</button>
+    <button class="cancel" onclick="closeModal('loginModal')">Cancel</button>
   </div>
+</div>
 
-  <!-- Payment Modal -->
-  <div id="paymentModal" class="modal">
-    <h2 style="color:#39FF14;">Submit Payment</h2>
-    <input type="text" id="utr" placeholder="Enter UTR"><br>
-    <button onclick="submitPayment()">Submit</button>
-    <button onclick="closePayment()">Cancel</button>
-  </div>
+<!-- Hamburger Menu Links -->
+<div id="menu" class="menu">
+  <a href="#" onclick="location.reload()">Home</a>
+  <a href="#" onclick="alert('Is game mein jokhim shamil hai. Apne jokhim par khelein. Refund 20 minute ke andar process ho jata hai.')">Privacy Policy</a>
+  <a href="https://wa.me/919012277862" target="_blank">WhatsApp</a>
+  <a href="#" id="loginLink" onclick="openLoginModal()">Login</a>
+  <a href="#" id="logoutLink" onclick="logoutUser()" style="display:none">Logout</a>
+</div>
 
-  <!-- Payment Confirmation -->
-  <div id="confirmation">
-    <h1>Payment Submitted!</h1>
-  </div>
+<script>
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+    authDomain: "sqladmin-ff04d.firebaseapp.com",
+    projectId: "sqladmin-ff04d",
+    storageBucket: "sqladmin-ff04d.firebasestorage.app",
+    messagingSenderId: "539086978850",
+    appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
+    measurementId: "G-KH4J0CZ9M5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  const db = firebase.firestore();
+  const auth = firebase.auth();
 
-  <script>
-    // TODO: Replace with your Firebase project configuration
-    var firebaseConfig = { /* // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  let currentMatchId = null;  // track which match user is joining
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-  authDomain: "sqladmin-ff04d.firebaseapp.com",
-  projectId: "sqladmin-ff04d",
-  storageBucket: "sqladmin-ff04d.firebasestorage.app",
-  messagingSenderId: "539086978850",
-  appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
-  measurementId: "G-KH4J0CZ9M5"
-};
+  // Listen for auth state changes to toggle login/logout in menu
+  auth.onAuthStateChanged(user => {
+    document.getElementById('loginLink').style.display = user ? 'none' : 'block';
+    document.getElementById('logoutLink').style.display = user ? 'block' : 'none';
+  });
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app); */ };
-    firebase.initializeApp(firebaseConfig);
-    var auth = firebase.auth();
-    var db = firebase.firestore();
+  function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+  function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+  function toggleMenu() {
+    const menu = document.getElementById('menu');
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+  }
+  function logoutUser() {
+    auth.signOut();
+  }
+  document.getElementById('loginBtn').onclick = function() {
+    const email = document.getElementById('emailInput').value;
+    const pass = document.getElementById('passInput').value;
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => { closeModal('loginModal'); })
+      .catch(err => alert(err.message));
+  };
 
-    // Monitor auth state and toggle menu items
-    auth.onAuthStateChanged(function(user) {
-      document.getElementById('loginMenu').style.display = user ? 'none' : 'block';
-      document.getElementById('logoutMenu').style.display = user ? 'block' : 'none';
-    });
+  // Load matches dynamically on page load
+  window.onload = function() {
+    db.collection("matches").orderBy("startTime")
+      .onSnapshot(snapshot => {
+        const container = document.getElementById('matches-container');
+        container.innerHTML = '';  // clear existing
+        snapshot.forEach(doc => {
+          const match = doc.data();
+          // Create card element
+          const card = document.createElement('div');
+          card.className = 'match-card';
+          card.innerHTML = `
+            <h3>${match.type} Match</h3>
+            <div class="match-info">
+              <span>Entry: ₹${match.entry}</span>
+              <span>Win: ₹${match.win}</span>
+            </div>
+            <div class="match-info">
+              <span>Players: ${match.joined}/${match.required}</span>
+              <span id="timer-${doc.id}"></span>
+            </div>
+            <div>Status: <span class="status">${match.status}</span></div>
+            <button id="btn-${doc.id}" class="btn-join">JOIN MATCH</button>
+            <div id="room-${doc.id}" style="margin-top:10px; font-style: italic;">
+              Room: ${match.status === 'open' ? 'Waiting for Payment Approval' : 'N/A'}
+            </div>
+          `;
+          container.appendChild(card);
 
-    // Load matches from Firestore
-    var matchesDiv = document.getElementById('matches');
-    db.collection("matches").get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        var data = doc.data();
-        var card = document.createElement('div');
-        card.className = 'match-card';
-        card.innerHTML = `
-          <h2>Match ${doc.id}</h2>
-          <p>Entry Fee: <span class="value">${data.entry || ''}</span></p>
-          <p>Prize: <span class="value">${data.win || ''}</span></p>
-          <p>Status: <span class="status ${data.status}">${data.status}</span></p>
-          <p>Time: <span id="timer-${doc.id}"></span></p>
-          <p>Players: <span class="value">${data.joined || 0}/${data.maxPlayers || 0}</span></p>
-          <div class="room-info"></div>
-        `;
-        matchesDiv.appendChild(card);
+          // Countdown timer
+          const startTime = match.startTime.toDate();
+          const timerEl = document.getElementById('timer-' + doc.id);
+          const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const diff = startTime - now;
+            if (diff < 0) {
+              timerEl.textContent = 'Started';
+              clearInterval(interval);
+            } else {
+              const hours = Math.floor((diff % (1000*60*60*24))/(1000*60*60));
+              const mins = Math.floor((diff % (1000*60*60))/(1000*60));
+              const secs = Math.floor((diff % (1000*60))/1000);
+              timerEl.textContent = hours+'h '+mins+'m '+secs+'s';
+            }
+          }, 1000);
 
-        // Display room ID/password or waiting text
-        var roomInfo = card.querySelector('.room-info');
-        if (data.status === 'approved') {
-          roomInfo.innerHTML = `
-            <p class="value">Room ID: ${data.roomId || ''}</p>
-            <p class="value">Password: ${data.password || ''}</p>`;
-        } else {
-          roomInfo.innerHTML = `<p>Waiting for approval</p>`;
-        }
-
-        // Join button for open matches
-        if (data.status === 'open') {
-          var btn = document.createElement('button');
-          btn.textContent = 'Join';
-          btn.className = 'join-btn';
-          btn.onclick = function() { openPaymentModal(doc.id); };
-          // Hide join if not logged in
-          if (!auth.currentUser) btn.style.display = 'none';
-          card.appendChild(btn);
-        }
-
-        // Countdown timer if startTime provided (assumes Firestore Timestamp)
-        if (data.startTime) {
-          var target = data.startTime.toDate().getTime();
-          startTimer(doc.id, target);
-        }
+          // Configure Join button
+          const btn = document.getElementById('btn-' + doc.id);
+          if (match.status === 'open') {
+            btn.onclick = () => { openJoinModal(doc.id); };
+          } else {
+            btn.classList.add('disabled');
+            btn.disabled = true;
+          }
+        });
       });
+  };
+
+  // Open payment modal for a specific match
+  function openJoinModal(matchId) {
+    if (!auth.currentUser) {
+      alert("Please login first.");
+      return;
+    }
+    currentMatchId = matchId;
+    document.getElementById('paymentModal').style.display = 'flex';
+  }
+
+  // Submit UTR and create payment request
+  document.getElementById('submitUtrBtn').onclick = function() {
+    const utr = document.getElementById('utrInput').value.trim();
+    if (!utr) { alert("Please enter UTR"); return; }
+    // Create payment document
+    db.collection("payments").add({
+      userId: auth.currentUser.uid,
+      matchId: currentMatchId,
+      UTR: utr,
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(docRef => {
+      closeModal('paymentModal');
+      alert("Payment submitted! Redirecting to status page.");
+      // Redirect to payment status page
+      window.location = 'status.html?id=' + docRef.id;
+    }).catch(err => {
+      alert("Error submitting payment: " + err.message);
     });
-
-    // Toggle menu visibility
-    function toggleMenu() {
-      var m = document.getElementById('menu');
-      m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-    }
-
-    // Show/Hide login modal
-    function showLogin(){ document.getElementById('loginModal').style.display = 'block'; }
-    function closeLogin(){ document.getElementById('loginModal').style.display = 'none'; }
-
-    // Login with email/password
-    function login() {
-      var email = document.getElementById('email').value;
-      var password = document.getElementById('password').value;
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => { closeLogin(); location.reload(); })
-        .catch(error => { alert(error.message); });
-    }
-    // Sign-up new user
-    function signUp() {
-      var email = document.getElementById('email').value;
-      var password = document.getElementById('password').value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => { alert("Account created, please log in."); })
-        .catch(error => { alert(error.message); });
-    }
-    // Logout user
-    function logout() {
-      auth.signOut().then(() => { location.reload(); });
-    }
-
-    // Payment modal logic
-    var currentMatchId = null;
-    function openPaymentModal(id) {
-      if (!auth.currentUser) { alert("Please login to join."); return; }
-      currentMatchId = id;
-      document.getElementById('paymentModal').style.display = 'block';
-    }
-    function closePayment() { document.getElementById('paymentModal').style.display = 'none'; }
-    function submitPayment() {
-      var utr = document.getElementById('utr').value.trim();
-      if (!utr) { alert("Enter UTR"); return; }
-      db.collection("payments").add({
-        matchId: currentMatchId,
-        utr: utr,
-        status: "pending",
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('paymentModal').style.display = 'none';
-        document.getElementById('confirmation').style.display = 'block';
-      }).catch(error => { alert(error.message); });
-    }
-
-    // Countdown timer function
-    function startTimer(id, targetTime) {
-      var pad = function(n){ return n<10 ? '0'+n : n; };
-      var interval = setInterval(function() {
-        var now = Date.now();
-        var dist = targetTime - now;
-        if (dist < 0) {
-          clearInterval(interval);
-          document.getElementById('timer-'+id).textContent = "00:00:00";
-          return;
-        }
-        var hours = pad(Math.floor((dist % (1000*60*60*24)) / (1000*60*60)));
-        var mins = pad(Math.floor((dist % (1000*60*60)) / (1000*60)));
-        var secs = pad(Math.floor((dist % (1000*60)) / 1000));
-        document.getElementById('timer-'+id).textContent = hours + ":" + mins + ":" + secs;
-      }, 1000);
-    }
-  </script>
+  };
+</script>
 </body>
-</html>
+    </html>
