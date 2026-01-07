@@ -2,163 +2,151 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>SQL TOURNAMENT | PRO PLAYER HUB</title>
+    <title>SQL MASTER | PRO ARENA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --accent: #00ff88; --gold: #ffd700; --bg: #050505;
-            --card: #0f0f0f; --border: #1f1f1f; --red: #ff4444;
+            --accent: #00ff88; --gold: #ffd700; --bg: #0a0a0a;
+            --card: #151515; --border: #222; --text-dim: #aaa;
         }
+
+        /* Developer Mode Fix: Disable Text Selection except for ID/Pass */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .allow-select { user-select: text !important; }
 
         body { 
             margin: 0; background: var(--bg); color: #fff; 
-            font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; 
-            overflow-x: hidden; scroll-behavior: smooth;
+            font-family: 'Poppins', sans-serif; overflow-x: hidden; 
         }
-
-        /* Animated Background */
-        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% -20%, #00ff8822, transparent 50%); z-index: -1; }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 
         /* Header */
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; background: rgba(0,0,0,0.8); 
-            backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); 
-            position: sticky; top: 0; z-index: 1000; 
+            padding: 15px 20px; background: #000; border-bottom: 2px solid var(--gold);
+            position: sticky; top: 0; z-index: 2000; 
         }
-        .logo { font-family: 'Orbitron', sans-serif; color: var(--gold); font-weight: 900; font-size: 1.4rem; letter-spacing: 2px; }
-        .logo span { color: #fff; font-size: 0.8rem; display: block; letter-spacing: 0; font-family: 'Inter'; }
+        .logo-area h1 { font-size: 1.2rem; margin: 0; color: var(--gold); letter-spacing: 1px; }
+        .logo-area span { font-size: 0.7rem; color: var(--accent); display: block; }
 
-        /* Hero Banner */
-        .hero { 
-            width: 92%; margin: 15px auto; height: 160px; 
-            border-radius: 20px; position: relative; overflow: hidden;
-            border: 1px solid var(--gold);
+        /* Banner: Fast Loading & Pro Look */
+        .hero-banner {
+            width: 92%; margin: 15px auto; height: 130px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+            border-radius: 15px; border: 1px solid var(--gold);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; position: relative; overflow: hidden;
         }
-        .hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
-        .hero-text { position: absolute; bottom: 15px; left: 15px; }
-        .hero-text h2 { margin: 0; font-family: 'Orbitron'; color: var(--gold); text-shadow: 0 0 10px #000; }
-
-        /* Navigation Tabs */
-        .nav-tabs { display: flex; justify-content: space-around; padding: 10px; background: #000; border-bottom: 1px solid #111; position: sticky; top: 70px; z-index: 999; }
-        .tab-btn { background: none; border: none; color: #666; font-weight: 800; font-size: 0.8rem; padding: 8px 15px; cursor: pointer; }
-        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-
-        /* Match Cards Advanced */
-        .match-list { padding: 15px; }
-        .m-card { 
-            background: var(--card); border-radius: 20px; border: 1px solid var(--border);
-            margin-bottom: 20px; overflow: hidden; transition: 0.3s;
+        .hero-banner::after {
+            content: "\f6de"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; right: -20px; font-size: 8rem; opacity: 0.1; color: var(--accent);
         }
-        .m-header { background: #151515; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
-        .m-title { font-family: 'Orbitron'; font-size: 0.9rem; color: var(--gold); }
-        .m-status { font-size: 0.6rem; padding: 3px 8px; border-radius: 5px; background: var(--accent); color: #000; font-weight: 900; }
+        .hero-banner h2 { margin: 0; font-size: 1.4rem; color: #fff; z-index: 1; }
+        .hero-banner p { margin: 5px 0 0; font-size: 0.8rem; color: var(--gold); z-index: 1; font-weight: bold; }
 
-        .m-body { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .info-box { display: flex; align-items: center; gap: 10px; }
-        .info-box i { color: #555; font-size: 1.1rem; }
-        .info-label { font-size: 0.65rem; color: #888; display: block; }
-        .info-val { font-size: 0.9rem; font-weight: 800; }
+        /* Navigation */
+        .tabs { display: flex; background: #111; padding: 5px; margin: 10px 15px; border-radius: 10px; border: 1px solid var(--border); }
+        .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.8rem; font-weight: bold; color: #555; cursor: pointer; border-radius: 8px; }
+        .tab.active { background: var(--accent); color: #000; }
 
-        .m-footer { padding: 0 15px 15px; }
-        .slot-container { margin-bottom: 15px; }
-        .slot-text { display: flex; justify-content: space-between; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
-        .progress-bg { height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #00ccff); border-radius: 10px; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Right Side Menu */
+        #menu-drawer { 
+            position: fixed; top: 0; right: -100%; width: 280px; height: 100%; 
+            background: #000; z-index: 3000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-left: 2px solid var(--gold); padding: 20px;
+        }
+        #menu-drawer.active { right: 0; }
+        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 2500; }
+        .close-menu { text-align: right; font-size: 1.8rem; margin-bottom: 30px; color: var(--red); }
+        .menu-link { display: flex; align-items: center; gap: 15px; padding: 15px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-size: 0.9rem; }
+        .menu-link i { color: var(--gold); width: 20px; }
+
+        /* Match Card - Crystal Clear UI */
+        .match-card { background: var(--card); border-radius: 15px; margin: 15px; border: 1px solid var(--border); position: relative; }
+        .m-badge { position: absolute; top: 12px; right: 12px; font-size: 0.6rem; background: var(--accent); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
+        
+        .m-top { padding: 15px; border-bottom: 1px solid #222; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-bit { display: flex; align-items: center; gap: 8px; }
+        .info-bit i { color: var(--gold); font-size: 0.9rem; }
+        .info-text { font-size: 0.75rem; color: var(--text-dim); }
+        .info-val { display: block; font-weight: 700; color: #fff; font-size: 0.85rem; }
+
+        .m-mid { padding: 15px; text-align: center; background: #0c0c0c; }
+        .timer-label { font-size: 0.6rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+        .timer-clock { font-size: 1.4rem; font-weight: 900; color: #fff; font-family: monospace; display: block; margin-top: 5px; }
+
+        .m-bottom { padding: 15px; }
+        .slot-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 5px; font-weight: bold; }
+        .bar-bg { height: 6px; background: #222; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .bar-fill { height: 100%; background: var(--accent); transition: 1s ease; }
 
         .btn-join { 
-            width: 100%; padding: 15px; border-radius: 12px; border: none;
-            background: linear-gradient(45deg, var(--accent), #00ccff);
-            color: #000; font-weight: 900; font-family: 'Orbitron'; font-size: 0.9rem;
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+            width: 100%; padding: 12px; border: none; border-radius: 10px; 
+            background: var(--accent); color: #000; font-weight: 900; 
+            font-size: 0.9rem; cursor: pointer; transition: 0.2s;
         }
-        .btn-full { background: #222 !important; color: #555 !important; box-shadow: none !important; cursor: not-allowed; }
+        .btn-join:disabled { background: #333; color: #777; cursor: not-allowed; }
 
-        /* Timer UI */
-        .timer-box { background: #111; border: 1px dashed var(--gold); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 15px; }
-        .timer-val { font-family: 'monospace'; font-size: 1.2rem; color: var(--gold); font-weight: 900; }
+        /* Room Details Area */
+        .room-revealed { 
+            background: #001a0d; border: 1px dashed var(--accent); 
+            padding: 12px; border-radius: 10px; text-align: center;
+        }
+        .room-revealed p { margin: 5px 0; font-size: 0.8rem; font-weight: bold; color: var(--accent); }
 
-        /* Room ID Area */
-        .room-box { background: #001a0d; border: 1px solid var(--accent); padding: 15px; border-radius: 12px; text-align: center; }
-        .room-box span { display: block; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
-        .room-box b { color: var(--accent); font-size: 1.1rem; letter-spacing: 2px; }
-
-        /* Side Drawer */
-        #drawer { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #000; z-index: 2000; transition: 0.4s; padding: 60px 20px; border-right: 1px solid var(--gold); }
-        #drawer.active { left: 0; }
-        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1999; }
-        .nav-link { display: block; padding: 15px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-weight: 600; }
-
-        /* Checkout Modal */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-box { background: #111; width: 100%; max-width: 400px; padding: 25px; border-radius: 25px; border: 1px solid var(--gold); text-align: center; }
-        .payment-options { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
-        .pay-btn { background: #1a1a1a; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; text-decoration: none; color: #fff; border: 1px solid #333; font-weight: bold; }
-        .pay-btn img { width: 30px; }
-
-        .utr-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: var(--accent); border-radius: 12px; margin-bottom: 15px; font-weight: 800; text-align: center; outline: none; }
+        /* Payment Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #111; width: 100%; max-width: 350px; padding: 25px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="bg-glow"></div>
-
     <header>
-        <div class="menu-btn" onclick="toggleDrawer()"><i class="fas fa-bars-staggered" style="font-size:1.5rem; color:var(--gold);"></i></div>
-        <div class="logo">SQL MASTER<span>TOURNAMENTS ONLINE</span></div>
-        <div class="user-icon" onclick="showTab('profile')"><i class="fas fa-circle-user" style="font-size:1.6rem; color:var(--accent);"></i></div>
+        <div class="logo-area">
+            <h1>SQL MASTER</h1>
+            <span>ULTIMATE FREE FIRE ARENA</span>
+        </div>
+        <div onclick="toggleMenu(true)"><i class="fas fa-bars-staggered" style="font-size:1.5rem; color:var(--gold);"></i></div>
     </header>
 
-    <div id="overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
-    <div id="drawer">
-        <h2 style="color:var(--gold); margin-top:0;">MENU</h2>
-        <a href="#" class="nav-link" onclick="location.reload()"><i class="fas fa-home"></i> HOME</a>
-        <a href="#" class="nav-link" onclick="alert('Join our WhatsApp for Daily Updates!')"><i class="fab fa-whatsapp"></i> WHATSAPP GROUP</a>
-        <a href="#" class="nav-link" onclick="openPolicy()"><i class="fas fa-shield-halved"></i> RULES & POLICY</a>
+    <div class="hero-banner">
+        <h2>BATTLE ROYALE</h2>
+        <p><i class="fas fa-medal"></i> WIN REAL CASH PRIZES DAILY</p>
     </div>
 
-    <div class="hero">
-        <img src="https://wallpaperaccess.com/full/1163618.jpg">
-        <div class="hero-text">
-            <h2>ESPORTS ARENA</h2>
-            <p style="margin:0; font-size:0.7rem; color:var(--accent);">PRO LEAGUE SEASON 1</p>
-        </div>
+    <div id="overlay" class="menu-overlay" onclick="toggleMenu(false)"></div>
+    <div id="menu-drawer">
+        <div class="close-menu" onclick="toggleMenu(false)"><i class="fas fa-circle-xmark"></i></div>
+        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-house"></i> Home</a>
+        <a href="https://wa.me/919012277862" class="menu-link"><i class="fab fa-whatsapp"></i> WhatsApp Support</a>
+        <a href="#" class="menu-link" onclick="alert('Rules: No Hacks, No Team-up!')"><i class="fas fa-file-contract"></i> Rules & Policy</a>
     </div>
 
-    <div class="nav-tabs">
-        <button class="tab-btn active" id="tab-live" onclick="switchSection('live')">LIVE MATCHES</button>
-        <button class="tab-btn" id="tab-my" onclick="switchSection('my')">MY MATCHES</button>
+    <div class="tabs">
+        <div class="tab active" id="tab-live" onclick="switchTab('live')">AVAILABLE</div>
+        <div class="tab" id="tab-my" onclick="switchTab('my')">JOINED</div>
     </div>
 
-    <main id="match-container" class="match-list"></main>
+    <main id="matches-container"></main>
 
     <div id="pay-modal" class="modal">
-        <div class="modal-box">
-            <h3 style="margin-top:0; color:var(--gold);">SECURE CHECKOUT</h3>
-            <p id="pay-amt" style="font-size:1.8rem; font-weight:900; color:var(--accent); margin:10px 0;"></p>
-            
-            <div class="payment-options">
-                <a id="upilink-g" href="#" class="pay-btn"><img src="https://img.icons8.com/color/48/google-pay.png"> Google Pay</a>
-                <a id="upilink-p" href="#" class="pay-btn"><img src="https://img.icons8.com/color/48/phone-pe.png"> PhonePe / Paytm</a>
+        <div class="modal-content">
+            <h3 style="color:var(--gold); margin-top:0;">CHECKOUT</h3>
+            <h2 id="modal-amt" style="color:var(--accent);">₹0</h2>
+            <div style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
+                <a id="pay-link" href="#" class="btn-join" style="text-decoration:none; display:block;">PAY WITH UPI</a>
             </div>
-
-            <p style="font-size:0.6rem; color:#666;">PAY KARNE KE BAAD UTR YA TXN ID YAHA DALE</p>
-            <input type="text" id="utr-input" class="utr-input" placeholder="Enter 12 Digit UTR Number">
-            <button class="btn-join" id="verify-btn" onclick="submitPayment()">VERIFY & JOIN</button>
-            <button onclick="closePay()" style="background:none; border:none; color:var(--red); margin-top:15px; font-weight:bold;">CANCEL</button>
+            <input type="text" id="utr-input" class="allow-select" placeholder="Enter 12 Digit UTR" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:var(--accent); border-radius:8px; margin-bottom:15px; text-align:center;">
+            <button class="btn-join" id="final-submit" onclick="submitUTR()">SUBMIT TRANSACTION</button>
+            <button onclick="closeModal()" style="background:none; border:none; color:var(--red); margin-top:15px; font-weight:bold;">CLOSE</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
@@ -172,135 +160,135 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let activeMatchId = null;
-        let currentSection = 'live';
+        let activeSection = 'live';
+        let currentMatchId = null;
 
-        // Load Matches Realtime
-        onSnapshot(collection(db, "matches"), snap => {
-            renderMatches(snap);
-        });
+        // --- REAL-TIME MATCH FETCHING ---
+        function loadContent() {
+            onSnapshot(collection(db, "matches"), snap => {
+                const container = document.getElementById('matches-container');
+                container.innerHTML = "";
 
-        function renderMatches(snap) {
-            const container = document.getElementById('match-container');
-            container.innerHTML = "";
-            
-            snap.forEach(doc => {
-                const m = doc.data();
-                const id = doc.id;
-                const payStatus = localStorage.getItem(`status_${id}`);
+                snap.forEach(d => {
+                    const m = d.data();
+                    const mid = d.id;
+                    const status = localStorage.getItem(`status_${mid}`);
 
-                // Logic for "My Matches" tab filter
-                if(currentSection === 'my' && !payStatus) return;
+                    if(activeSection === 'my' && !status) return;
 
-                const isFull = m.joined >= m.total;
-                const slotPercent = (m.joined / m.total) * 100;
+                    const isFull = m.joined >= m.total;
+                    const progress = (m.joined / m.total) * 100;
 
-                let actionHtml = '';
-                if(payStatus === 'approved') {
-                    actionHtml = `
-                        <div class="room-box">
-                            <span>ROOM DETAILS REVEALED</span>
-                            <b>ID: ${m.roomId || 'Wait...'}</b><br>
-                            <b>PASS: ${m.password || 'Wait...'}</b>
-                        </div>`;
-                } else if(payStatus === 'pending') {
-                    actionHtml = `<button class="btn-join btn-full" disabled>VERIFYING PAYMENT...</button>`;
-                } else {
-                    actionHtml = isFull 
-                        ? `<button class="btn-join btn-full">MATCH FULL</button>` 
-                        : `<button class="btn-join" onclick="openPay('${id}', ${m.entry})">JOIN NOW ₹${m.entry}</button>`;
-                }
+                    let actionArea = '';
+                    if(status === 'approved') {
+                        actionArea = `
+                            <div class="room-revealed">
+                                <p>ROOM DETAILS</p>
+                                <p class="allow-select" style="color:#fff">ID: ${m.roomId || 'Wait...'}</p>
+                                <p class="allow-select" style="color:#fff">PASS: ${m.password || 'Wait...'}</p>
+                            </div>`;
+                    } else if(status === 'pending') {
+                        // Check realtime if admin approved it
+                        checkAutoApproval(mid);
+                        actionArea = `<button class="btn-join" style="background:#444; color:#aaa;" disabled>VERIFYING PAYMENT...</button>`;
+                    } else {
+                        actionArea = isFull ? `<button class="btn-join" disabled>MATCH FULL</button>` : `<button class="btn-join" onclick="openPayment('${mid}', ${m.entry})">JOIN MATCH</button>`;
+                    }
 
-                container.innerHTML += `
-                <div class="m-card">
-                    <div class="m-header">
-                        <div class="m-title">TOURNAMENT #${id.substring(0,5)}</div>
-                        <div class="m-status">${m.status.toUpperCase()}</div>
-                    </div>
-                    <div class="m-body">
-                        <div class="info-box"><i class="fas fa-map-location-dot"></i><div><span class="info-label">MAP</span><span class="info-val">${m.map}</span></div></div>
-                        <div class="info-box"><i class="fas fa-users"></i><div><span class="info-label">TYPE</span><span class="info-val">${m.type}</span></div></div>
-                        <div class="info-box"><i class="fas fa-trophy"></i><div><span class="info-label">WIN PRIZE</span><span class="info-val">₹${m.win}</span></div></div>
-                        <div class="info-box"><i class="fas fa-ticket"></i><div><span class="info-label">ENTRY</span><span class="info-val">₹${m.entry}</span></div></div>
-                    </div>
-                    <div class="m-footer">
-                        <div class="timer-box">
-                            <span class="info-label">MATCH STARTS IN</span>
-                            <div class="timer-val" id="timer-${id}">${calculateTime(m.startTime)}</div>
+                    container.innerHTML += `
+                    <div class="match-card">
+                        <div class="m-badge">${m.status.toUpperCase()}</div>
+                        <div class="m-top">
+                            <div class="info-bit"><i class="fas fa-map"></i><div><span class="info-text">MAP</span><span class="info-val">${m.map}</span></div></div>
+                            <div class="info-bit"><i class="fas fa-user-group"></i><div><span class="info-text">TYPE</span><span class="info-val">${m.type}</span></div></div>
+                            <div class="info-bit"><i class="fas fa-trophy"></i><div><span class="info-text">WIN PRIZE</span><span class="info-val">₹${m.win}</span></div></div>
+                            <div class="info-bit"><i class="fas fa-wallet"></i><div><span class="info-text">ENTRY</span><span class="info-val">₹${m.entry}</span></div></div>
                         </div>
-                        <div class="slot-container">
-                            <div class="slot-text"><span>Filled: ${m.joined}/${m.total}</span><span>${Math.round(slotPercent)}%</span></div>
-                            <div class="progress-bg"><div class="progress-fill" style="width:${slotPercent}%"></div></div>
+                        <div class="m-mid">
+                            <span class="timer-label">Match Starts In</span>
+                            <span class="timer-clock" data-time="${m.startTime}">Calculating...</span>
                         </div>
-                        ${actionHtml}
-                    </div>
-                </div>`;
+                        <div class="m-bottom">
+                            <div class="slot-row"><span>Slots Filled</span><span>${m.joined}/${m.total}</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width:${progress}%"></div></div>
+                            ${actionArea}
+                        </div>
+                    </div>`;
+                });
             });
         }
 
-        // Timer Logic
-        function calculateTime(ts) {
-            const diff = ts - Date.now();
-            if(diff <= 0) return "STARTED";
-            const h = Math.floor(diff/3600000);
-            const m = Math.floor((diff%3600000)/60000);
-            const s = Math.floor((diff%60000)/1000);
-            return `${h}h : ${m}m : ${s}s`;
+        // --- AUTO APPROVAL CHECK ---
+        function checkAutoApproval(mid) {
+            const q = query(collection(db, "payments"), where("matchId", "==", mid), where("status", "==", "approved"));
+            onSnapshot(q, (snapshot) => {
+                if (!snapshot.empty) {
+                    localStorage.setItem(`status_${mid}`, 'approved');
+                    // Page will auto-update because of main snapshot
+                }
+            });
         }
 
+        // --- COUNTDOWN LOGIC (Developer Mode) ---
         setInterval(() => {
-            document.querySelectorAll('[id^="timer-"]').forEach(el => {
-                const id = el.id.split('-')[1];
-                // Note: Re-fetching the full data for timer is heavy, 
-                // but for this simple version, we just let it refresh on next snapshot or manual update.
+            document.querySelectorAll('.timer-clock').forEach(clock => {
+                const startTime = parseInt(clock.getAttribute('data-time'));
+                const now = Date.now();
+                const diff = startTime - now;
+
+                if(diff <= 0) {
+                    clock.innerText = "STARTED";
+                    clock.style.color = "var(--accent)";
+                } else {
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    clock.innerText = `${h}h : ${m}m : ${s}s`;
+                }
             });
         }, 1000);
 
-        // Section Switcher
-        window.switchSection = (sec) => {
-            currentSection = sec;
-            document.getElementById('tab-live').classList.toggle('active', sec === 'live');
-            document.getElementById('tab-my').classList.toggle('active', sec === 'my');
-            location.reload(); // Re-trigger snapshot render
+        // --- MODAL & TABS ---
+        window.switchTab = (t) => {
+            activeSection = t;
+            document.getElementById('tab-live').classList.toggle('active', t === 'live');
+            document.getElementById('tab-my').classList.toggle('active', t === 'my');
+            loadContent();
         };
 
-        // Payment Process
-        window.openPay = (id, amt) => {
-            activeMatchId = id;
+        window.openPayment = (id, amt) => {
+            currentMatchId = id;
+            document.getElementById('modal-amt').innerText = "₹" + amt;
+            document.getElementById('pay-link').href = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_${id}`;
             document.getElementById('pay-modal').style.display = 'flex';
-            document.getElementById('pay-amt').innerText = "Pay ₹" + amt;
-            const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_${id}`;
-            document.getElementById('upilink-g').href = upi;
-            document.getElementById('upilink-p').href = upi;
         };
 
-        window.submitPayment = async () => {
+        window.submitUTR = async () => {
             const utr = document.getElementById('utr-input').value;
-            if(utr.length < 10) return alert("Valid UTR Number Dalein!");
+            if(utr.length < 10) return alert("Enter valid 12 digit UTR!");
 
-            const btn = document.getElementById('verify-btn');
-            btn.innerText = "SENDING TO ADMIN...";
-            btn.disabled = true;
+            const btn = document.getElementById('final-submit');
+            btn.innerText = "Processing..."; btn.disabled = true;
 
             await addDoc(collection(db, "payments"), {
-                matchId: activeMatchId,
+                matchId: currentMatchId,
                 utr: utr,
                 status: 'pending',
                 timestamp: Date.now()
             });
 
-            localStorage.setItem(`status_${activeMatchId}`, 'pending');
-            alert("Request Sent! Admin will verify in 10-20 mins.");
-            location.reload();
+            localStorage.setItem(`status_${currentMatchId}`, 'pending');
+            alert("Payment Submitted! Waiting for Admin Approval.");
+            closeModal();
         };
 
-        window.closePay = () => document.getElementById('pay-modal').style.display = 'none';
-        window.toggleDrawer = () => {
-            document.getElementById('drawer').classList.toggle('active');
-            document.getElementById('overlay').style.display = 
-                document.getElementById('drawer').classList.contains('active') ? 'block' : 'none';
+        window.closeModal = () => document.getElementById('pay-modal').style.display = 'none';
+        window.toggleMenu = (show) => {
+            document.getElementById('menu-drawer').classList.toggle('active', show);
+            document.getElementById('overlay').style.display = show ? 'block' : 'none';
         };
 
+        loadContent();
     </script>
 </body>
 </html>
