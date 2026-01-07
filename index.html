@@ -2,145 +2,110 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>SQL MASTER | PRO ARENA</title>
+    <title>SQL TOURNAMENT PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --accent: #00ff88; --gold: #ffd700; --bg: #0a0a0a;
-            --card: #151515; --border: #222; --text-dim: #aaa;
-        }
-
-        /* Developer Mode Fix: Disable Text Selection except for ID/Pass */
+        :root { --accent: #00ff88; --gold: #ffd700; --bg: #050505; --card: #121212; --border: #222; --red: #ff4444; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Poppins', sans-serif; overflow-x: hidden; }
         .allow-select { user-select: text !important; }
 
-        body { 
-            margin: 0; background: var(--bg); color: #fff; 
-            font-family: 'Poppins', sans-serif; overflow-x: hidden; 
-        }
-
-        /* Header */
+        /* Centered Header */
         header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; background: #000; border-bottom: 2px solid var(--gold);
-            position: sticky; top: 0; z-index: 2000; 
+            background: #000; padding: 15px; border-bottom: 2px solid var(--gold);
+            text-align: center; position: sticky; top: 0; z-index: 1000;
         }
-        .logo-area h1 { font-size: 1.2rem; margin: 0; color: var(--gold); letter-spacing: 1px; }
-        .logo-area span { font-size: 0.7rem; color: var(--accent); display: block; }
+        .header-title { color: var(--gold); font-weight: 800; font-size: 0.9rem; margin: 0; letter-spacing: 0.5px; text-transform: uppercase; }
+        .header-sub { color: var(--accent); font-size: 0.65rem; display: block; margin-top: 2px; }
+        .menu-btn { position: absolute; right: 20px; top: 18px; color: var(--gold); font-size: 1.4rem; cursor: pointer; }
 
-        /* Banner: Fast Loading & Pro Look */
-        .hero-banner {
-            width: 92%; margin: 15px auto; height: 130px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
-            border-radius: 15px; border: 1px solid var(--gold);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; position: relative; overflow: hidden;
-        }
-        .hero-banner::after {
-            content: "\f6de"; font-family: "Font Awesome 6 Free"; font-weight: 900;
-            position: absolute; right: -20px; font-size: 8rem; opacity: 0.1; color: var(--accent);
-        }
-        .hero-banner h2 { margin: 0; font-size: 1.4rem; color: #fff; z-index: 1; }
-        .hero-banner p { margin: 5px 0 0; font-size: 0.8rem; color: var(--gold); z-index: 1; font-weight: bold; }
-
-        /* Navigation */
-        .tabs { display: flex; background: #111; padding: 5px; margin: 10px 15px; border-radius: 10px; border: 1px solid var(--border); }
-        .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.8rem; font-weight: bold; color: #555; cursor: pointer; border-radius: 8px; }
+        /* Navigation Tabs */
+        .tabs { display: flex; margin: 15px; background: #111; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+        .tab { flex: 1; padding: 12px; border: none; background: none; color: #666; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
         .tab.active { background: var(--accent); color: #000; }
 
-        /* Right Side Menu */
-        #menu-drawer { 
-            position: fixed; top: 0; right: -100%; width: 280px; height: 100%; 
-            background: #000; z-index: 3000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            border-left: 2px solid var(--gold); padding: 20px;
-        }
-        #menu-drawer.active { right: 0; }
-        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 2500; }
-        .close-menu { text-align: right; font-size: 1.8rem; margin-bottom: 30px; color: var(--red); }
-        .menu-link { display: flex; align-items: center; gap: 15px; padding: 15px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-size: 0.9rem; }
-        .menu-link i { color: var(--gold); width: 20px; }
-
-        /* Match Card - Crystal Clear UI */
-        .match-card { background: var(--card); border-radius: 15px; margin: 15px; border: 1px solid var(--border); position: relative; }
-        .m-badge { position: absolute; top: 12px; right: 12px; font-size: 0.6rem; background: var(--accent); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; }
+        /* Match Card Design */
+        .card { background: var(--card); border-radius: 18px; margin: 15px; border: 1px solid var(--border); overflow: hidden; position: relative; }
+        .m-tag { position: absolute; top: 12px; right: 15px; font-size: 0.6rem; background: #222; padding: 3px 8px; border-radius: 5px; color: var(--accent); font-weight: 800; }
         
-        .m-top { padding: 15px; border-bottom: 1px solid #222; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .info-bit { display: flex; align-items: center; gap: 8px; }
-        .info-bit i { color: var(--gold); font-size: 0.9rem; }
-        .info-text { font-size: 0.75rem; color: var(--text-dim); }
-        .info-val { display: block; font-weight: 700; color: #fff; font-size: 0.85rem; }
+        .card-body { padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .item { display: flex; align-items: center; gap: 10px; }
+        .item i { color: var(--gold); font-size: 0.9rem; width: 15px; }
+        .item div span { display: block; font-size: 0.6rem; color: #666; text-transform: uppercase; }
+        .item div b { font-size: 0.85rem; color: #fff; }
 
-        .m-mid { padding: 15px; text-align: center; background: #0c0c0c; }
-        .timer-label { font-size: 0.6rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-        .timer-clock { font-size: 1.4rem; font-weight: 900; color: #fff; font-family: monospace; display: block; margin-top: 5px; }
+        .timer-box { background: #0c0c0c; padding: 12px; text-align: center; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
+        .timer-label { font-size: 0.6rem; color: #555; display: block; margin-bottom: 2px; }
+        .countdown { font-family: monospace; font-size: 1.3rem; color: var(--gold); font-weight: 900; }
 
-        .m-bottom { padding: 15px; }
-        .slot-row { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 5px; font-weight: bold; }
-        .bar-bg { height: 6px; background: #222; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
-        .bar-fill { height: 100%; background: var(--accent); transition: 1s ease; }
+        .card-footer { padding: 15px; }
+        .slots { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; font-weight: 700; }
+        .bar { height: 8px; background: #222; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .fill { height: 100%; background: var(--accent); transition: 1s ease; }
 
-        .btn-join { 
-            width: 100%; padding: 12px; border: none; border-radius: 10px; 
-            background: var(--accent); color: #000; font-weight: 900; 
-            font-size: 0.9rem; cursor: pointer; transition: 0.2s;
-        }
-        .btn-join:disabled { background: #333; color: #777; cursor: not-allowed; }
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 900; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
+        .btn-join { background: var(--accent); color: #000; box-shadow: 0 4px 15px rgba(0,255,136,0.2); }
+        .btn-dis { background: #222; color: #555; cursor: not-allowed; }
 
-        /* Room Details Area */
-        .room-revealed { 
-            background: #001a0d; border: 1px dashed var(--accent); 
-            padding: 12px; border-radius: 10px; text-align: center;
-        }
-        .room-revealed p { margin: 5px 0; font-size: 0.8rem; font-weight: bold; color: var(--accent); }
+        /* Security: Room Details Styling */
+        .room-box { background: #001a0d; border: 1px dashed var(--accent); padding: 15px; border-radius: 12px; text-align: center; animation: fadeIn 0.5s; }
+        .room-box h4 { margin: 0 0 10px; font-size: 0.75rem; color: var(--accent); letter-spacing: 1px; }
+        .room-data { display: flex; justify-content: space-around; background: #000; padding: 10px; border-radius: 8px; }
+        .room-data div span { display: block; font-size: 0.55rem; color: #666; }
+        .room-data div b { font-size: 0.9rem; color: #fff; }
 
-        /* Payment Modal */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: #111; width: 100%; max-width: 350px; padding: 25px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; }
+        /* Modal & Side Menu */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-ui { background: #111; width: 100%; max-width: 380px; padding: 25px; border-radius: 20px; border: 1px solid var(--gold); text-align: center; }
+        .pay-grid { display: grid; gap: 10px; margin: 20px 0; }
+        .pay-opt { display: flex; align-items: center; gap: 12px; padding: 12px; background: #1a1a1a; border-radius: 12px; text-decoration: none; color: #fff; border: 1px solid #333; font-weight: 600; font-size: 0.85rem; }
+        .pay-opt img { width: 25px; }
+
+        #side-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: #000; z-index: 2000; transition: 0.4s; border-left: 2px solid var(--gold); padding: 25px; }
+        #side-menu.active { right: 0; }
+        .menu-link { display: flex; align-items: center; gap: 15px; padding: 18px; color: #fff; text-decoration: none; border-bottom: 1px solid #111; font-weight: 600; }
+        .close-menu { color: var(--red); font-size: 2rem; text-align: right; cursor: pointer; margin-bottom: 20px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-area">
-            <h1>SQL MASTER</h1>
-            <span>ULTIMATE FREE FIRE ARENA</span>
-        </div>
-        <div onclick="toggleMenu(true)"><i class="fas fa-bars-staggered" style="font-size:1.5rem; color:var(--gold);"></i></div>
+        <p class="header-title">FREE FIRE DAILY TOURNAMENT LIVE</p>
+        <span class="header-sub">JOIN PLAY & WIN REAL MONEY 💰</span>
+        <div class="menu-btn" onclick="toggleMenu(true)"><i class="fas fa-bars-staggered"></i></div>
     </header>
 
-    <div class="hero-banner">
-        <h2>BATTLE ROYALE</h2>
-        <p><i class="fas fa-medal"></i> WIN REAL CASH PRIZES DAILY</p>
-    </div>
-
-    <div id="overlay" class="menu-overlay" onclick="toggleMenu(false)"></div>
-    <div id="menu-drawer">
-        <div class="close-menu" onclick="toggleMenu(false)"><i class="fas fa-circle-xmark"></i></div>
-        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-house"></i> Home</a>
-        <a href="https://wa.me/919012277862" class="menu-link"><i class="fab fa-whatsapp"></i> WhatsApp Support</a>
-        <a href="#" class="menu-link" onclick="alert('Rules: No Hacks, No Team-up!')"><i class="fas fa-file-contract"></i> Rules & Policy</a>
-    </div>
-
     <div class="tabs">
-        <div class="tab active" id="tab-live" onclick="switchTab('live')">AVAILABLE</div>
-        <div class="tab" id="tab-my" onclick="switchTab('my')">JOINED</div>
+        <button class="tab active" id="tab-live" onclick="switchTab('live')">LIVE MATCHES</button>
+        <button class="tab" id="tab-my" onclick="switchTab('my')">MY HISTORY</button>
     </div>
 
-    <main id="matches-container"></main>
+    <div id="side-menu">
+        <div class="close-menu" onclick="toggleMenu(false)">&times;</div>
+        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-home"></i> Home</a>
+        <a href="https://wa.me/919012277862" class="menu-link"><i class="fab fa-whatsapp"></i> WhatsApp Group</a>
+        <a href="#" class="menu-link" onclick="alert('No Hacks Allowed!')"><i class="fas fa-shield-halved"></i> Rules & Policy</a>
+    </div>
+
+    <main id="app-content"></main>
 
     <div id="pay-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--gold); margin-top:0;">CHECKOUT</h3>
-            <h2 id="modal-amt" style="color:var(--accent);">₹0</h2>
-            <div style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
-                <a id="pay-link" href="#" class="btn-join" style="text-decoration:none; display:block;">PAY WITH UPI</a>
+        <div class="modal-ui">
+            <h3 style="color:var(--gold); margin:0;">CHECKOUT</h3>
+            <h2 id="modal-amt" style="color:var(--accent); margin:10px 0;">₹0</h2>
+            <div class="pay-grid">
+                <a id="g-link" href="#" class="pay-opt"><img src="https://img.icons8.com/color/48/google-pay.png"> Google Pay</a>
+                <a id="p-link" href="#" class="pay-opt"><img src="https://img.icons8.com/color/48/phone-pe.png"> PhonePe</a>
+                <a id="y-link" href="#" class="pay-opt"><img src="https://img.icons8.com/color/48/paytm.png"> Paytm / UPI</a>
             </div>
-            <input type="text" id="utr-input" class="allow-select" placeholder="Enter 12 Digit UTR" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:var(--accent); border-radius:8px; margin-bottom:15px; text-align:center;">
-            <button class="btn-join" id="final-submit" onclick="submitUTR()">SUBMIT TRANSACTION</button>
-            <button onclick="closeModal()" style="background:none; border:none; color:var(--red); margin-top:15px; font-weight:bold;">CLOSE</button>
+            <input type="text" id="utr-input" class="allow-select" placeholder="Enter 12 Digit UTR Number" style="width:100%; padding:14px; background:#000; border:1px solid #333; color:var(--accent); border-radius:12px; text-align:center; font-weight:800; margin-bottom:15px;">
+            <button class="btn-main btn-join" id="submit-btn" onclick="processPayment()">SUBMIT TRANSACTION</button>
+            <button onclick="closeModal()" style="background:none; border:none; color:var(--red); margin-top:15px; font-weight:bold; cursor:pointer;">CLOSE</button>
         </div>
     </div>
 
@@ -160,135 +125,146 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let activeSection = 'live';
-        let currentMatchId = null;
+        let activeTab = 'live';
+        let activeMatchId = null;
 
-        // --- REAL-TIME MATCH FETCHING ---
-        function loadContent() {
+        // --- Core Engine: User & Payment Persistence ---
+        function renderUI() {
             onSnapshot(collection(db, "matches"), snap => {
-                const container = document.getElementById('matches-container');
+                const container = document.getElementById('app-content');
                 container.innerHTML = "";
 
-                snap.forEach(d => {
-                    const m = d.data();
-                    const mid = d.id;
-                    const status = localStorage.getItem(`status_${mid}`);
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    const mid = doc.id;
+                    const record = JSON.parse(localStorage.getItem(`pay_record_${mid}`));
 
-                    if(activeSection === 'my' && !status) return;
+                    if (activeTab === 'my' && !record) return;
 
-                    const isFull = m.joined >= m.total;
-                    const progress = (m.joined / m.total) * 100;
+                    const startTime = parseInt(m.startTime);
+                    const isStarted = Date.now() >= startTime;
+                    const isExpired = Date.now() > (startTime + 3600000); // 1 Hour Post-Start Expiry
 
-                    let actionArea = '';
-                    if(status === 'approved') {
-                        actionArea = `
-                            <div class="room-revealed">
-                                <p>ROOM DETAILS</p>
-                                <p class="allow-select" style="color:#fff">ID: ${m.roomId || 'Wait...'}</p>
-                                <p class="allow-select" style="color:#fff">PASS: ${m.password || 'Wait...'}</p>
-                            </div>`;
-                    } else if(status === 'pending') {
-                        // Check realtime if admin approved it
-                        checkAutoApproval(mid);
-                        actionArea = `<button class="btn-join" style="background:#444; color:#aaa;" disabled>VERIFYING PAYMENT...</button>`;
+                    let actionHtml = "";
+                    
+                    // Logic for showing Room ID or Buttons
+                    if (record) {
+                        if (record.status === 'approved' || m.approvedUtrs?.includes(record.utr)) {
+                            if (isExpired) {
+                                actionHtml = `<button class="btn-main btn-dis">MATCH EXPIRED</button>`;
+                            } else {
+                                actionHtml = `
+                                <div class="room-box">
+                                    <h4>✅ JOINED SUCCESSFULLY</h4>
+                                    <div class="room-data allow-select">
+                                        <div><span>ROOM ID</span><b>${m.roomId || 'Wait...'}</b></div>
+                                        <div><span>PASSWORD</span><b>${m.password || 'Wait...'}</b></div>
+                                    </div>
+                                </div>`;
+                            }
+                        } else if (record.status === 'rejected') {
+                            actionHtml = `<button class="btn-main" style="background:var(--red); color:#fff;" disabled>PAYMENT REJECTED</button>`;
+                        } else {
+                            // Check Realtime for Approval
+                            checkRealtimeApproval(mid, record.utr);
+                            actionHtml = `<button class="btn-main btn-dis" style="color:var(--gold)">VERIFYING UTR: ${record.utr}</button>`;
+                        }
+                    } else if (isStarted) {
+                        actionHtml = `<button class="btn-main btn-dis">MATCH STARTED</button>`;
+                    } else if (m.joined >= m.total) {
+                        actionHtml = `<button class="btn-main btn-dis">MATCH FULL</button>`;
                     } else {
-                        actionArea = isFull ? `<button class="btn-join" disabled>MATCH FULL</button>` : `<button class="btn-join" onclick="openPayment('${mid}', ${m.entry})">JOIN MATCH</button>`;
+                        actionHtml = `<button class="btn-main btn-join" onclick="openPayment('${mid}', ${m.entry})">JOIN NOW</button>`;
                     }
 
                     container.innerHTML += `
-                    <div class="match-card">
-                        <div class="m-badge">${m.status.toUpperCase()}</div>
-                        <div class="m-top">
-                            <div class="info-bit"><i class="fas fa-map"></i><div><span class="info-text">MAP</span><span class="info-val">${m.map}</span></div></div>
-                            <div class="info-bit"><i class="fas fa-user-group"></i><div><span class="info-text">TYPE</span><span class="info-val">${m.type}</span></div></div>
-                            <div class="info-bit"><i class="fas fa-trophy"></i><div><span class="info-text">WIN PRIZE</span><span class="info-val">₹${m.win}</span></div></div>
-                            <div class="info-bit"><i class="fas fa-wallet"></i><div><span class="info-text">ENTRY</span><span class="info-val">₹${m.entry}</span></div></div>
+                    <div class="card">
+                        <div class="m-tag">${m.map.toUpperCase()}</div>
+                        <div class="card-body">
+                            <div class="item"><i class="fas fa-gamepad"></i><div><span>Mode</span><b>${m.type}</b></div></div>
+                            <div class="item"><i class="fas fa-trophy"></i><div><span>Win Prize</span><b>₹${m.win}</b></div></div>
+                            <div class="item"><i class="fas fa-wallet"></i><div><span>Entry Fee</span><b>₹${m.entry}</b></div></div>
+                            <div class="item"><i class="fas fa-id-badge"></i><div><span>Match ID</span><b>#${mid.slice(-4)}</b></div></div>
                         </div>
-                        <div class="m-mid">
-                            <span class="timer-label">Match Starts In</span>
-                            <span class="timer-clock" data-time="${m.startTime}">Calculating...</span>
+                        <div class="timer-box">
+                            <span class="timer-label">MATCH STARTS IN</span>
+                            <span class="countdown" data-time="${startTime}">--:--:--</span>
                         </div>
-                        <div class="m-bottom">
-                            <div class="slot-row"><span>Slots Filled</span><span>${m.joined}/${m.total}</span></div>
-                            <div class="bar-bg"><div class="bar-fill" style="width:${progress}%"></div></div>
-                            ${actionArea}
+                        <div class="card-footer">
+                            <div class="slots"><span>Filled</span><span>${m.joined}/${m.total}</span></div>
+                            <div class="bar"><div class="fill" style="width:${(m.joined/m.total)*100}%"></div></div>
+                            ${actionHtml}
                         </div>
                     </div>`;
                 });
             });
         }
 
-        // --- AUTO APPROVAL CHECK ---
-        function checkAutoApproval(mid) {
-            const q = query(collection(db, "payments"), where("matchId", "==", mid), where("status", "==", "approved"));
-            onSnapshot(q, (snapshot) => {
-                if (!snapshot.empty) {
-                    localStorage.setItem(`status_${mid}`, 'approved');
-                    // Page will auto-update because of main snapshot
-                }
+        // Realtime Status Sync
+        function checkRealtimeApproval(mid, utr) {
+            const q = query(collection(db, "payments"), where("matchId", "==", mid), where("utr", "==", utr));
+            onSnapshot(q, (s) => {
+                s.forEach(doc => {
+                    const data = doc.data();
+                    if(data.status === 'approved') {
+                        const local = JSON.parse(localStorage.getItem(`pay_record_${mid}`));
+                        local.status = 'approved';
+                        localStorage.setItem(`pay_record_${mid}`, JSON.stringify(local));
+                    }
+                });
             });
         }
 
-        // --- COUNTDOWN LOGIC (Developer Mode) ---
+        // Timer Logic
         setInterval(() => {
-            document.querySelectorAll('.timer-clock').forEach(clock => {
-                const startTime = parseInt(clock.getAttribute('data-time'));
-                const now = Date.now();
-                const diff = startTime - now;
-
-                if(diff <= 0) {
-                    clock.innerText = "STARTED";
-                    clock.style.color = "var(--accent)";
-                } else {
-                    const h = Math.floor(diff / 3600000);
-                    const m = Math.floor((diff % 3600000) / 60000);
-                    const s = Math.floor((diff % 60000) / 1000);
-                    clock.innerText = `${h}h : ${m}m : ${s}s`;
+            document.querySelectorAll('.countdown').forEach(el => {
+                const target = parseInt(el.dataset.time);
+                const diff = target - Date.now();
+                if(diff <= 0) { el.innerText = "STARTED"; el.style.color = "var(--accent)"; }
+                else {
+                    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+                    el.innerText = `${h}h : ${m}m : ${s}s`;
                 }
             });
         }, 1000);
 
-        // --- MODAL & TABS ---
         window.switchTab = (t) => {
-            activeSection = t;
+            activeTab = t;
             document.getElementById('tab-live').classList.toggle('active', t === 'live');
             document.getElementById('tab-my').classList.toggle('active', t === 'my');
-            loadContent();
+            renderUI();
         };
 
         window.openPayment = (id, amt) => {
-            currentMatchId = id;
+            activeMatchId = id;
             document.getElementById('modal-amt').innerText = "₹" + amt;
-            document.getElementById('pay-link').href = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_${id}`;
+            const upi = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&cu=INR&tn=SQL_ARENA_${id}`;
+            document.getElementById('g-link').href = upi;
+            document.getElementById('p-link').href = upi;
+            document.getElementById('y-link').href = upi;
             document.getElementById('pay-modal').style.display = 'flex';
         };
 
-        window.submitUTR = async () => {
+        window.processPayment = async () => {
             const utr = document.getElementById('utr-input').value;
-            if(utr.length < 10) return alert("Enter valid 12 digit UTR!");
+            if(utr.length < 10) return alert("Enter valid 12 Digit UTR!");
 
-            const btn = document.getElementById('final-submit');
-            btn.innerText = "Processing..."; btn.disabled = true;
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.innerText = "Processing...";
 
-            await addDoc(collection(db, "payments"), {
-                matchId: currentMatchId,
-                utr: utr,
-                status: 'pending',
-                timestamp: Date.now()
-            });
+            const record = { utr: utr, matchId: activeMatchId, status: 'pending', date: new Date().toLocaleDateString() };
+            localStorage.setItem(`pay_record_${activeMatchId}`, JSON.stringify(record));
 
-            localStorage.setItem(`status_${currentMatchId}`, 'pending');
-            alert("Payment Submitted! Waiting for Admin Approval.");
+            await addDoc(collection(db, "payments"), { ...record, timestamp: Date.now() });
+
+            alert("UTR Submitted! Room Details will unlock once Admin approves.");
             closeModal();
         };
 
         window.closeModal = () => document.getElementById('pay-modal').style.display = 'none';
-        window.toggleMenu = (show) => {
-            document.getElementById('menu-drawer').classList.toggle('active', show);
-            document.getElementById('overlay').style.display = show ? 'block' : 'none';
-        };
+        window.toggleMenu = (s) => document.getElementById('side-menu').classList.toggle('active', s);
 
-        loadContent();
+        renderUI();
     </script>
 </body>
 </html>
