@@ -109,6 +109,15 @@
         .h-btn { flex:1; padding:10px; border:none; background:none; color:#666; font-weight:700; cursor:pointer; border-radius:8px; }
         .h-btn.active { background:#222; color:#fff; }
 
+        /* --- NEW STATS BOX STYLE --- */
+        .stats-box { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:20px; }
+        .stat-item { background:#0b0b0b; padding:10px 5px; border-radius:10px; border:1px solid #222; text-align:center; }
+        .stat-lbl { font-size:0.6rem; color:#888; text-transform:uppercase; display:block; margin-bottom:4px; font-weight:700; }
+        .stat-val { font-size:1rem; font-weight:800; }
+        .st-gold { color:var(--gold); font-size:1.1rem; }
+        .st-red { color:var(--red); }
+        .st-green { color:var(--accent); }
+
         /* Animation */
         @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none} }
     </style>
@@ -331,7 +340,11 @@
                     const snap = await getDoc(doc(db, "users", phone));
                     if(snap.exists()) throw "Phone already registered. Please Login.";
 
-                    const userData = { name, phone, gamingName: gaming, password: pass, dpUrl: "", upiId:"", qrUrl:"", balance:0, joinedMatches:0 };
+                    const userData = { 
+                        name, phone, gamingName: gaming, password: pass, 
+                        dpUrl: "", upiId:"", qrUrl:"", 
+                        balance:0, totalProfit:0, totalLoss:0 
+                    };
                     await setDoc(doc(db, "users", phone), userData);
                     saveSession(userData);
                     alert("Registration Successful!");
@@ -348,7 +361,6 @@
                     if(data.password !== pass) throw "Wrong Password!";
 
                     saveSession(data);
-                    // alert("Login Successful!"); removed to prevent stuck popup, logic handled by close
                 }
                 document.getElementById('auth-modal').style.display = 'none';
                 renderUI();
@@ -491,6 +503,28 @@
             let freshUser = s;
             try { const snap = await getDoc(doc(db,"users",s.phone)); if(snap.exists()){ freshUser=snap.data(); saveSession(freshUser); } } catch(e){}
 
+            // UPI Hiding Logic
+            let upiUi = '';
+            if(freshUser.upiId && freshUser.upiId.length > 5){
+                const masked = "******" + freshUser.upiId.slice(-4);
+                upiUi = `
+                <div id="upi-display" style="display:flex; justify-content:space-between; align-items:center; background:#0b0b0b; padding:12px; border-radius:10px; border:1px solid #333;">
+                    <div style="color:#aaa; letter-spacing:2px; font-weight:bold;">${masked}</div>
+                    <button class="small-btn" onclick="toggleUpiEdit(true)">CHANGE</button>
+                </div>
+                <div id="upi-edit" style="display:none; gap:10px;">
+                    <input type="text" id="profile-upi" value="${freshUser.upiId}" style="margin:0;">
+                    <button class="small-btn" onclick="saveUpi()">SAVE</button>
+                    <button class="small-btn" style="background:#222;" onclick="toggleUpiEdit(false)">X</button>
+                </div>`;
+            } else {
+                upiUi = `
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="profile-upi" value="" placeholder="e.g. 9012...@ybl" style="margin:0;">
+                    <button class="small-btn" onclick="saveUpi()">SAVE</button>
+                </div>`;
+            }
+
             c.innerHTML = `
             <div class="profile-head">
                 <div class="p-img-cont">
@@ -500,12 +534,24 @@
                 <h3 style="margin:0;">${freshUser.name}</h3>
                 <div style="font-size:0.8rem; color:var(--accent); margin-bottom:15px;">${freshUser.phone}</div>
                 
+                <div class="stats-box">
+                    <div class="stat-item">
+                        <span class="stat-lbl">Wallet Balance</span>
+                        <div class="stat-val st-gold">₹${freshUser.balance || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-lbl">Total Invest</span>
+                        <div class="stat-val st-red">₹${freshUser.totalLoss || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-lbl">Total Profit</span>
+                        <div class="stat-val st-green">₹${freshUser.totalProfit || 0}</div>
+                    </div>
+                </div>
+
                 <div style="background:#000; padding:15px; border-radius:12px; text-align:left;">
                     <label style="font-size:0.7rem; color:#666;">MY UPI ID (For Winnings)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="profile-upi" value="${freshUser.upiId||''}" placeholder="e.g. 9012...@ybl" style="margin:0;">
-                        <button class="small-btn" onclick="saveUpi()">SAVE</button>
-                    </div>
+                    ${upiUi}
                     <label style="font-size:0.7rem; color:#666; margin-top:10px; display:block;">MY QR CODE</label>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div style="font-size:0.8rem; color:#fff;">${freshUser.qrUrl ? '✅ QR Uploaded' : '❌ No QR'}</div>
@@ -522,6 +568,11 @@
             `;
 
             loadHistoryData(document.getElementById('hist-list'));
+        };
+
+        window.toggleUpiEdit = (show) => {
+            document.getElementById('upi-display').style.display = show ? 'none' : 'flex';
+            document.getElementById('upi-edit').style.display = show ? 'flex' : 'none';
         };
 
         window.setHistFilter = (f) => { historyFilter = f; renderUI(); }
@@ -594,9 +645,11 @@
 
         window.saveUpi = async () => {
             const val = document.getElementById('profile-upi').value.trim();
+            if(!val) return alert("Enter valid UPI");
             const s = loadSession();
             await updateDoc(doc(db,"users",s.phone), { upiId: val });
-            alert("UPI ID Saved.");
+            alert("UPI ID Saved Securely.");
+            renderUI();
         };
 
         // 3. RESULTS (With Likes/Comments & Full Details)
@@ -806,4 +859,4 @@
 
     </script>
 </body>
-    </html>
+                </html>
