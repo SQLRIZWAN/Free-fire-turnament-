@@ -132,8 +132,8 @@
         .st-green { color:var(--accent); }
 
         /* --- NEW ADD FUND & WITHDRAW STYLES --- */
-        .wallet-actions { display:flex; gap:10px; margin-bottom:15px; }
-        .w-act-btn { flex:1; padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; }
+        .wallet-actions { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; }
+        .w-act-btn { padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; }
         .w-act-btn:hover { border-color:var(--accent); }
         .pkg-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:15px; }
         .pkg-box { background:#1a1a1a; padding:12px; border-radius:10px; border:1px solid #333; text-align:center; cursor:pointer; font-weight:bold; }
@@ -185,6 +185,14 @@
     </div>
 
     <main id="app-content"></main>
+
+    <div id="history-list-modal" class="modal">
+        <div class="modal-ui" style="max-height: 80vh; overflow-y: auto;">
+            <h3 id="hist-modal-title" style="color:var(--gold); text-align:center; margin-bottom:15px;">HISTORY</h3>
+            <div id="hist-modal-content" style="font-size: 0.85rem;"></div>
+            <button onclick="document.getElementById('history-list-modal').style.display='none'" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer; font-weight: bold;">CLOSE</button>
+        </div>
+    </div>
 
     <div id="wallet-modal" class="modal">
         <div class="modal-ui">
@@ -642,6 +650,8 @@
                 <div class="wallet-actions">
                     <button class="w-act-btn" onclick="openWalletModal('add')"><i class="fas fa-plus-circle"></i> ADD FUND</button>
                     <button class="w-act-btn" onclick="openWalletModal('with')"><i class="fas fa-paper-plane"></i> WITHDRAW</button>
+                    <button class="w-act-btn" onclick="showFundHistory()"><i class="fas fa-history"></i> FUND HISTORY</button>
+                    <button class="w-act-btn" onclick="showWithdrawHistory()"><i class="fas fa-receipt"></i> WITHDRAW HISTORY</button>
                 </div>
 
                 <div style="background:#000; padding:15px; border-radius:12px; text-align:left;">
@@ -1012,6 +1022,57 @@
             });
         }
 
+        // --- NEW LIFETIME HISTORY FUNCTIONS ---
+        window.showFundHistory = async () => {
+            const s = loadSession();
+            const modal = document.getElementById('history-list-modal');
+            const content = document.getElementById('hist-modal-content');
+            document.getElementById('hist-modal-title').innerText = "LIFETIME FUND HISTORY";
+            content.innerHTML = "Loading...";
+            modal.style.display = 'flex';
+
+            const q = query(collection(db, "payments"), where("userId", "==", s.phone), where("matchId", "==", "ADD_FUND"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            content.innerHTML = "";
+            if(snap.empty) content.innerHTML = "No deposit history found.";
+            snap.forEach(d => {
+                const data = d.data();
+                content.innerHTML += `
+                <div style="border-bottom:1px solid #222; padding:10px 0;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b style="color:var(--accent);">₹${data.utr.split('_')[0] || '--'}</b>
+                        <span style="color:${data.status==='approved'?'var(--accent)':'var(--red)'}">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.7rem; color:#555;">UTR: ${data.utr} | ${new Date(data.timestamp).toLocaleString()}</div>
+                </div>`;
+            });
+        };
+
+        window.showWithdrawHistory = async () => {
+            const s = loadSession();
+            const modal = document.getElementById('history-list-modal');
+            const content = document.getElementById('hist-modal-content');
+            document.getElementById('hist-modal-title').innerText = "LIFETIME WITHDRAW HISTORY";
+            content.innerHTML = "Loading...";
+            modal.style.display = 'flex';
+
+            const q = query(collection(db, "withdrawals"), where("userId", "==", s.phone), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            content.innerHTML = "";
+            if(snap.empty) content.innerHTML = "No withdrawal history found.";
+            snap.forEach(d => {
+                const data = d.data();
+                content.innerHTML += `
+                <div style="border-bottom:1px solid #222; padding:10px 0;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b style="color:var(--gold);">₹${data.amount}</b>
+                        <span style="color:${data.status==='approved'?'var(--accent)':'var(--waiting)'}">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.7rem; color:#555;">UPI: ${data.upi} | ${new Date(data.timestamp).toLocaleString()}</div>
+                </div>`;
+            });
+        };
+
         setInterval(() => {
             document.querySelectorAll('.countdown').forEach(el => {
                 const t = parseInt(el.dataset.time);
@@ -1035,4 +1096,4 @@
 
     </script>
 </body>
-            </html>
+    </html>
