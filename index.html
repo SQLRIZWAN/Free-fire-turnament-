@@ -1,394 +1,836 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>SQL TOURNAMENT PRO | ADMIN PANEL</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Hub - User</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #4f46e5;
+            --secondary: #818cf8;
+            --accent: #f43f5e;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+        }
 
-  <!-- Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  <style>
-    /* =============================
-       BASIC ADMIN PANEL STYLING
-       ============================= */
-    body {
-      margin: 0;
-      background: #050505;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
 
-    header {
-      background: #000;
-      padding: 12px;
-      border-bottom: 2px solid gold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .glass-morphism {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    header h1 {
-      margin: 0;
-      font-size: 18px;
-      color: gold;
-    }
+        .nav-item.active {
+            color: var(--primary);
+            position: relative;
+        }
 
-    .container {
-      padding: 12px;
-      max-width: 1200px;
-      margin: auto;
-    }
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
 
-    .card {
-      background: #121212;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      border: 1px solid #222;
-    }
+        .card-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
 
-    input, button, select {
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      margin-top: 6px;
-    }
+        .match-card {
+            transition: transform 0.2s ease;
+        }
 
-    button {
-      cursor: pointer;
-      background: gold;
-      color: #000;
-      font-weight: bold;
-    }
+        .match-card:active {
+            transform: scale(0.98);
+        }
 
-    button.danger {
-      background: #ff4444;
-      color: #fff;
-    }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-    button.secondary {
-      background: #444;
-      color: #fff;
-    }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
-    img {
-      max-width: 100%;
-      border-radius: 6px;
-    }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
 
-    .hidden {
-      display: none;
-    }
-  </style>
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            to { background-position: -200% 0; }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .payout-badge {
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+        }
+    </style>
 </head>
 <body>
+    <header class="fixed top-0 left-0 right-0 z-50 glass-morphism px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <i class="fas fa-gamepad text-white text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight text-white">GAMING<span class="text-indigo-400">HUB</span></h1>
+        </div>
+        <div id="walletDisplay" class="flex items-center gap-3 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700 cursor-pointer hover:bg-slate-800 transition-all" onclick="showTab('wallet')">
+            <i class="fas fa-wallet text-indigo-400"></i>
+            <span class="font-bold text-white">₹0</span>
+            <div class="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                <i class="fas fa-plus text-[10px] text-white"></i>
+            </div>
+        </div>
+    </header>
 
-<header>
-  <h1>SQL TOURNAMENT PRO — ADMIN</h1>
-  <div id="adminStatus">NOT LOGGED IN</div>
-</header>
+    <main class="mt-20 px-4 max-w-lg mx-auto">
+        
+        <section id="homeTab" class="tab-content active">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Live Matches</h2>
+                <div class="flex gap-2">
+                    <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+            </div>
 
-<div class="container">
+            <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar mb-4">
+                <button class="px-6 py-2.5 rounded-2xl bg-indigo-600 text-white font-medium shadow-lg shadow-indigo-600/20 whitespace-nowrap">All Games</button>
+                <button class="px-6 py-2.5 rounded-2xl bg-slate-800 text-slate-400 font-medium whitespace-nowrap">Battle Royale</button>
+                <button class="px-6 py-2.5 rounded-2xl bg-slate-800 text-slate-400 font-medium whitespace-nowrap">Classic</button>
+                <button class="px-6 py-2.5 rounded-2xl bg-slate-800 text-slate-400 font-medium whitespace-nowrap">TDM</button>
+            </div>
 
-  <!-- =============================
-       ADMIN LOGIN SECTION
-       ============================= -->
-  <div class="card" id="adminLoginBox">
-    <h3>Admin Login</h3>
-    <input id="adminId" placeholder="Admin ID (email / uid)" />
-    <input id="adminPass" type="password" placeholder="Password" />
-    <button onclick="adminLogin()">LOGIN</button>
-  </div>
+            <div id="matchesContainer" class="space-y-4">
+                <div class="shimmer h-64 rounded-3xl w-full"></div>
+                <div class="shimmer h-64 rounded-3xl w-full"></div>
+            </div>
+        </section>
 
-  <!-- =============================
-       MAIN ADMIN PANEL
-       ============================= -->
-  <div id="adminPanel" class="hidden">
+        <section id="resultsTab" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-white">Match Results</h2>
+            <div id="resultsContainer" class="space-y-4">
+                <div class="text-center py-20 text-slate-500">
+                    <i class="fas fa-trophy text-4xl mb-3 block opacity-20"></i>
+                    <p>Loading results...</p>
+                </div>
+            </div>
+        </section>
 
-    <!-- MATCH MANAGEMENT -->
-    <div class="card">
-      <h3>Add Match</h3>
-      <input id="m_map" placeholder="Map Name" />
-      <input id="m_type" placeholder="Match Type (Solo / Duo)" />
-      <input id="m_entry" type="number" placeholder="Entry Fee" />
-      <input id="m_prize" type="number" placeholder="Winning Prize" />
-      <input id="m_total" type="number" placeholder="Total Slots" />
-      <input id="m_time" type="datetime-local" />
-      <button onclick="addMatch()">ADD MATCH</button>
+        <section id="profileTab" class="tab-content">
+            <div class="bg-slate-800/50 rounded-3xl p-6 border border-slate-700 mb-6">
+                <div class="flex flex-col items-center">
+                    <div class="relative group">
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" class="w-24 h-24 rounded-3xl object-cover border-4 border-slate-700 shadow-2xl transition-transform group-hover:scale-105">
+                        <label for="avatarUpload" class="absolute -bottom-2 -right-2 bg-indigo-500 w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer shadow-lg border-2 border-slate-800">
+                            <i class="fas fa-camera text-xs text-white"></i>
+                            <input type="file" id="avatarUpload" class="hidden" accept="image/*">
+                        </label>
+                    </div>
+                    <h3 id="profileName" class="text-xl font-bold mt-4 text-white">Loading...</h3>
+                    <p id="profilePhone" class="text-slate-400 text-sm">Please wait...</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mt-8">
+                    <div class="text-center bg-slate-900/50 p-3 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-500 mb-1">Matches</p>
+                        <p id="statMatches" class="font-bold text-white">0</p>
+                    </div>
+                    <div class="text-center bg-slate-900/50 p-3 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-500 mb-1">Earnings</p>
+                        <p id="statEarnings" class="font-bold text-emerald-400">₹0</p>
+                    </div>
+                    <div class="text-center bg-slate-900/50 p-3 rounded-2xl border border-slate-700/50">
+                        <p class="text-xs text-slate-500 mb-1">Wins</p>
+                        <p id="statWins" class="font-bold text-amber-400">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="showTab('wallet')" class="w-full flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/50 rounded-2xl border border-slate-700/50 transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <span class="font-medium">My Wallet</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-600"></i>
+                </button>
+                <button onclick="showMatchHistory()" class="w-full flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/50 rounded-2xl border border-slate-700/50 transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-indigo-500/10 text-indigo-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <span class="font-medium">Match History</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-600"></i>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center justify-between p-4 bg-rose-500/10 hover:bg-rose-500/20 rounded-2xl border border-rose-500/20 transition-all text-rose-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <span class="font-medium">Logout</span>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <section id="walletTab" class="tab-content">
+            <div class="bg-indigo-600 rounded-3xl p-8 mb-6 relative overflow-hidden shadow-2xl shadow-indigo-600/20">
+                <div class="relative z-10">
+                    <p class="text-indigo-100 text-sm mb-1 opacity-80">Total Balance</p>
+                    <h2 class="text-4xl font-bold text-white mb-6">₹<span id="walletBalance">0</span></h2>
+                    <div class="flex gap-4">
+                        <button onclick="openModal('addFundModal')" class="flex-1 bg-white text-indigo-600 py-3 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-lg">
+                            <i class="fas fa-plus-circle mr-2"></i> Deposit
+                        </button>
+                        <button onclick="openModal('withdrawModal')" class="flex-1 bg-indigo-500 text-white py-3 rounded-xl font-bold hover:bg-indigo-400 transition-colors border border-indigo-400/50 shadow-lg">
+                            <i class="fas fa-arrow-alt-circle-up mr-2"></i> Withdraw
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-900/20 rounded-full blur-3xl"></div>
+            </div>
+
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-list-ul text-indigo-400"></i> Transaction History
+            </h3>
+            <div id="transactionContainer" class="space-y-3 pb-24">
+                </div>
+  </section>        <div id="matchDetailModal" class="fixed inset-0 z-[100] hidden">
+            <div class="modal-overlay absolute inset-0" onclick="closeModal('matchDetailModal')"></div>
+            <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-slate-900 rounded-t-[40px] p-6 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl border-t border-slate-800">
+                <div id="matchDetailContent">
+                    </div>
+            </div>
+        </div>
+
+        <div id="addFundModal" class="fixed inset-0 z-[100] hidden">
+            <div class="modal-overlay absolute inset-0" onclick="closeModal('addFundModal')"></div>
+            <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-slate-900 rounded-t-[40px] p-8 shadow-2xl border-t border-slate-800">
+                <h3 class="text-2xl font-bold mb-6 text-center">Add Funds</h3>
+                <div class="space-y-4">
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+                        <label class="text-xs text-slate-400 block mb-2 uppercase tracking-wider font-bold">Enter Amount (₹)</label>
+                        <input type="number" id="addAmount" placeholder="Min. ₹10" class="w-full bg-transparent text-2xl font-bold text-white outline-none">
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="setAmount(50)" class="bg-slate-800 py-2 rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors">₹50</button>
+                        <button onclick="setAmount(100)" class="bg-slate-800 py-2 rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors">₹100</button>
+                        <button onclick="setAmount(500)" class="bg-slate-800 py-2 rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors">₹500</button>
+                    </div>
+                    <button id="depositBtn" onclick="initiateDeposit()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/20 active:scale-95 transition-transform mt-4">
+                        Proceed to Pay
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="withdrawModal" class="fixed inset-0 z-[100] hidden">
+            <div class="modal-overlay absolute inset-0" onclick="closeModal('withdrawModal')"></div>
+            <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-slate-900 rounded-t-[40px] p-8 shadow-2xl border-t border-slate-800">
+                <h3 class="text-2xl font-bold mb-6 text-center">Withdraw Money</h3>
+                <div class="space-y-4">
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+                        <label class="text-xs text-slate-400 block mb-2 uppercase tracking-wider font-bold">UPI ID</label>
+                        <input type="text" id="withdrawUpi" placeholder="example@ybl" class="w-full bg-transparent text-lg font-medium text-white outline-none">
+                    </div>
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+                        <label class="text-xs text-slate-400 block mb-2 uppercase tracking-wider font-bold">Withdrawal Amount (₹)</label>
+                        <input type="number" id="withdrawAmount" placeholder="Min. ₹50" class="w-full bg-transparent text-2xl font-bold text-white outline-none">
+                    </div>
+                    <p class="text-xs text-slate-500 text-center px-4">Withdrawal will be processed within 24-48 working hours.</p>
+                    <button id="withdrawBtn" onclick="processWithdrawal()" class="w-full bg-rose-600 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-rose-600/20 active:scale-95 transition-transform">
+                        Confirm Withdrawal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="authOverlay" class="fixed inset-0 z-[200] bg-slate-950 flex flex-col items-center justify-center px-6 hidden">
+            <div class="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/30">
+                <i class="fas fa-gamepad text-white text-4xl"></i>
+            </div>
+            <h2 id="authTitle" class="text-3xl font-bold mb-2">Welcome Back</h2>
+            <p id="authSubtitle" class="text-slate-400 mb-8">Sign in to start winning</p>
+            
+            <div class="w-full space-y-4 max-w-sm">
+                <div id="nameInput" class="hidden space-y-2">
+                    <label class="text-sm font-medium text-slate-400">Full Name</label>
+                    <input type="text" id="userName" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 focus:border-indigo-500 outline-none transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-400">Mobile Number</label>
+                    <input type="number" id="userPhone" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 focus:border-indigo-500 outline-none transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-400">Password</label>
+                    <input type="password" id="userPassword" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 focus:border-indigo-500 outline-none transition-all">
+                </div>
+                
+                <button id="authBtn" onclick="handleAuth()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-600/20 active:scale-95 transition-transform">
+                    Login Now
+                </button>
+                
+                <p class="text-center text-slate-500 mt-6">
+                    <span id="authToggleText">Don't have an account?</span>
+                    <button onclick="toggleAuth()" id="authToggleBtn" class="text-indigo-400 font-bold ml-1">Sign Up</button>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 z-50 glass-morphism px-6 py-4 flex justify-between items-center max-w-lg mx-auto rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <button onclick="showTab('home')" class="nav-item active flex flex-col items-center gap-1">
+            <i class="fas fa-gamepad text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Live</span>
+        </button>
+        <button onclick="showTab('results')" class="nav-item flex flex-col items-center gap-1 text-slate-500">
+            <i class="fas fa-trophy text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Results</span>
+        </button>
+        <button onclick="showTab('wallet')" class="nav-item flex flex-col items-center gap-1 text-slate-500">
+            <i class="fas fa-wallet text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Wallet</span>
+        </button>
+        <button onclick="showTab('profile')" class="nav-item flex flex-col items-center gap-1 text-slate-500">
+            <i class="fas fa-user text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Profile</span>
+        </button>
+    </nav>
+
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[300] bg-emerald-500 text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-3 scale-0 transition-transform">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">Action Successful</span>
     </div>
 
-    <div class="card">
-      <h3>All Matches</h3>
-      <div id="matchList">Loading...</div>
-    </div>
+    <script>
+        // -------------------------------------------------------------
+        // FIREBASE CONFIGURATION (REPLACE WITH YOUR KEYS)
+        // -------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyAs-XXXXXXXXXXXXXXX",
+            authDomain: "tournament-XXXXX.firebaseapp.com",
+            projectId: "tournament-XXXXX",
+            storageBucket: "tournament-XXXXX.appspot.com",
+            messagingSenderId: "XXXXXXXXXXXX",
+            appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-    <!-- PAYMENTS -->
-    <div class="card">
-      <h3>Pending Payments</h3>
-      <div id="paymentList">Loading...</div>
-    </div>
+        // Application State
+        let currentUser = null;
+        let userData = null;
+        let activeMatchId = null;
+        let isLogin = true;
 
-    <!-- WITHDRAWALS -->
-    <div class="card">
-      <h3>Withdraw Requests</h3>
-      <div id="withdrawList">Loading...</div>
-    </div>
+        // -------------------------------------------------------------
+        // CORE FUNCTIONS
+        // -------------------------------------------------------------
 
-    <!-- RESULTS -->
-    <div class="card">
-      <h3>Upload Result</h3>
-      <input id="r_matchId" placeholder="Match ID" />
-      <input id="r_name" placeholder="Winner Name" />
-      <input id="r_phone" placeholder="Winner Phone" />
-      <input id="r_amount" type="number" placeholder="Winning Amount" />
-      <input id="r_img" type="file" />
-      <button onclick="uploadResult()">UPLOAD RESULT</button>
-    </div>
+        // Toast Message System
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[300] ${isError ? 'bg-rose-500' : 'bg-emerald-500'} text-white px-6 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-3 transition-transform duration-300`;
+            toastMsg.innerText = msg;
+            toast.style.transform = 'translateX(-50%) scale(1)';
+            setTimeout(() => {
+                toast.style.transform = 'translateX(-50%) scale(0)';
+            }, 3000);
+        }
 
-  </div>
-</div>
+        // Tab Management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                item.classList.add('text-slate-500');
+            });
+            event.currentTarget.classList.add('active');
+            event.currentTarget.classList.remove('text-slate-500');
 
-<!-- =============================
-     FIREBASE + ADMIN LOGIC
-     ============================= -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, getDocs, getDoc, doc,
-    updateDoc, deleteDoc, onSnapshot, runTransaction,
-    increment, arrayUnion
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            if(tabName === 'wallet') loadTransactions();
+            if(tabName === 'results') loadResults();
+            window.scrollTo(0, 0);
+        }
 
-  /* =============================
-     FIREBASE CONFIG (SAME PROJECT)
-     ============================= */
-  const firebaseConfig = {
-    apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-    authDomain: "sqladmin-ff04d.firebaseapp.com",
-    projectId: "sqladmin-ff04d",
-    storageBucket: "sqladmin-ff04d.appspot.com",
-    messagingSenderId: "539086978850",
-    appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b"
-  };
+        // Modal Management
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+// -------------------------------------------------------------
+        // AUTHENTICATION LOGIC
+        // -------------------------------------------------------------
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? 'Welcome Back' : 'Create Account';
+            document.getElementById('authSubtitle').innerText = isLogin ? 'Sign in to start winning' : 'Join the gaming community';
+            document.getElementById('nameInput').classList.toggle('hidden', isLogin);
+            document.getElementById('authBtn').innerText = isLogin ? 'Login Now' : 'Register Account';
+            document.getElementById('authToggleBtn').innerText = isLogin ? 'Sign Up' : 'Login';
+            document.getElementById('authToggleText').innerText = isLogin ? "Don't have an account?" : "Already have an account?";
+        }
 
-  let adminSession = null;
+        async function handleAuth() {
+            const phone = document.getElementById('userPhone').value.trim();
+            const pass = document.getElementById('userPassword').value.trim();
+            const name = document.getElementById('userName').value.trim();
 
-  /* =============================
-     SIMPLE SHA-256 PASSWORD CHECK
-     ============================= */
-  async function sha256(text) {
-    const enc = new TextEncoder().encode(text);
-    const hash = await crypto.subtle.digest("SHA-256", enc);
-    return Array.from(new Uint8Array(hash))
-      .map(b => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
+            if (!phone || !pass || (!isLogin && !name)) {
+                return showToast("Please fill all fields", true);
+            }
 
-  /* =============================
-     ADMIN LOGIN
-     ============================= */
-  window.adminLogin = async () => {
-    const id = adminId.value.trim();
-    const pass = adminPass.value.trim();
-    if (!id || !pass) return alert("Enter admin credentials");
+            try {
+                if (isLogin) {
+                    // Login Process
+                    const userDoc = await db.collection('users').doc(phone).get();
+                    if (!userDoc.exists || userDoc.data().password !== pass) {
+                        return showToast("Invalid credentials", true);
+                    }
+                    localStorage.setItem('userPhone', phone);
+                    initApp(phone);
+                } else {
+                    // Registration Process
+                    const checkUser = await db.collection('users').doc(phone).get();
+                    if (checkUser.exists) return showToast("User already exists", true);
 
-    const snap = await getDoc(doc(db, "admins", id));
-    if (!snap.exists()) return alert("Admin not found");
+                    const newUser = {
+                        name: name,
+                        phone: phone,
+                        password: pass,
+                        balance: 0,
+                        totalProfit: 0,
+                        matchesPlayed: 0,
+                        wins: 0,
+                        avatar: `https://ui-avatars.com/api/?name=${name}&background=random`,
+                        joinedAt: Date.now()
+                    };
+                    await db.collection('users').doc(phone).set(newUser);
+                    localStorage.setItem('userPhone', phone);
+                    initApp(phone);
+                }
+                document.getElementById('authOverlay').classList.add('hidden');
+                showToast("Welcome to Gaming Hub!");
+            } catch (e) {
+                showToast("Auth Error: " + e.message, true);
+            }
+        }
 
-    const hash = await sha256(pass);
-    if (snap.data().passwordHash !== hash) {
-      return alert("Wrong password");
-    }
+        function logout() {
+            localStorage.removeItem('userPhone');
+            location.reload();
+        }
 
-    adminSession = { id };
-    adminLoginBox.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
-    adminStatus.innerText = "LOGGED IN AS ADMIN";
+        // -------------------------------------------------------------
+        // DATA LOADING & SYNC
+        // -------------------------------------------------------------
+        function initApp(phone) {
+            // Real-time User Data Sync
+            db.collection('users').doc(phone).onSnapshot(doc => {
+                if (doc.exists) {
+                    userData = doc.data();
+                    updateUI();
+                    syncPayments(phone); // Fix for double credit issue
+                }
+            });
 
-    loadMatches();
-    loadPayments();
-    loadWithdrawals();
-  };
+            // Real-time Matches Sync
+            db.collection('matches').orderBy('matchTime', 'asc').onSnapshot(snapshot => {
+                renderMatches(snapshot);
+            });
+        }
 
-  /* =============================
-     MATCH MANAGEMENT
-     ============================= */
-  async function addMatch() {
-    await addDoc(collection(db, "matches"), {
-      map: m_map.value,
-      type: m_type.value,
-      entry: Number(m_entry.value),
-      win: Number(m_prize.value),
-      total: Number(m_total.value),
-      joined: 0,
-      joinedUsers: [],
-      startTime: new Date(m_time.value).getTime(),
-      createdAt: Date.now()
-    });
-    alert("Match added");
-  }
+        function updateUI() {
+            document.getElementById('walletDisplay').querySelector('span').innerText = `₹${userData.balance}`;
+            document.getElementById('walletBalance').innerText = userData.balance;
+            document.getElementById('profileName').innerText = userData.name;
+            document.getElementById('profilePhone').innerText = `+91 ${userData.phone}`;
+            document.getElementById('userAvatar').src = userData.avatar;
+            document.getElementById('statMatches').innerText = userData.matchesPlayed;
+            document.getElementById('statEarnings').innerText = `₹${userData.totalProfit}`;
+            document.getElementById('statWins').innerText = userData.wins;
+        }
 
-  function loadMatches() {
-    onSnapshot(collection(db, "matches"), snap => {
-      matchList.innerHTML = "";
-      snap.forEach(d => {
-        const m = d.data();
-        matchList.innerHTML += `
-          <div class="card">
-            <b>${m.map}</b> | Entry ₹${m.entry} | Joined ${m.joined}/${m.total}
-            <br/>
-            <button class="danger" onclick="deleteMatch('${d.id}')">DELETE</button>
-          </div>`;
-      });
-    });
-  }
+        // FIX: Admin Approves, then balance updates (Anti-Double Credit)
+        async function syncPayments(phone) {
+            const snap = await db.collection('payments')
+                .where('phone', '==', phone)
+                .where('status', '==', 'approved')
+                .where('processed', '==', false)
+                .get();
 
-  async function deleteMatch(id) {
-    if (!confirm("Delete match?")) return;
-    await deleteDoc(doc(db, "matches", id));
-  }
+            for (const doc of snap.docs) {
+                const data = doc.data();
+                const amount = parseFloat(data.amount);
+                
+                if (!isNaN(amount)) {
+                    await db.collection('users').doc(phone).update({
+                        balance: firebase.firestore.FieldValue.increment(amount)
+                    });
+                    await db.collection('payments').doc(doc.id).update({ processed: true });
+                    showToast(`₹${amount} Added to Wallet!`);
+                }
+            }
+        }
 
-  /* =============================
-     PAYMENT APPROVAL (NO DOUBLE CREDIT)
-     ============================= */
-  function loadPayments() {
-    onSnapshot(collection(db, "payments"), snap => {
-      paymentList.innerHTML = "";
-      snap.forEach(d => {
-        const p = d.data();
-        if (p.status !== "pending") return;
+        // -------------------------------------------------------------
+        // MATCH SYSTEM
+        // -------------------------------------------------------------
+        function renderMatches(snapshot) {
+            const container = document.getElementById('matchesContainer');
+            container.innerHTML = '';
 
-        paymentList.innerHTML += `
-          <div class="card">
-            <b>${p.userName}</b> | ₹${p.amount} | ${p.type}
-            <br/>UTR: ${p.utr}
-            <br/><img src="${p.ss}" />
-            <br/>
-            <button onclick="approvePayment('${d.id}')">APPROVE</button>
-            <button class="danger" onclick="rejectPayment('${d.id}')">REJECT</button>
-          </div>`;
-      });
-    });
-  }
+            snapshot.forEach(doc => {
+                const match = doc.data();
+                const isFull = match.joined >= match.totalSlots;
+                
+                const card = `
+                <div class="match-card bg-slate-800/40 rounded-[32px] overflow-hidden border border-slate-700/50 hover:border-indigo-500/50 transition-all shadow-xl" onclick="openMatchDetails('${doc.id}')">
+                    <div class="relative h-40">
+                        <img src="${match.image}" class="w-full h-full object-cover">
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <span class="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-bold text-indigo-400 border border-indigo-500/30 uppercase tracking-widest">${match.gameType}</span>
+                        </div>
+                        <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                            <div>
+                                <h3 class="text-xl font-black text-white drop-shadow-lg">${match.title}</h3>
+                                <p class="text-xs text-slate-300"><i class="far fa-calendar-alt mr-1"></i> ${new Date(match.matchTime).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="grid grid-cols-3 gap-2 mb-5">
+                            <div class="bg-slate-900/50 rounded-2xl p-2 text-center border border-slate-700/30">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold">Prize Pool</p>
+                                <p class="text-sm font-bold text-amber-400">₹${match.prizePool}</p>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-2xl p-2 text-center border border-slate-700/30">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold">Per Kill</p>
+                                <p class="text-sm font-bold text-rose-400">₹${match.perKill}</p>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-2xl p-2 text-center border border-slate-700/30">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold">Entry Fee</p>
+                                <p class="text-sm font-bold text-emerald-400">${match.entryFee == 0 ? 'FREE' : '₹'+match.entryFee}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs font-bold px-1">
+                                <span class="${isFull ? 'text-rose-400' : 'text-indigo-400'}">${isFull ? 'MATCH FULL' : match.joined + ' Joined'}</span>
+                                <span class="text-slate-500">${match.totalSlots} Slots</span>
+                            </div>
+                            <div class="h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700/30">
+                                <div class="h-full bg-gradient-to-r from-indigo-600 to-violet-500 rounded-full transition-all duration-1000" style="width: ${(match.joined/match.totalSlots)*100}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += card;
+            });
+      }// -------------------------------------------------------------
+        // MATCH DETAILS & JOINING LOGIC
+        // -------------------------------------------------------------
+        async function openMatchDetails(id) {
+            activeMatchId = id;
+            const doc = await db.collection('matches').doc(id).get();
+            const match = doc.data();
+            const isJoined = userData && userData.joinedMatches && userData.joinedMatches.includes(id);
 
-  window.approvePayment = async (pid) => {
-    const pref = doc(db, "payments", pid);
+            const content = document.getElementById('matchDetailContent');
+            content.innerHTML = `
+                <div class="flex justify-center mb-4">
+                    <div class="w-12 h-1.5 bg-slate-700 rounded-full"></div>
+                </div>
+                <img src="${match.image}" class="w-full h-48 object-cover rounded-[24px] mb-6 shadow-2xl">
+                <h3 class="text-2xl font-black mb-2">${match.title}</h3>
+                <div class="flex gap-4 mb-6">
+                    <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-lg uppercase tracking-widest border border-indigo-500/20">${match.gameType}</span>
+                    <span class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1 rounded-lg uppercase tracking-widest border border-slate-700">${match.map || 'ERANGEL'}</span>
+                </div>
 
-    await runTransaction(db, async tx => {
-      const ps = await tx.get(pref);
-      if (!ps.exists()) return;
-      if (ps.data().status !== "pending") return;
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Prize Pool</p>
+                        <p class="text-lg font-bold text-white">₹${match.prizePool}</p>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Entry Fee</p>
+                        <p class="text-lg font-bold text-emerald-400">${match.entryFee == 0 ? 'FREE' : '₹'+match.entryFee}</p>
+                    </div>
+                </div>
 
-      const p = ps.data();
-      const userRef = doc(db, "users", p.userId);
+                <div class="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30 mb-8">
+                    <h4 class="font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                        <i class="fas fa-info-circle"></i> Match Credentials
+                    </h4>
+                    ${isJoined ? `
+                        <div class="space-y-3">
+                            <div class="flex justify-between p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                                <span class="text-slate-400 text-sm">Room ID</span>
+                                <span class="font-mono font-bold text-indigo-400">${match.roomId || 'Waiting...'}</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                                <span class="text-slate-400 text-sm">Password</span>
+                                <span class="font-mono font-bold text-indigo-400">${match.password || 'Waiting...'}</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="text-center py-4 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
+                            <p class="text-sm text-slate-500">Join match to see Room ID & Password</p>
+                        </div>
+                    `}
+                </div>
 
-      // ADD FUND → wallet credit
-      if (p.type === "add_fund") {
-        tx.update(userRef, { balance: increment(p.amount) });
-      }
+                <button id="joinBtn" onclick="processJoin('${id}', ${match.entryFee})" 
+                    class="w-full ${isJoined ? 'bg-emerald-600' : 'bg-indigo-600'} py-4 rounded-2xl font-bold text-lg shadow-xl transition-all active:scale-95"
+                    ${(isJoined || match.joined >= match.totalSlots) ? 'disabled' : ''}>
+                    ${isJoined ? '<i class="fas fa-check-circle mr-2"></i> ALREADY JOINED' : (match.joined >= match.totalSlots ? 'MATCH FULL' : 'JOIN NOW')}
+                </button>
+            `;
+            openModal('matchDetailModal');
+        }
 
-      // MATCH JOIN → joined++
-      if (p.type === "match") {
-        const mref = doc(db, "matches", p.matchId);
-        tx.update(mref, {
-          joined: increment(1),
-          joinedUsers: arrayUnion(p.userId)
-        });
-      }
+        async function processJoin(matchId, fee) {
+            if (!userData) return showToast("Please login first", true);
+            if (userData.balance < fee) return showToast("Insufficient balance", true);
 
-      tx.update(pref, { status: "approved" });
-    });
+            const btn = document.getElementById('joinBtn');
+            btn.disabled = true;
+            btn.innerText = "Joining...";
 
-    alert("Payment approved safely");
-  };
+            try {
+                // 1. Deduct Balance
+                await db.collection('users').doc(userData.phone).update({
+                    balance: firebase.firestore.FieldValue.increment(-fee),
+                    joinedMatches: firebase.firestore.FieldValue.arrayUnion(matchId),
+                    matchesPlayed: firebase.firestore.FieldValue.increment(1)
+                });
 
-  window.rejectPayment = async (pid) => {
-    await updateDoc(doc(db, "payments", pid), { status: "rejected" });
-  };
+                // 2. Increase Match Joined Count
+                await db.collection('matches').doc(matchId).update({
+                    joined: firebase.firestore.FieldValue.increment(1)
+                });
 
-  /* =============================
-     WITHDRAW APPROVAL
-     ============================= */
-  function loadWithdrawals() {
-    onSnapshot(collection(db, "withdrawals"), snap => {
-      withdrawList.innerHTML = "";
-      snap.forEach(d => {
-        const w = d.data();
-        if (w.status !== "pending") return;
+                // 3. Create Transaction record
+                await db.collection('transactions').add({
+                    phone: userData.phone,
+                    type: 'MATCH_JOIN',
+                    amount: fee,
+                    matchId: matchId,
+                    timestamp: Date.now()
+                });
 
-        withdrawList.innerHTML += `
-          <div class="card">
-            <b>${w.userName}</b> | ₹${w.amount}
-            <br/>UPI: ${w.upi}
-            <br/>
-            <button onclick="approveWithdraw('${d.id}')">APPROVE</button>
-            <button class="danger" onclick="rejectWithdraw('${d.id}')">REJECT</button>
-          </div>`;
-      });
-    });
-  }
+                showToast("Successfully joined match!");
+                closeModal('matchDetailModal');
+            } catch (e) {
+                showToast("Join Error: " + e.message, true);
+                btn.disabled = false;
+            }
+        }
 
-  window.approveWithdraw = async (id) => {
-    const wref = doc(db, "withdrawals", id);
+        // -------------------------------------------------------------
+        // WALLET SYSTEM (DEPOSIT & WITHDRAW)
+        // -------------------------------------------------------------
+        function setAmount(amt) {
+            document.getElementById('addAmount').value = amt;
+        }
 
-    await runTransaction(db, async tx => {
-      const ws = await tx.get(wref);
-      if (!ws.exists()) return;
-      if (ws.data().status !== "pending") return;
+        async function initiateDeposit() {
+            const amt = parseFloat(document.getElementById('addAmount').value);
+            if (!amt || amt < 10) return showToast("Min. deposit is ₹10", true);
 
-      const uref = doc(db, "users", ws.data().userId);
-      tx.update(uref, { balance: increment(-ws.data().amount) });
-      tx.update(wref, { status: "approved" });
-    });
+            const btn = document.getElementById('depositBtn');
+            btn.disabled = true;
+            btn.innerText = "Redirecting...";
 
-    alert("Withdrawal approved");
-  };
+            // Create Payment Request for Admin Approval
+            const payData = {
+                phone: userData.phone,
+                amount: amt,
+                status: 'pending',
+                processed: false,
+                type: 'DEPOSIT',
+                timestamp: Date.now()
+            };
 
-  window.rejectWithdraw = async (id) => {
-    await updateDoc(doc(db, "withdrawals", id), { status: "rejected" });
-  };
+            const doc = await db.collection('payments').add(payData);
+            
+            // Redirect to UPI (Admin UPI would be dynamic in production)
+            const upiUrl = `upi://pay?pa=YOUR_UPI_ID@okicici&pn=GamingHub&am=${amt}&cu=INR&tn=Deposit_ID_${doc.id}`;
+            window.location.href = upiUrl;
+            
+            setTimeout(() => {
+                closeModal('addFundModal');
+                showToast("Request sent! Balance will update after approval.");
+                btn.disabled = false;
+                btn.innerText = "Proceed to Pay";
+            }, 3000);
+        }
 
-  /* =============================
-     RESULT UPLOAD (NO DOUBLE PRIZE)
-     ============================= */
-  async function uploadResult() {
-    const file = r_img.files[0];
-    if (!file) return alert("Upload image");
+        async function processWithdrawal() {
+            const upi = document.getElementById('withdrawUpi').value.trim();
+            const amt = parseFloat(document.getElementById('withdrawAmount').value);
 
-    const imgUrl = await uploadToCloudinary(file);
+            if (!upi || isNaN(amt) || amt < 50) return showToast("Min. withdrawal is ₹50", true);
+            if (userData.balance < amt) return showToast("Insufficient balance", true);
 
-    await addDoc(collection(db, "results"), {
-      matchId: r_matchId.value,
-      winnerName: r_name.value,
-      winnerPhone: r_phone.value,
-      winningAmount: Number(r_amount.value),
-      image: imgUrl,
-      paidTo: [],
-      timestamp: Date.now()
-    });
+            const btn = document.getElementById('withdrawBtn');
+            btn.disabled = true;
+            btn.innerText = "Processing...";
 
-    alert("Result uploaded");
-  }
+            try {
+                // FIXED: Instant Balance Deduction on withdrawal request
+                await db.collection('users').doc(userData.phone).update({
+                    balance: firebase.firestore.FieldValue.increment(-amt)
+                });
 
-  async function uploadToCloudinary(file) {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", "sql_admin");
-    fd.append("folder", "results");
+                await db.collection('withdrawals').add({
+                    phone: userData.phone,
+                    upi: upi,
+                    amount: amt,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/debp1kjtm/image/upload", {
-      method: "POST",
-      body: fd
-    });
+                showToast("Withdrawal request sent! ₹" + amt + " deducted.");
+                closeModal('withdrawModal');
+            } catch (e) {
+                showToast("Error: " + e.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm Withdrawal";
+            }
+        }
 
-    const data = await res.json();
-    return data.secure_url;
-  }
-</script>
+        async function loadTransactions() {
+            const container = document.getElementById('transactionContainer');
+            container.innerHTML = '<p class="text-center py-10 text-slate-500">Fetching history...</p>';
+            
+            const snap = await db.collection('transactions')
+                .where('phone', '==', userData.phone)
+                .orderBy('timestamp', 'desc')
+                .limit(10)
+                .get();
 
+            container.innerHTML = '';
+            if (snap.empty) container.innerHTML = '<p class="text-center py-10 text-slate-500">No transactions yet</p>';
+
+            snap.forEach(doc => {
+                const tr = doc.data();
+                container.innerHTML += `
+                <div class="flex items-center justify-between p-4 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 ${tr.type === 'MATCH_JOIN' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'} rounded-xl flex items-center justify-center">
+                            <i class="fas ${tr.type === 'MATCH_JOIN' ? 'fa-gamepad' : 'fa-plus-circle'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-white">${tr.type === 'MATCH_JOIN' ? 'Match Joined' : 'Funds Added'}</p>
+                            <p class="text-[10px] text-slate-500">${new Date(tr.timestamp).toLocaleString()}</p>
+                        </div>
+                    </div>
+                    <p class="font-bold ${tr.type === 'MATCH_JOIN' ? 'text-rose-500' : 'text-emerald-500'}">${tr.type === 'MATCH_JOIN' ? '-' : '+'}₹${tr.amount}</p>
+                </div>`;
+            });
+        }
+
+        // On Page Load
+        window.onload = () => {
+            const savedPhone = localStorage.getItem('userPhone');
+            if (savedPhone) {
+                initApp(savedPhone);
+            } else {
+                document.getElementById('authOverlay').classList.remove('hidden');
+            }
+        };
+    </script>
 </body>
 </html>
