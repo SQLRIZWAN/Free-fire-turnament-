@@ -387,12 +387,27 @@
         // FIREBASE CONFIGURATION (REPLACE WITH YOUR KEYS)
         // -------------------------------------------------------------
         const firebaseConfig = {
-            apiKey: "AIzaSyAs-XXXXXXXXXXXXXXX",
-            authDomain: "tournament-XXXXX.firebaseapp.com",
-            projectId: "tournament-XXXXX",
-            storageBucket: "tournament-XXXXX.appspot.com",
-            messagingSenderId: "XXXXXXXXXXXX",
-            appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXX"
+            // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+  authDomain: "sqladmin-ff04d.firebaseapp.com",
+  projectId: "sqladmin-ff04d",
+  storageBucket: "sqladmin-ff04d.firebasestorage.app",
+  messagingSenderId: "539086978850",
+  appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b",
+  measurementId: "G-KH4J0CZ9M5"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -884,7 +899,86 @@
                         </div>
                     </div>
                     <p class="font-bold ${tr.type === 'MATCH_JOIN' ? 'text-rose-500' : 'text-emerald-500'}">${tr.type === 'MATCH_JOIN' ? '-' : '+'}₹${tr.amount}</p>
-                </div>`;
+                </div>`;// -------------------------------------------------------------
+        // AUTH & PROFILE LOGIC (WITH AVATAR UPLOAD)
+        // -------------------------------------------------------------
+        
+        // 1. Profile Photo Update Function
+        document.getElementById('avatarUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !userData) return;
+
+            showToast("Uploading photo...");
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'ml_default'); // Cloudinary default preset
+
+            try {
+                // Image upload using Cloudinary (No setup required for this demo)
+                const res = await fetch('https://api.cloudinary.com/v1_1/demo/image/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if(data.secure_url) {
+                    await db.collection('users').doc(userData.phone).update({
+                        avatar: data.secure_url
+                    });
+                    showToast("Profile photo updated!");
+                }
+            } catch (err) {
+                showToast("Upload failed", true);
+            }
+        });
+
+        // 2. Fixed Auth Logic (Registration + Password Creation)
+        async function handleAuth() {
+            const phone = document.getElementById('userPhone').value.trim();
+            const pass = document.getElementById('userPassword').value.trim();
+            const name = document.getElementById('userName').value.trim();
+
+            if (!phone || phone.length < 10) return showToast("Enter 10-digit number", true);
+            if (!pass || pass.length < 4) return showToast("Set a password (min 4 chars)", true);
+
+            try {
+                if (isLogin) {
+                    // LOGIN
+                    const userDoc = await db.collection('users').doc(phone).get();
+                    if (!userDoc.exists) return showToast("User not found!", true);
+                    if (userDoc.data().password !== pass) return showToast("Wrong password!", true);
+                    
+                    localStorage.setItem('userPhone', phone);
+                    initApp(phone);
+                } else {
+                    // NEW REGISTRATION
+                    if (!name) return showToast("Please enter your name", true);
+                    const checkUser = await db.collection('users').doc(phone).get();
+                    if (checkUser.exists) return showToast("Already registered!", true);
+
+                    const newUser = {
+                        name: name,
+                        phone: phone,
+                        password: pass, // Password saves here
+                        balance: 0,
+                        totalProfit: 0,
+                        matchesPlayed: 0,
+                        wins: 0,
+                        avatar: `https://ui-avatars.com/api/?name=${name}&background=6366f1&color=fff`,
+                        joinedAt: Date.now(),
+                        joinedMatches: []
+                    };
+                    
+                    await db.collection('users').doc(phone).set(newUser);
+                    localStorage.setItem('userPhone', phone);
+                    initApp(phone);
+                }
+                document.getElementById('authOverlay').classList.add('hidden');
+                showToast("Success!");
+            } catch (e) {
+                showToast("Error: " + e.message, true);
+            }
+        }
             });
         }
 
