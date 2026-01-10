@@ -275,7 +275,7 @@
             </h3>
             <div id="transactionContainer" class="space-y-3 pb-24">
                 </div>
-  </section>        <div id="matchDetailModal" class="fixed inset-0 z-[100] hidden">
+    </section><div id="matchDetailModal" class="fixed inset-0 z-[100] hidden">
             <div class="modal-overlay absolute inset-0" onclick="closeModal('matchDetailModal')"></div>
             <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-slate-900 rounded-t-[40px] p-6 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl border-t border-slate-800">
                 <div id="matchDetailContent">
@@ -446,8 +446,74 @@
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
             document.body.style.overflow = 'auto';
+        }// -------------------------------------------------------------
+        // AUTHENTICATION LOGIC (FIXED FOR NEW REGISTRATION)
+        // -------------------------------------------------------------
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? 'Welcome Back' : 'Create Account';
+            document.getElementById('authSubtitle').innerText = isLogin ? 'Sign in to start winning' : 'Join the gaming community';
+            
+            // Show/Hide Name input for Registration
+            document.getElementById('nameInput').classList.toggle('hidden', isLogin);
+            
+            // UI Updates
+            document.getElementById('authBtn').innerText = isLogin ? 'Login Now' : 'Create Account';
+            document.getElementById('authToggleBtn').innerText = isLogin ? 'Sign Up' : 'Login';
+            document.getElementById('authToggleText').innerText = isLogin ? "Don't have an account?" : "Already have an account?";
         }
-// -------------------------------------------------------------
+
+        async function handleAuth() {
+            const phone = document.getElementById('userPhone').value.trim();
+            const pass = document.getElementById('userPassword').value.trim();
+            const name = document.getElementById('userName').value.trim();
+
+            if (!phone || phone.length < 10) return showToast("Enter valid 10-digit number", true);
+            if (!pass || pass.length < 4) return showToast("Password must be 4+ chars", true);
+            if (!isLogin && !name) return showToast("Please enter your name", true);
+
+            try {
+                if (isLogin) {
+                    // LOGIN PROCESS
+                    const userDoc = await db.collection('users').doc(phone).get();
+                    if (!userDoc.exists) {
+                        return showToast("User not found. Please Sign Up.", true);
+                    }
+                    if (userDoc.data().password !== pass) {
+                        return showToast("Incorrect password", true);
+                    }
+                    localStorage.setItem('userPhone', phone);
+                    initApp(phone);
+                } else {
+                    // REGISTRATION PROCESS (NEW USER CREATION)
+                    const checkUser = await db.collection('users').doc(phone).get();
+                    if (checkUser.exists) {
+                        return showToast("Phone already registered. Please Login.", true);
+                    }
+
+                    const newUser = {
+                        name: name,
+                        phone: phone,
+                        password: pass, // Password is set here during registration
+                        balance: 0,
+                        totalProfit: 0,
+                        matchesPlayed: 0,
+                        wins: 0,
+                        avatar: `https://ui-avatars.com/api/?name=${name}&background=random`,
+                        joinedAt: Date.now(),
+                        joinedMatches: []
+                    };
+                    
+                    await db.collection('users').doc(phone).set(newUser);
+                    localStorage.setItem('userPhone', phone);
+                    initApp(phone);
+                }
+                document.getElementById('authOverlay').classList.add('hidden');
+                showToast("Success! Welcome to Gaming Hub.");
+            } catch (e) {
+                showToast("Error: " + e.message, true);
+            }
+        }// -------------------------------------------------------------
         // AUTHENTICATION LOGIC
         // -------------------------------------------------------------
         function toggleAuth() {
@@ -616,7 +682,7 @@
                 </div>`;
                 container.innerHTML += card;
             });
-      }// -------------------------------------------------------------
+    }// -------------------------------------------------------------
         // MATCH DETAILS & JOINING LOGIC
         // -------------------------------------------------------------
         async function openMatchDetails(id) {
