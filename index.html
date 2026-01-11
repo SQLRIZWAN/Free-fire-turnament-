@@ -7,11 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #00ff88; --gold: #ffd700; --bg: #050505; --card: #121212; --border: #222; --red: #ff4444; --muted:#888; --waiting:#ffae00; }
+        :root { --accent: #00ff88; --gold: #ffd700; --bg: #050505; --card: #121212; --border: #222; --red: #ff4444; --muted:#888; --waiting:#ffae00; --glass: rgba(20,20,20,0.95); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { margin: 0; background: var(--bg); color: #fff; font-family: 'Poppins', sans-serif; overflow-x: hidden; }
         .allow-select, .room-data b { user-select: text !important; cursor: text; }
 
+        /* Header & Navigation */
         header { background: #000; padding: 15px; border-bottom: 2px solid var(--gold); text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(255, 215, 0, 0.1); }
         .header-title { color: var(--gold); font-weight: 800; font-size: 0.95rem; margin: 0; letter-spacing: 0.5px; text-transform: uppercase; }
         .header-sub { color: var(--accent); font-size: 0.7rem; display: block; margin-top: 2px; }
@@ -20,19 +21,18 @@
         .tabs { display: flex; gap:8px; margin: 12px; background: #111; border-radius: 12px; border:1px solid var(--border); padding:6px; }
         .tab { flex: 1; padding: 10px; border: none; background: none; color: var(--muted); font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; text-align:center; border-radius:10px; }
         .tab.active { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
-        .small-btn { padding:6px 12px; font-size:0.75rem; border-radius:8px; border:1px solid #333; background:#0b0b0b; color:#ccc; cursor:pointer; font-weight:600; }
 
+        /* Main Content Area */
         #app-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; padding: 10px 12px 90px 12px; }
 
-        .card { background: var(--card); border-radius: 18px; border:1px solid var(--border); overflow: hidden; position: relative; }
-        .m-tag { position: absolute; top: 12px; right: 15px; font-size: 0.65rem; background:#000; padding:4px 8px; border:1px solid var(--accent); border-radius:6px; color:var(--accent); font-weight:800; }
+        /* Tournament Card Style */
+        .card { background: var(--card); border-radius: 18px; border:1px solid var(--border); overflow: hidden; position: relative; transition: 0.3s; }
+        .m-tag { position: absolute; top: 12px; right: 15px; font-size: 0.65rem; background:#000; padding:4px 8px; border:1px solid var(--accent); border-radius:6px; color:var(--accent); font-weight:800; z-index: 10; }
         .card-body { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .item { display:flex; gap:10px; align-items:center; }
         .item i { color: var(--gold); font-size:1rem; width:20px; text-align:center; }
         .item div span { display:block; font-size:0.6rem; color:var(--muted); text-transform:uppercase; }
         .item div b { font-size:0.95rem; color:#fff; }
-        .win-green { color: var(--accent); }
-        .entry-gold { color: var(--gold); }
 
         .timer-box { background:#080808; padding:10px; text-align:center; border-top:1px solid #222; border-bottom:1px solid #222; }
         .countdown { font-family: monospace; font-size:1.2rem; color:var(--waiting); font-weight:900; }
@@ -42,74 +42,74 @@
         .bar { height:8px; background:#222; border-radius:12px; overflow:hidden; margin-bottom:12px; }
         .fill { height:100%; background:linear-gradient(90deg, var(--accent), #008f4c); transition:1s ease; }
 
-        .btn-main { width:100%; padding:14px; border-radius:12px; border:none; font-weight:900; font-size:1rem; cursor:pointer; transition:0.2s; text-transform:uppercase; }
-        .btn-join { background:var(--accent); color:#000; }
+        .btn-main { width:100%; padding:14px; border-radius:12px; border:none; font-weight:900; font-size:1rem; cursor:pointer; text-transform:uppercase; transition: 0.2s; }
+        .btn-join { background:var(--accent); color:#000; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2); }
+        .btn-join:active { transform: scale(0.98); }
         .btn-dis { background:#222; color:var(--muted); cursor:not-allowed; }
 
+        /* Room Details Box */
         .room-box { background: rgba(0, 255, 136, 0.05); border:1px dashed var(--accent); padding:15px; border-radius:12px; text-align:center; margin-bottom:10px; }
-        .room-box h4 { margin:0 0 10px; font-size:0.8rem; color:var(--accent); }
+        .room-box h4 { margin:0 0 10px; font-size:0.8rem; color:var(--accent); letter-spacing: 1px; }
         .room-data { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
         .room-data div { background:#000; padding:10px; border-radius:8px; border:1px solid #333; }
         .room-data div span { display:block; font-size:0.6rem; color:var(--muted); margin-bottom:4px; }
         .room-data div b { font-size:1rem; color:#fff; font-family:monospace; }
 
-        #side-menu { position: fixed; top:0; right:-100%; width:300px; height:100%; background:#0a0a0a; z-index:5000; transition:0.4s; border-left:1px solid var(--gold); display:flex; flex-direction:column; }
+        /* Side Menu */
+        #side-menu { position: fixed; top:0; right:-100%; width:300px; height:100%; background:#0a0a0a; z-index:5000; transition:0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left:1px solid var(--gold); display:flex; flex-direction:column; }
         #side-menu.active { right:0; }
-        .menu-header { padding:20px; border-bottom:1px solid #222; display:flex; align-items:center; gap:15px; background:#000; }
-        .menu-dp { width:50px; height:50px; border-radius:50%; border:2px solid var(--gold); }
+        .menu-header { padding:30px 20px; border-bottom:1px solid #222; display:flex; align-items:center; gap:15px; background: linear-gradient(45deg, #000, #111); }
+        .menu-dp { width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); object-fit: cover; }
         .menu-items { padding:10px; overflow-y:auto; flex:1; }
         .menu-link { display:flex; align-items:center; gap:15px; padding:16px; color:#ddd; text-decoration:none; border-bottom:1px solid #1a1a1a; font-weight:600; font-size:0.95rem; }
-        .menu-link i { width:25px; text-align:center; color:var(--gold); }
-        .close-menu { position:absolute; top:15px; right:15px; color:var(--red); font-size:1.8rem; cursor:pointer; }
-        .menu-footer { padding:20px; border-top:1px solid #222; text-align:center; background:#000; }
+        .menu-link i { width:25px; text-align:center; color:var(--gold); font-size: 1.1rem; }
+        .menu-footer { padding:20px; border-top:1px solid #222; background:#000; }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display:none; align-items:center; justify-content:center; padding:15px; }
-        .modal-ui { background:#111; width:100%; max-width:480px; padding:25px; border-radius:20px; border:1px solid var(--gold); }
-        .pay-opt { display:flex; align-items:center; gap:15px; padding:12px; background:#1a1a1a; border-radius:12px; text-decoration:none; color:#fff; border:1px solid #333; margin-bottom:10px; }
-        .pay-opt img { width:32px; }
-        input, textarea { width:100%; background:#050505; border:1px solid #333; color:#fff; padding:12px; border-radius:10px; outline:none; margin-bottom:10px; }
+        /* Modals */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display:none; align-items:center; justify-content:center; padding:15px; backdrop-filter: blur(5px); }
+        .modal-ui { background:#111; width:100%; max-width:480px; padding:25px; border-radius:24px; border:1px solid var(--gold); position: relative; animation: modalPop 0.3s ease-out; }
+        @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        input, textarea, select { width:100%; background:#050505; border:1px solid #333; color:#fff; padding:14px; border-radius:12px; outline:none; margin-bottom:12px; font-family: inherit; }
+        input:focus { border-color: var(--accent); }
 
-        .profile-head { background: linear-gradient(180deg, #1a1a1a, #050505); padding:20px; border-radius:16px; text-align:center; border:1px solid #333; margin-bottom:20px; }
-        .p-img-cont { position:relative; width:80px; height:80px; margin:0 auto 10px; }
-        .p-img { width:100%; height:100%; border-radius:50%; border:2px solid var(--accent); }
-        .p-edit { position:absolute; bottom:0; right:0; background:var(--gold); color:#000; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; cursor:pointer; border:2px solid #000; }
+        /* Profile Styles */
+        .profile-container { padding: 10px; }
+        .profile-head { background: linear-gradient(180deg, #1a1a1a, #050505); padding:30px 20px; border-radius:24px; text-align:center; border:1px solid #333; margin-bottom:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .p-img-cont { position:relative; width:100px; height:100px; margin:0 auto 15px; }
+        .p-img { width:100%; height:100%; border-radius:50%; border:3px solid var(--accent); object-fit: cover; }
+        .p-edit { position:absolute; bottom:5px; right:5px; background:var(--gold); color:#000; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.9rem; cursor:pointer; border:3px solid #000; }
 
-        .stats-box { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:20px; }
-        .stat-item { background:#0b0b0b; padding:10px 5px; border-radius:10px; border:1px solid #222; text-align:center; }
-        .stat-lbl { font-size:0.6rem; color:#888; text-transform:uppercase; display:block; margin-bottom:4px; font-weight:700; }
-        .stat-val { font-size:1rem; font-weight:800; }
-        .st-gold { color:var(--gold); font-size:1.1rem; }
-        .st-red { color:var(--red); }
-        .st-green { color:var(--accent); }
+        .stats-box { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:25px; }
+        .stat-item { background:#0b0b0b; padding:15px 5px; border-radius:16px; border:1px solid #222; text-align:center; transition: 0.3s; }
+        .stat-lbl { font-size:0.65rem; color:#888; text-transform:uppercase; display:block; margin-bottom:6px; font-weight:700; }
+        .stat-val { font-size:1.1rem; font-weight:800; }
 
-        .wallet-actions { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; }
-        .w-act-btn { padding:12px; border-radius:12px; border:1px solid #333; background:#111; color:#fff; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; }
-        .pkg-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:15px; }
-        .pkg-box { background:#1a1a1a; padding:12px; border-radius:10px; border:1px solid #333; text-align:center; cursor:pointer; font-weight:bold; }
-        .pkg-box.active { border-color:var(--gold); color:var(--gold); }
+        /* Wallet Actions */
+        .wallet-card { background: #161616; border-radius: 20px; padding: 20px; border: 1px solid #222; margin-bottom: 20px; }
+        .pkg-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px; }
+        .pkg-box { background:#050505; padding:15px; border-radius:12px; border:1px solid #333; text-align:center; cursor:pointer; font-weight:bold; transition: 0.2s; }
+        .pkg-box.active { border-color:var(--gold); color:var(--gold); background: rgba(255, 215, 0, 0.05); }
 
-        .result-card { background:#121212; padding:0; border-radius:16px; margin-bottom:15px; overflow:hidden; }
-        .r-head { padding:12px; background:#080808; border-bottom:1px solid #222; display:flex; justify-content:space-between; }
-        .r-img { width:100%; display:block; max-height:250px; object-fit:cover; }
-        .r-body { padding:15px; }
-        .winner-box { background: linear-gradient(45deg, #ffd70010, transparent); border-left:3px solid var(--gold); padding:10px; margin-bottom:10px; }
-        .winner-row { display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px; }
-        .r-actions { padding:10px 15px; border-top:1px solid #222; display:flex; gap:20px; }
-        .act-btn { background:none; border:none; color:#888; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:6px; }
-
-        #comment-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 7000; display: none; flex-direction: column; }
+        /* Results & Comments */
+        .result-card { background: var(--card); border-radius: 20px; overflow: hidden; margin-bottom: 20px; border: 1px solid #222; }
+        .r-img { width:100%; height: 200px; object-fit: cover; border-bottom: 1px solid #222; }
+        .r-body { padding: 15px; }
+        .winner-tag { background: rgba(255, 215, 0, 0.1); border-left: 4px solid var(--gold); padding: 10px; margin: 10px 0; border-radius: 0 8px 8px 0; }
+        
+        #comment-page { position: fixed; inset:0; background: #000; z-index: 7000; display: none; flex-direction: column; }
         .cp-header { padding:15px; border-bottom:1px solid #222; display:flex; align-items:center; gap:15px; background:#080808; }
-        .cp-back { color:#fff; font-size:1.2rem; cursor:pointer; }
-        .cp-body { flex:1; overflow-y:auto; padding:15px; padding-bottom:80px; }
-        .cp-footer { position: absolute; bottom: 0; width: 100%; background: #111; padding: 10px; border-top: 1px solid #333; display: flex; gap: 10px; }
-        .cp-item { margin-bottom:15px; display:flex; gap:10px; }
-        .cp-dp { width:35px; height:35px; border-radius:50%; background:#222; }
-        .cp-box { background:#1a1a1a; padding:8px 12px; border-radius:12px; max-width:85%; }
-        .cp-name { font-size:0.75rem; font-weight:bold; color:var(--gold); display:block; margin-bottom:2px; }
-        .cp-text { font-size:0.85rem; color:#eee; }
+        .cp-body { flex:1; overflow-y:auto; padding:15px; }
+        .cp-footer { padding: 15px; background: #111; display: flex; gap: 10px; border-top: 1px solid #222; }
+
+        /* Utility */
+        .loader { width: 40px; height: 40px; border: 4px solid #222; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 50px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .no-data { text-align: center; padding: 40px; color: #555; font-weight: 600; }
     </style>
 </head>
 <body>
+
 <header>
     <p class="header-title">FREE FIRE DAILY TOURNAMENT</p>
     <span class="header-sub">JOIN PLAY & WIN REAL MONEY 💰</span>
@@ -122,250 +122,655 @@
     <button class="tab" id="tab-result" onclick="switchTab('result')">RESULTS</button>
 </div>
 
+<main id="app-content"></main>
+
 <div id="side-menu">
-    <div class="close-menu" onclick="toggleMenu(false)">&times;</div>
     <div class="menu-header">
         <img id="menu-user-dp" src="https://img.icons8.com/color/96/user-male-circle.png" class="menu-dp">
         <div>
-            <div id="menu-user-name" style="font-weight:bold; color:#fff;">Guest</div>
-            <div id="menu-user-bal-side" style="font-size:0.7rem; color:var(--accent);">₹0.00</div>
+            <div id="menu-user-name" style="font-weight:bold; color:#fff; font-size: 1.1rem;">Guest User</div>
+            <div id="menu-user-bal-side" style="font-size:0.8rem; color:var(--accent); font-weight: 700;">Balance: ₹0.00</div>
         </div>
+        <div onclick="toggleMenu(false)" style="margin-left: auto; color: #555; font-size: 1.2rem;"><i class="fas fa-times"></i></div>
     </div>
     <div class="menu-items">
-        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-home"></i> Home</a>
-        <a href="#" id="menu-auth-btn" class="menu-link" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="#" class="menu-link" onclick="switchTab('my'); toggleMenu(false)"><i class="fas fa-user-circle"></i> My Profile</a>
+        <a href="#" class="menu-link" onclick="openHistoryModal()"><i class="fas fa-history"></i> Transaction History</a>
+        <a href="#" class="menu-link" onclick="showRules()"><i class="fas fa-file-contract"></i> Tournament Rules</a>
+        <a href="#" class="menu-link" style="color: #555;"><i class="fas fa-headset"></i> Support Help</a>
+        <a href="#" id="menu-auth-btn" class="menu-link" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login / Register</a>
     </div>
     <div class="menu-footer">
-        <button id="menu-logout-btn" onclick="confirmLogout()" style="background:#222; color:var(--red); border:none; padding:12px; width:100%; border-radius:10px; display:none; cursor:pointer;">LOGOUT</button>
-    </div>
-</div>
-
-<main id="app-content"></main>
-
-<div id="wallet-modal" class="modal">
-    <div class="modal-ui">
-        <h3 id="wallet-modal-title" style="color:var(--gold); text-align:center; margin-bottom:15px;">ADD FUND</h3>
-        <div id="add-fund-form">
-            <div class="pkg-grid">
-                <div class="pkg-box" onclick="setPkg(50)">₹50</div>
-                <div class="pkg-box" onclick="setPkg(100)">₹100</div>
-                <div class="pkg-box" onclick="setPkg(500)">₹500</div>
-                <div class="pkg-box" onclick="setPkg(1000)">₹1000</div>
-            </div>
-            <input type="number" id="manual-amt" placeholder="Amount" style="text-align:center;">
-            <button class="btn-main btn-join" onclick="initWalletDeposit()">DEPOSIT</button>
-        </div>
-        <div id="withdraw-form" style="display:none;">
-            <input type="number" id="with-amt" placeholder="Amount (Min ₹50)">
-            <input type="text" id="with-upi" placeholder="UPI ID">
-            <button class="btn-main" style="background:var(--gold); color:#000;" onclick="submitWithdrawal()">WITHDRAW</button>
-        </div>
-        <button onclick="document.getElementById('wallet-modal').style.display='none'" style="width:100%; background:none; border:none; color:#555; margin-top:10px; cursor:pointer;">CLOSE</button>
-    </div>
-</div>
-
-<div id="pay-modal" class="modal">
-    <div class="modal-ui">
-        <h3 style="color:var(--gold); text-align:center;">PAYMENT</h3>
-        <h1 id="modal-amt" style="color:var(--accent); text-align:center; font-size:2.5rem;">₹0</h1>
-        <div id="wallet-pay-box" style="display:none; text-align:center; margin:15px 0;">
-            <span style="color:var(--accent);">Wallet: <b id="pay-modal-bal">₹0</b></span>
-            <button class="btn-main btn-join" style="margin-top:10px;" onclick="payViaWallet()">PAY VIA WALLET</button>
-        </div>
-        <div id="manual-pay-div">
-            <a id="g-link" href="#" class="pay-opt"><img src="https://img.icons8.com/color/48/google-pay.png"> Google Pay</a>
-            <input type="text" id="utr-input" placeholder="UTR Number" maxlength="12" style="text-align:center;">
-            <input type="file" id="utr-ss" accept="image/*">
-            <button class="btn-main btn-join" id="submit-pay-btn" onclick="processPayment()">SUBMIT</button>
-        </div>
-        <button onclick="closeModal()" class="btn-main" style="background:#222; margin-top:10px;">CANCEL</button>
+        <button id="menu-logout-btn" onclick="confirmLogout()" style="background:#1a1a1a; color:var(--red); border:1px solid #333; padding:14px; width:100%; border-radius:12px; display:none; cursor:pointer; font-weight:800; letter-spacing: 1px;">LOGOUT SYSTEM</button>
     </div>
 </div>
 
 <div id="auth-modal" class="modal">
     <div class="modal-ui">
-        <h2 id="auth-title" style="color:var(--gold); text-align:center;">LOGIN</h2>
+        <h2 id="auth-title" style="color:var(--gold); text-align:center; margin-bottom: 20px;">ACCOUNT LOGIN</h2>
         <div id="auth-forms"></div>
-        <button id="auth-submit-btn" class="btn-main btn-join" onclick="submitAuth()">LOGIN</button>
-        <p style="text-align:center; font-size:0.8rem; margin-top:15px; color:#888; cursor:pointer;" onclick="toggleAuthMode()">
-            <span id="auth-toggle-msg">Register?</span>
+        <button id="auth-submit-btn" class="btn-main btn-join" onclick="submitAuth()">SIGN IN</button>
+        <p style="text-align:center; font-size:0.85rem; margin-top:20px; color:#888;">
+            <span id="auth-toggle-text">Don't have an account?</span> 
+            <b style="color:var(--accent); cursor:pointer;" onclick="toggleAuthMode()" id="auth-toggle-btn">Register Now</b>
         </p>
-        <button onclick="document.getElementById('auth-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#555; font-size:1.5rem;">&times;</button>
+        <div onclick="closeModals()" style="position:absolute; top:20px; right:20px; color:#444; cursor:pointer;"><i class="fas fa-times-circle"></i></div>
     </div>
 </div>
 
-<div id="comment-page">
-    <div class="cp-header">
-        <i class="fas fa-arrow-left cp-back" onclick="closeCommentPage()"></i>
-        <span style="font-weight:bold;">Comments</span>
+<div id="wallet-modal" class="modal">
+    <div class="modal-ui">
+        <h3 id="wallet-modal-title" style="color:var(--gold); text-align:center; margin-bottom:20px;">WALLET RECHARGE</h3>
+        <div id="deposit-section">
+            <div class="pkg-grid">
+                <div class="pkg-box" onclick="setPkg(50)">₹50</div>
+                <div class="pkg-box" onclick="setPkg(100)">₹100</div>
+                <div class="pkg-box" onclick="setPkg(200)">₹200</div>
+            </div>
+            <input type="number" id="dep-amt-input" placeholder="Custom Amount (Min ₹20)">
+            <p style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">* Money will be added after UTR verification by admin.</p>
+            <button class="btn-main btn-join" onclick="processDeposit()">PROCEED TO PAY</button>
+        </div>
+        <div id="withdraw-section" style="display:none;">
+            <input type="number" id="with-amt-input" placeholder="Amount to Withdraw">
+            <input type="text" id="with-upi-input" placeholder="Your UPI ID (e.g. name@paytm)">
+            <button class="btn-main" style="background:var(--gold); color:#000;" onclick="processWithdrawal()">REQUEST WITHDRAW</button>
+        </div>
+        <div onclick="closeModals()" style="position:absolute; top:20px; right:20px; color:#444; cursor:pointer;"><i class="fas fa-times"></i></div>
     </div>
-    <div class="cp-body" id="cp-list"></div>
-    <div class="cp-footer">
-        <input type="text" id="cp-input" placeholder="Comment..." style="margin:0; border-radius:20px;">
-        <button class="small-btn" onclick="postComment()" style="border-radius:20px;"><i class="fas fa-paper-plane"></i></button>
+</div>
+
+<div id="utr-modal" class="modal">
+    <div class="modal-ui">
+        <h3 style="color:var(--accent); text-align:center;">VERIFY PAYMENT</h3>
+        <p style="text-align:center; font-size:0.8rem; color:#888;">Send <b id="utr-display-amt" style="color:#fff;">₹0</b> to UPI: <br><b class="allow-select" style="color:var(--gold);">sqlpayment@okaxis</b></p>
+        <input type="text" id="utr-number-input" placeholder="Enter 12 Digit UTR Number" maxlength="12">
+        <button class="btn-main btn-join" onclick="submitUTR()">SUBMIT FOR VERIFICATION</button>
+        <button class="btn-main" style="background:none; color:#555;" onclick="closeModals()">CANCEL</button>
     </div>
 </div>
 
 <div id="history-modal" class="modal">
     <div class="modal-ui" style="max-height:80vh; overflow-y:auto;">
-        <h3 id="hist-title" style="color:var(--gold); text-align:center;">HISTORY</h3>
-        <div id="hist-content"></div>
-        <button onclick="document.getElementById('history-modal').style.display='none'" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">CLOSE</button>
+        <h3 style="color:var(--gold); text-align:center; margin-bottom:20px;">TRANSACTIONS</h3>
+        <div id="history-list"></div>
+        <button class="btn-main" style="background:#222; margin-top:15px;" onclick="closeModals()">CLOSE</button>
     </div>
 </div>
 
-<input type="file" id="hidden-dp" accept="image/*" style="display:none;" onchange="updateDP(this)">
+<div id="comment-page">
+    <div class="cp-header">
+        <i class="fas fa-arrow-left" onclick="closeComments()" style="cursor:pointer;"></i>
+        <span style="font-weight:800; letter-spacing:1px;">MATCH COMMENTS</span>
+    </div>
+    <div class="cp-body" id="cp-list-container"></div>
+    <div class="cp-footer">
+        <input type="text" id="cp-input" placeholder="Write a comment..." style="margin:0;">
+        <button class="btn-main btn-join" style="width:60px; padding:0;" onclick="postComment()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, query, where, orderBy, getDocs, doc, getDoc, updateDoc, increment, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getFirestore, collection, onSnapshot, doc, getDoc, setDoc, 
+        updateDoc, increment, runTransaction, arrayUnion, query, 
+        where, orderBy, limit 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const app = initializeApp({
-    apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
-    authDomain: "sqladmin-ff04d.firebaseapp.com",
-    projectId: "sqladmin-ff04d"
-});
-const db = getFirestore(app);
+    // Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
+        authDomain: "sqladmin-ff04d.firebaseapp.com",
+        projectId: "sqladmin-ff04d"
+    };
 
-let activeTab = 'live', authMode = 'login', activeMatchId = null, activeFee = 0, currentResultId = null, commentUnsub = null, userBal = 0;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-function loadSession(){ try{ return JSON.parse(localStorage.getItem('sql_session')||"null"); }catch{ return null; }}
-function saveSession(d){ localStorage.setItem('sql_session', JSON.stringify(d)); updateMenu(); }
-function clearSession(){ localStorage.removeItem('sql_session'); updateMenu(); renderUI(); }
+    // Global State
+    let currentUser = JSON.parse(localStorage.getItem('sql_session') || "null");
+    let activeTab = 'live';
+    let authMode = 'login';
+    let activeMatchId = null;
+    let commentUnsub = null;
 
-function startWalletSync(phone){
-    onSnapshot(doc(db,"users",phone), snap => {
-        if(snap.exists()){
-            const d = snap.data();
-            userBal = d.balance||0;
-            document.getElementById('menu-user-bal-side').innerText = `₹${userBal.toFixed(2)}`;
-            saveSession(d);
+    // --- Core UI Functions ---
+    window.toggleMenu = (show) => document.getElementById('side-menu').classList.toggle('active', show);
+    
+    window.closeModals = () => {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    };
+
+    window.switchTab = (tab) => {
+        activeTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        renderMain();
+    };
+
+    // --- Authentication System ---
+    window.openAuthModal = (mode) => {
+        authMode = mode;
+        document.getElementById('auth-modal').style.display = 'flex';
+        renderAuthForm();
+        toggleMenu(false);
+    };
+
+    window.toggleAuthMode = () => {
+        authMode = authMode === 'login' ? 'register' : 'login';
+        renderAuthForm();
+    };
+
+    function renderAuthForm() {
+        const container = document.getElementById('auth-forms');
+        const title = document.getElementById('auth-title');
+        const btn = document.getElementById('auth-submit-btn');
+        const toggleText = document.getElementById('auth-toggle-text');
+        const toggleBtn = document.getElementById('auth-toggle-btn');
+
+        if(authMode === 'login') {
+            title.innerText = "WELCOME BACK";
+            btn.innerText = "SECURE LOGIN";
+            toggleText.innerText = "New player here?";
+            toggleBtn.innerText = "Create Account";
+            container.innerHTML = `
+                <input type="number" id="auth-phone" placeholder="Phone Number">
+                <input type="password" id="auth-pass" placeholder="Password">
+            `;
+        } else {
+            title.innerText = "PLAYER REGISTER";
+            btn.innerText = "CREATE ACCOUNT";
+            toggleText.innerText = "Already a member?";
+            toggleBtn.innerText = "Login Instead";
+            container.innerHTML = `
+                <input type="text" id="auth-name" placeholder="Full Name">
+                <input type="number" id="auth-phone" placeholder="Phone Number">
+                <input type="text" id="auth-gaming" placeholder="Free Fire Gaming UID">
+                <input type="password" id="auth-pass" placeholder="Create Password">
+            `;
         }
-    });
-}
-
-function updateMenu(){
-    const s = loadSession();
-    const dp = document.getElementById('menu-user-dp');
-    const nm = document.getElementById('menu-user-name');
-    const authBtn = document.getElementById('menu-auth-btn');
-    const logoutBtn = document.getElementById('menu-logout-btn');
-    if(s){
-        dp.src = s.dpUrl || "https://img.icons8.com/color/96/user-male-circle.png";
-        nm.innerText = s.name;
-        authBtn.style.display = 'none';
-        logoutBtn.style.display = 'block';
-        document.getElementById('menu-user-bal-side').innerText = `₹${(s.balance||0).toFixed(2)}`;
-    }else{
-        dp.src = "https://img.icons8.com/color/96/user-male-circle.png";
-        nm.innerText = "Guest";
-        authBtn.style.display = 'flex';
-        logoutBtn.style.display = 'none';
-        document.getElementById('menu-user-bal-side').innerText = "₹0.00";
     }
-}
 
-window.openAuthModal = mode => { document.getElementById('auth-modal').style.display='flex'; authMode=mode; renderAuthForm(); };
-window.toggleAuthMode = () => { authMode = authMode==='login'?'register':'login'; renderAuthForm(); };
+    window.submitAuth = async () => {
+        const btn = document.getElementById('auth-submit-btn');
+        const phone = document.getElementById('auth-phone').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+        
+        if(!phone || !pass) return alert("Please fill all fields!");
+        
+        btn.disabled = true;
+        btn.innerText = "PROCESSING...";
 
-function renderAuthForm(){
-    const ui = document.getElementById('auth-forms');
-    const title = document.getElementById('auth-title');
-    const msg = document.getElementById('auth-toggle-msg');
-    const btn = document.getElementById('auth-submit-btn');
-    if(authMode==='login'){
-        title.innerText="LOGIN"; btn.innerText="LOGIN";
-        msg.innerHTML='New? <span style="color:var(--accent)">Register</span>';
-        ui.innerHTML=`<input id="login_phone" type="number" placeholder="Phone" maxlength="10"><input id="login_pass" type="password" placeholder="Password">`;
-    }else{
-        title.innerText="REGISTER"; btn.innerText="REGISTER";
-        msg.innerHTML='Have account? <span style="color:var(--accent)">Login</span>';
-        ui.innerHTML=`<input id="reg_name" placeholder="Name"><input id="reg_phone" type="number" placeholder="Phone" maxlength="10"><input id="reg_gaming" placeholder="Gaming UID"><input id="reg_pass" type="password" placeholder="Password">`;
-    }
-}
+        try {
+            if(authMode === 'register') {
+                const name = document.getElementById('auth-name').value.trim();
+                const gaming = document.getElementById('auth-gaming').value.trim();
+                
+                const userCheck = await getDoc(doc(db, "users", phone));
+                if(userCheck.exists()) throw "This phone number is already registered!";
 
-window.submitAuth = async () => {
-    const btn = document.getElementById('auth-submit-btn');
-    btn.disabled=true; btn.innerText="Processing...";
-    try{
-        if(authMode==='register'){
-            const name = document.getElementById('reg_name').value.trim();
-            const phone = document.getElementById('reg_phone').value.trim();
-            const gaming = document.getElementById('reg_gaming').value.trim();
-            const pass = document.getElementById('reg_pass').value.trim();
-            if(!name||!phone||phone.length!==10||!gaming||!pass) throw "All fields required";
-            const snap = await getDoc(doc(db,"users",phone));
-            if(snap.exists()) throw "Phone exists";
-            const userData = { name, phone, gamingName:gaming, password:pass, dpUrl:"", upiId:"", balance:0, totalProfit:0, totalLoss:0 };
-            await setDoc(doc(db,"users",phone), userData);
-            saveSession(userData);
-            startWalletSync(phone);
-            alert("Registered!");
-        }else{
-            const phone = document.getElementById('login_phone').value.trim();
-            const pass = document.getElementById('login_pass').value.trim();
-            if(!phone||!pass) throw "Enter credentials";
-            const snap = await getDoc(doc(db,"users",phone));
-            if(!snap.exists()) throw "User not found";
-            const d = snap.data();
-            if(d.password!==pass) throw "Wrong password";
-            saveSession(d);
-            startWalletSync(phone);
-        }
-        document.getElementById('auth-modal').style.display='none';
-        renderUI();
-    }catch(e){ alert(e); }
-    finally{ btn.disabled=false; btn.innerText=authMode==='login'?"LOGIN":"REGISTER"; }
-};
+                const userData = {
+                    name, phone, gamingUid: gaming, password: pass,
+                    balance: 0, createdAt: Date.now(), dp: ""
+                };
+                await setDoc(doc(db, "users", phone), userData);
+                alert("Registration Successful! Please login.");
+                authMode = 'login';
+                renderAuthForm();
+            } else {
+                const userSnap = await getDoc(doc(db, "users", phone));
+                if(!userSnap.exists()) throw "User not found!";
+                if(userSnap.data().password !== pass) throw "Invalid Password!";
 
-window.confirmLogout = () => { if(confirm("Logout?")&&confirm("Confirm?")){ clearSession(); toggleMenu(false); }};
-
-window.switchTab = t => {
-    activeTab=t;
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.getElementById(`tab-${t}`).classList.add('active');
-    renderUI();
-};
-
-function renderUI(){
-    const c = document.getElementById('app-content');
-    c.innerHTML="";
-    if(activeTab==='live') renderLive(c);
-    else if(activeTab==='my') renderProfile(c);
-    else if(activeTab==='result') renderResults(c);
-}
-
-function renderLive(container){
-    onSnapshot(collection(db,"matches"), snap => {
-        if(activeTab!=='live') return;
-        container.innerHTML="";
-        const matches=[];
-        snap.forEach(d => matches.push({id:d.id, ...d.data()}));
-        matches.sort((a,b)=>a.startTime-b.startTime);
-        matches.forEach(m => {
-            const now=Date.now(), start=m.startTime||0;
-            const isStarted=now>start, isFull=(m.joined||0)>=(m.total||48);
-            const fill=Math.min(100,((m.joined||0)/(m.total||48))*100);
-            const myRec=JSON.parse(localStorage.getItem(`pay_${m.id}`)||"null");
-            let btnHTML="", roomHTML="";
-            if(myRec){
-                if(myRec.status==='approved'||(m.approvedUtrs&&m.approvedUtrs.includes(myRec.utr))){
-                    if(isStarted){
-                        roomHTML=`<div class="room-box"><h4>✅ STARTED</h4><div class="room-data"><div><span>ID</span><b>${m.roomId}</b></div><div><span>PASS</span><b>${m.password}</b></div></div></div>`;
-                        btnHTML=`<button class="btn-main btn-dis">GOOD LUCK</button>`;
-                    }else{
-                        roomHTML=`<div class="room-box"><h4>✅ JOINED</h4><div class="room-data"><div><span>ID</span><b>${m.roomId||'Wait'}</b></div><div><span>PASS</span><b>${m.password||'Wait'}</b></div></div></div>`;
-                        btnHTML=`<button class="btn-main btn-dis">JOINED</button>`;
-                    }
-                }else if(myRec.status==='rejected'){
-                    btnHTML=`<button class="btn-main" style="background:var(--red)">REJECTED</button>`;
-                }else{
-                    checkPaymentStatus(m.id, myRec.utr);
-                    btnHTML=`<button class="btn-main btn-dis" style="color:var(--waiting)">VERIFYING...</button>`;
-                }
-            }else{
-                if(isStarted) btnHTML=`<button class="btn-main btn-dis">STARTED</button>`;
-                else if(isFull) btnHTML=`<button class="btn-main btn-dis">FULL</button>`;
-                else btnHTML=`<button class="btn-main btn-join" onclick="initPayment('${m.id}',${m.entry})">JOIN ₹${m.entry}</button>`;
+                currentUser = { ...userSnap.data(), phone };
+                localStorage.setItem('sql_session', JSON.stringify(currentUser));
+                initUserSync();
+                closeModals();
+                renderMain();
             }
-            const html=`<div class="card"><div class="m-tag">${m.map}</div><div class="card-body"><div class="item"><i class="fas fa-crosshairs"></i><div><span>Mode</span><b>${m.type}</b></div></div><div
+        } catch(e) { alert(e); }
+        btn.disabled = false;
+        btn.innerText = authMode === 'login' ? "SECURE LOGIN" : "CREATE ACCOUNT";
+    };
+
+    window.confirmLogout = () => {
+        if(confirm("Are you sure you want to logout from SQL Tournament?")) {
+            localStorage.removeItem('sql_session');
+            location.reload();
+        }
+    };
+
+    // --- User Data Realtime Sync ---
+    function initUserSync() {
+        if(!currentUser) return;
+        onSnapshot(doc(db, "users", currentUser.phone), (snap) => {
+            if(snap.exists()) {
+                currentUser = { ...snap.data(), phone: currentUser.phone };
+                localStorage.setItem('sql_session', JSON.stringify(currentUser));
+                updateHeaderUI();
+            }
+        });
+    }
+
+    function updateHeaderUI() {
+        const nameEl = document.getElementById('menu-user-name');
+        const balEl = document.getElementById('menu-user-bal-side');
+        const logoutBtn = document.getElementById('menu-logout-btn');
+        const authBtn = document.getElementById('menu-auth-btn');
+
+        if(currentUser) {
+            nameEl.innerText = currentUser.name;
+            balEl.innerText = `Balance: ₹${currentUser.balance.toFixed(2)}`;
+            logoutBtn.style.display = 'block';
+            authBtn.style.display = 'none';
+        } else {
+            nameEl.innerText = "Guest User";
+            balEl.innerText = "Balance: ₹0.00";
+            logoutBtn.style.display = 'none';
+            authBtn.style.display = 'flex';
+        }
+    }
+
+    // --- Tournament Logic (FIXED) ---
+    async function joinMatch(matchId, fee) {
+        if(!currentUser) return openAuthModal('login');
+        
+        const btn = event.target;
+        if(btn.innerText === "JOINING...") return;
+
+        if(!confirm(`Join this tournament for ₹${fee}?`)) return;
+
+        btn.disabled = true;
+        btn.innerText = "JOINING...";
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const userRef = doc(db, "users", currentUser.phone);
+                const matchRef = doc(db, "matches", matchId);
+                
+                const uSnap = await transaction.get(userRef);
+                const mSnap = await transaction.get(matchRef);
+
+                if(!mSnap.exists()) throw "Match no longer exists!";
+                const mData = mSnap.data();
+
+                if(uSnap.data().balance < fee) throw "Insufficient Balance! Recharge your wallet.";
+                if(mData.joined >= mData.total) throw "Match is already full!";
+                if(mData.participants && mData.participants.includes(currentUser.phone)) throw "You already joined!";
+
+                // 1. Deduct Balance
+                transaction.update(userRef, { balance: increment(-fee) });
+                
+                // 2. Update Match Count & Participants
+                transaction.update(matchRef, {
+                    joined: increment(1),
+                    participants: arrayUnion(currentUser.phone)
+                });
+
+                // 3. Create History Record
+                const histRef = doc(collection(db, "history"));
+                transaction.set(histRef, {
+                    phone: currentUser.phone,
+                    type: "MATCH_JOIN",
+                    amount: fee,
+                    matchId: matchId,
+                    status: "success",
+                    timestamp: Date.now()
+                });
+            });
+            alert("Success! You are registered for the match.");
+        } catch(e) { alert(e); }
+        btn.disabled = false;
+    }
+
+    // --- Wallet System (FIXED) ---
+    window.setPkg = (amt) => {
+        document.querySelectorAll('.pkg-box').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('dep-amt-input').value = amt;
+    };
+
+    window.openWalletModal = (type) => {
+        document.getElementById('wallet-modal').style.display = 'flex';
+        const dep = document.getElementById('deposit-section');
+        const withdr = document.getElementById('withdraw-section');
+        const title = document.getElementById('wallet-modal-title');
+
+        if(type === 'deposit') {
+            title.innerText = "ADD FUND TO WALLET";
+            dep.style.display = 'block';
+            withdr.style.display = 'none';
+        } else {
+            title.innerText = "WITHDRAW WINNINGS";
+            dep.style.display = 'none';
+            withdr.style.display = 'block';
+        }
+    };
+
+    window.processDeposit = () => {
+        const amt = parseFloat(document.getElementById('dep-amt-input').value);
+        if(!amt || amt < 20) return alert("Minimum deposit is ₹20");
+        
+        document.getElementById('wallet-modal').style.display = 'none';
+        document.getElementById('utr-display-amt').innerText = `₹${amt}`;
+        document.getElementById('utr-modal').style.display = 'flex';
+    };
+
+    window.submitUTR = async () => {
+        const utr = document.getElementById('utr-number-input').value.trim();
+        const amt = parseFloat(document.getElementById('utr-display-amt').innerText.replace('₹', ''));
+        
+        if(utr.length !== 12) return alert("Enter valid 12-digit UTR Number!");
+
+        try {
+            // Check for duplicate UTR
+            const utrCheck = await getDoc(doc(db, "payments", utr));
+            if(utrCheck.exists()) throw "This UTR is already submitted!";
+
+            await setDoc(doc(db, "payments", utr), {
+                utr, amount: amt, phone: currentUser.phone,
+                status: "pending", type: "ADD_FUND", timestamp: Date.now()
+            });
+
+            alert("Payment submitted! Wait 30-60 mins for verification.");
+            closeModals();
+        } catch(e) { alert(e); }
+    };
+
+    window.processWithdrawal = async () => {
+        const amt = parseFloat(document.getElementById('with-amt-input').value);
+        const upi = document.getElementById('with-upi-input').value.trim();
+
+        if(!amt || amt < 50) return alert("Minimum withdrawal is ₹50");
+        if(!upi.includes('@')) return alert("Enter a valid UPI ID");
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const userRef = doc(db, "users", currentUser.phone);
+                const uSnap = await transaction.get(userRef);
+
+                if(uSnap.data().balance < amt) throw "Insufficient balance to withdraw!";
+
+                // Deduct balance instantly to prevent double withdrawal
+                transaction.update(userRef, { balance: increment(-amt) });
+
+                const withRef = doc(collection(db, "withdrawals"));
+                transaction.set(withRef, {
+                    phone: currentUser.phone, amount: amt, upi,
+                    status: "pending", timestamp: Date.now()
+                });
+            });
+            alert("Withdrawal request sent! Your balance is updated.");
+            closeModals();
+        } catch(e) { alert(e); }
+    };
+
+    // --- Main Rendering Engines ---
+    function renderMain() {
+        const container = document.getElementById('app-content');
+        container.innerHTML = `<div class="loader"></div>`;
+
+        if(activeTab === 'live') renderLive();
+        else if(activeTab === 'my') renderProfile();
+        else if(activeTab === 'result') renderResults();
+    }
+
+    function renderLive() {
+        const container = document.getElementById('app-content');
+        onSnapshot(collection(db, "matches"), (snap) => {
+            if(activeTab !== 'live') return;
+            if(snap.empty) {
+                container.innerHTML = `<div class="no-data">No Live Matches Available</div>`;
+                return;
+            }
+            container.innerHTML = "";
+            snap.forEach(d => {
+                const m = d.data();
+                const isJoined = m.participants && m.participants.includes(currentUser?.phone);
+                const isFull = m.joined >= m.total;
+                const fillPercent = (m.joined / m.total) * 100;
+
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="m-tag">${m.map}</div>
+                        <div class="card-body">
+                            <div class="item"><i class="fas fa-trophy"></i><div><span>Prize Pool</span><b>₹${m.win}</b></div></div>
+                            <div class="item"><i class="fas fa-money-bill-wave"></i><div><span>Entry Fee</span><b style="color:var(--gold);">₹${m.entry}</b></div></div>
+                            <div class="item"><i class="fas fa-gamepad"></i><div><span>Type</span><b>${m.type}</b></div></div>
+                            <div class="item"><i class="fas fa-clock"></i><div><span>Schedule</span><b>${m.time}</b></div></div>
+                        </div>
+                        <div class="timer-box">
+                            <span class="countdown" data-time="${m.startTime}">Calculating...</span>
+                        </div>
+                        <div class="card-footer">
+                            ${isJoined ? `
+                                <div class="room-box">
+                                    <h4><i class="fas fa-door-open"></i> ROOM CREDENTIALS</h4>
+                                    <div class="room-data">
+                                        <div><span>Room ID</span><b class="allow-select">${m.roomId || 'Wait...'}</b></div>
+                                        <div><span>Password</span><b class="allow-select">${m.password || 'Wait...'}</b></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="slots">
+                                <span>Slots: ${m.joined}/${m.total}</span>
+                                <span style="color:var(--accent);">${Math.round(fillPercent)}% Full</span>
+                            </div>
+                            <div class="bar"><div class="fill" style="width:${fillPercent}%"></div></div>
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn-main ${isJoined || isFull ? 'btn-dis' : 'btn-join'}" 
+                                        style="flex:3;"
+                                        onclick="${isJoined || isFull ? '' : `joinMatch('${d.id}', ${m.entry})`}">
+                                    ${isJoined ? 'ALREADY JOINED' : (isFull ? 'MATCH FULL' : 'JOIN TOURNAMENT')}
+                                </button>
+                                <button class="btn-main" style="flex:1; background:#1a1a1a; border:1px solid #333;" onclick="openComments('${d.id}')">
+                                    <i class="fas fa-comment-dots"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    function renderProfile() {
+        const container = document.getElementById('app-content');
+        if(!currentUser) {
+            container.innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-user-lock" style="font-size:3rem; margin-bottom:20px; display:block;"></i>
+                    Login to view your gaming profile
+                    <button class="btn-main btn-join" style="margin-top:20px;" onclick="openAuthModal('login')">LOGIN NOW</button>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="profile-container">
+                <div class="profile-head">
+                    <div class="p-img-cont">
+                        <img src="${currentUser.dp || 'https://img.icons8.com/color/96/user-male-circle.png'}" class="p-img">
+                        <div class="p-edit"><i class="fas fa-camera"></i></div>
+                    </div>
+                    <h2 style="margin:0;">${currentUser.name}</h2>
+                    <span style="color:#666; font-size:0.8rem;">Gaming ID: ${currentUser.gamingUid}</span>
+                    
+                    <div class="stats-box" style="margin-top:25px;">
+                        <div class="stat-item"><span class="stat-lbl">Wallet</span><b class="stat-val" style="color:var(--accent);">₹${currentUser.balance.toFixed(2)}</b></div>
+                        <div class="stat-item"><span class="stat-lbl">Kills</span><b class="stat-val">0</b></div>
+                        <div class="stat-item"><span class="stat-lbl">Wins</span><b class="stat-val">0</b></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <button class="btn-main btn-join" onclick="openWalletModal('deposit')"><i class="fas fa-plus-circle"></i> ADD CASH</button>
+                        <button class="btn-main" style="background:#222;" onclick="openWalletModal('withdraw')"><i class="fas fa-arrow-alt-circle-up"></i> WITHDRAW</button>
+                    </div>
+                </div>
+
+                <div class="wallet-card">
+                    <h4 style="margin-top:0; color:var(--gold);">ACCOUNT ACTIONS</h4>
+                    <button class="btn-main" style="background:#000; border:1px solid #333; margin-bottom:10px; text-align:left; padding-left:20px;" onclick="openHistoryModal()">
+                        <i class="fas fa-history" style="margin-right:15px; color:var(--accent);"></i> My Transactions
+                    </button>
+                    <button class="btn-main" style="background:#000; border:1px solid #333; text-align:left; padding-left:20px;" onclick="alert('Coming Soon')">
+                        <i class="fas fa-shield-alt" style="margin-right:15px; color:var(--accent);"></i> Change Password
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderResults() {
+        const container = document.getElementById('app-content');
+        onSnapshot(collection(db, "results"), (snap) => {
+            if(activeTab !== 'result') return;
+            if(snap.empty) {
+                container.innerHTML = `<div class="no-data">Results will appear here shortly</div>`;
+                return;
+            }
+            container.innerHTML = "";
+            snap.forEach(d => {
+                const r = d.data();
+                container.innerHTML += `
+                    <div class="result-card">
+                        <img src="${r.img}" class="r-img" onerror="this.src='https://via.placeholder.com/400x200?text=Match+Result'">
+                        <div class="r-body">
+                            <h3 style="margin:0; color:var(--gold);">${r.title}</h3>
+                            <div class="winner-tag">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <b>🏆 Winner: ${r.winner}</b>
+                                    <span style="color:var(--accent);">Kills: ${r.kills}</span>
+                                </div>
+                            </div>
+                            <p style="font-size:0.75rem; color:#666;">Tournament Date: ${new Date(r.timestamp).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    // --- History System ---
+    window.openHistoryModal = async () => {
+        if(!currentUser) return openAuthModal('login');
+        
+        const list = document.getElementById('history-list');
+        list.innerHTML = `<div class="loader"></div>`;
+        document.getElementById('history-modal').style.display = 'flex';
+        toggleMenu(false);
+
+        try {
+            const q = query(collection(db, "payments"), where("phone", "==", currentUser.phone), orderBy("timestamp", "desc"), limit(20));
+            const snap = await getDocs(q);
+            
+            if(snap.empty) {
+                list.innerHTML = `<p style="text-align:center; color:#444;">No recent transactions</p>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            snap.forEach(d => {
+                const h = d.data();
+                list.innerHTML += `
+                    <div style="background:#000; padding:12px; border-radius:12px; margin-bottom:10px; border-left:4px solid ${h.status === 'approved' ? 'var(--accent)' : 'var(--waiting)'};">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span style="font-weight:800; color:var(--gold);">₹${h.amount}</span>
+                            <span style="font-size:0.7rem; color:${h.status === 'approved' ? 'var(--accent)' : 'var(--waiting)'};">${h.status.toUpperCase()}</span>
+                        </div>
+                        <div style="font-size:0.65rem; color:#555;">UTR: ${h.utr} | ${new Date(h.timestamp).toLocaleString()}</div>
+                    </div>
+                `;
+            });
+        } catch(e) { console.error(e); }
+    };
+
+    // --- Comment Logic ---
+    window.openComments = (matchId) => {
+        activeMatchId = matchId;
+        document.getElementById('comment-page').style.display = 'flex';
+        const list = document.getElementById('cp-list-container');
+        list.innerHTML = `<div class="loader"></div>`;
+
+        commentUnsub = onSnapshot(
+            query(collection(db, `matches/${matchId}/comments`), orderBy("timestamp", "asc")),
+            (snap) => {
+                list.innerHTML = "";
+                if(snap.empty) {
+                    list.innerHTML = `<p style="text-align:center; color:#333; margin-top:50px;">Be the first to comment!</p>`;
+                    return;
+                }
+                snap.forEach(d => {
+                    const c = d.data();
+                    const isMe = currentUser && c.phone === currentUser.phone;
+                    list.innerHTML += `
+                        <div style="margin-bottom:15px; display:flex; flex-direction:${isMe?'row-reverse':'row'}; gap:10px;">
+                            <div style="width:35px; height:35px; border-radius:50%; background:#222; overflow:hidden;">
+                                <img src="https://img.icons8.com/color/48/user-male-circle.png" style="width:100%;">
+                            </div>
+                            <div style="background:${isMe?'#222':'#111'}; padding:8px 15px; border-radius:18px; max-width:75%;">
+                                <div style="font-size:0.65rem; color:var(--gold); font-weight:800; margin-bottom:2px;">${c.name}</div>
+                                <div style="font-size:0.85rem; color:#eee;">${c.text}</div>
+                            </div>
+                        </div>
+                    `;
+                    list.scrollTop = list.scrollHeight;
+                });
+            }
+        );
+    };
+
+    window.postComment = async () => {
+        const input = document.getElementById('cp-input');
+        if(!currentUser) return alert("Please Login to comment!");
+        if(!input.value.trim()) return;
+
+        const text = input.value.trim();
+        input.value = "";
+
+        await addDoc(collection(db, `matches/${activeMatchId}/comments`), {
+            name: currentUser.name,
+            phone: currentUser.phone,
+            text: text,
+            timestamp: Date.now()
+        });
+    };
+
+    window.closeComments = () => {
+        if(commentUnsub) commentUnsub();
+        document.getElementById('comment-page').style.display = 'none';
+    };
+
+    // --- Utils ---
+    setInterval(() => {
+        document.querySelectorAll('.countdown').forEach(el => {
+            const targetTime = parseInt(el.dataset.time);
+            if(!targetTime) return;
+
+            const diff = targetTime - Date.now();
+            if(diff <= 0) {
+                el.innerText = "MATCH STARTED";
+                el.style.color = "var(--accent)";
+            } else {
+                const h = Math.floor(diff/3600000);
+                const m = Math.floor((diff%3600000)/60000);
+                const s = Math.floor((diff%60000)/1000);
+                el.innerText = `${h.toString().padStart(2,'0')}h : ${m.toString().padStart(2,'0')}m : ${s.toString().padStart(2,'0')}s`;
+            }
+        });
+    }, 1000);
+
+    window.showRules = () => {
+        alert("SQL TOURNAMENT RULES:\n1. Use of hacks will lead to direct ban.\n2. Team-up is not allowed in Solo matches.\n3. Room ID & Pass will be shared 10-15 mins before start.\n4. Prize will be credited within 2 hours of result.");
+    };
+
+    // Boot Up
+    if(currentUser) initUserSync();
+    updateHeaderUI();
+    renderMain();
+
+</script>
+</body>
+</html>
