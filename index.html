@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>SQL TOURNAMENT PRO - ULTIMATE PRODUCTION</title>
+    <title>SQL TOURNAMENT PRO - ULTIMATE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
+        /* --- PRODUCTION LEVEL CSS (RESTORED & IMPROVED) --- */
         :root { 
             --accent: #00ff88; 
             --gold: #ffd700; 
@@ -21,21 +22,25 @@
             --glass: rgba(20,20,20,0.95); 
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
-        /* Anti-Copy System but allow-select for Room IDs */
         body { 
             margin: 0; 
             background: var(--bg); 
             color: #fff; 
             font-family: 'Poppins', sans-serif; 
-            overflow-x: hidden;
-            user-select: none; 
+            overflow-x: hidden; 
+            user-select: none;
         }
 
-        .allow-select, .room-data b, .utr-text { user-select: text !important; cursor: text; }
+        .allow-select { user-select: text !important; }
 
-        /* --- HEADER --- */
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        /* Header Styling */
         header { 
             background: #000; 
             padding: 15px; 
@@ -46,96 +51,96 @@
             z-index: 1000; 
             box-shadow: 0 4px 20px rgba(255, 215, 0, 0.1); 
         }
-        .header-title { color: var(--gold); font-weight: 800; font-size: 1.1rem; margin: 0; letter-spacing: 1px; text-transform: uppercase; }
-        .header-sub { color: var(--accent); font-size: 0.75rem; display: block; margin-top: 2px; font-weight: 600; }
+        .header-title { color: var(--gold); font-weight: 800; font-size: 0.95rem; margin: 0; letter-spacing: 0.5px; text-transform: uppercase; }
+        .header-sub { color: var(--accent); font-size: 0.7rem; display: block; margin-top: 2px; }
         .menu-btn { position: absolute; right: 20px; top: 18px; color: var(--gold); font-size: 1.4rem; cursor: pointer; }
 
-        /* --- TABS --- */
+        /* Navigation Tabs */
         .tabs { display: flex; gap: 8px; margin: 12px; background: #111; border-radius: 12px; border: 1px solid var(--border); padding: 6px; }
-        .tab { flex: 1; padding: 12px; border: none; background: none; color: var(--muted); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; text-align: center; border-radius: 10px; }
-        .tab.active { background: var(--accent); color: #000; box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
+        .tab { flex: 1; padding: 10px; border: none; background: none; color: var(--muted); font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: 0.3s; text-align: center; border-radius: 10px; }
+        .tab.active { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
 
-        /* --- APP CONTENT & GRID --- */
+        /* Responsive 2-Card Grid (Fixed as requested) */
         #app-content { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-            gap: 15px; 
-            padding: 10px 15px 100px 15px; 
-        }
-        @media (min-width: 768px) {
-            #app-content { grid-template-columns: 1fr 1fr; }
+            grid-template-columns: repeat(2, 1fr); /* Two cards per line strictly */
+            gap: 10px; 
+            padding: 10px 10px 90px 10px; 
         }
 
-        /* --- MATCH CARDS --- */
-        .card { background: var(--card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; position: relative; transition: 0.3s; }
-        .card:hover { border-color: var(--accent); transform: translateY(-3px); }
-        .m-tag { position: absolute; top: 12px; right: 15px; font-size: 0.7rem; background: #000; padding: 5px 10px; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-weight: 800; }
+        /* Match Card UI Upgrade for Small Grid */
+        .card { 
+            background: var(--card); 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            overflow: hidden; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .m-tag { position: absolute; top: 8px; right: 8px; font-size: 0.55rem; background: rgba(0,0,0,0.8); padding: 3px 6px; border: 1px solid var(--accent); border-radius: 4px; color: var(--accent); font-weight: 800; }
         
-        .card-body { padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: center; }
-        .item { display: flex; gap: 12px; align-items: center; }
-        .item i { color: var(--gold); font-size: 1.1rem; width: 22px; text-align: center; }
-        .item div span { display: block; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; font-weight: 600; }
-        .item div b { font-size: 0.95rem; color: #fff; }
+        .card-body { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .item { display: flex; gap: 6px; align-items: center; }
+        .item i { color: var(--gold); font-size: 0.7rem; width: 12px; }
+        .item div span { display: block; font-size: 0.5rem; color: var(--muted); text-transform: uppercase; }
+        .item div b { font-size: 0.7rem; color: #fff; }
 
-        .timer-box { background: #080808; padding: 12px; text-align: center; border-top: 1px solid #222; border-bottom: 1px solid #222; }
-        .countdown { font-family: 'Courier New', monospace; font-size: 1.2rem; color: var(--waiting); font-weight: 900; letter-spacing: 1.5px; }
+        .timer-box { background: #080808; padding: 6px; text-align: center; border-top: 1px solid #222; }
+        .countdown { font-family: monospace; font-size: 0.8rem; color: var(--waiting); font-weight: 900; }
 
-        .card-footer { padding: 16px; }
-        .slots { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 10px; font-weight: 800; }
-        .bar { height: 10px; background: #222; border-radius: 20px; overflow: hidden; margin-bottom: 15px; }
-        .fill { height: 100%; background: linear-gradient(90deg, var(--accent), #008f4c); transition: 1.5s cubic-bezier(0.1, 0, 0.1, 1); }
+        .card-footer { padding: 8px; background: #181818; }
+        .slots { display: flex; justify-content: space-between; font-size: 0.6rem; margin-bottom: 5px; font-weight: 800; }
+        .bar { height: 4px; background: #222; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+        .fill { height: 100%; background: linear-gradient(90deg, var(--accent), #008f4c); transition: 1s ease; }
 
-        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 900; font-size: 1rem; cursor: pointer; transition: 0.2s; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-join { background: var(--accent); color: #000; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2); }
-        .btn-dis { background: #1a1a1a; color: #555; cursor: not-allowed; border: 1px solid #333; }
+        .btn-main { width: 100%; padding: 8px; border-radius: 6px; border: none; font-weight: 900; font-size: 0.7rem; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
+        .btn-join { background: var(--accent); color: #000; }
+        .btn-dis { background: #222; color: #555; cursor: not-allowed; }
 
-        /* --- ROOM DETAILS BOX --- */
-        .room-box { background: rgba(0, 255, 136, 0.08); border: 2px dashed var(--accent); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; animation: glow 2s infinite alternate; }
-        @keyframes glow { from { box-shadow: 0 0 5px rgba(0, 255, 136, 0.1); } to { box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); } }
-        .room-data { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-        .room-data div { background: #000; padding: 10px; border-radius: 10px; border: 1px solid #333; }
-        .room-data div b { font-size: 1.1rem; color: #fff; font-family: monospace; }
+        /* Profile & Active Games Section */
+        .profile-head { grid-column: 1 / -1; background: linear-gradient(180deg, #1a1a1a, #050505); padding: 20px; border-radius: 16px; text-align: center; border: 1px solid #333; margin-bottom: 20px; }
+        .stats-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .stat-item { background: #0b0b0b; padding: 10px 5px; border-radius: 10px; border: 1px solid #222; }
+        .stat-lbl { font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-val { font-size: 0.9rem; font-weight: 800; }
 
-        /* --- SIDE MENU --- */
-        #side-menu { position: fixed; top: 0; right: -100%; width: 310px; height: 100%; background: #0a0a0a; z-index: 5000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid var(--gold); }
-        #side-menu.active { right: 0; box-shadow: -15px 0 50px rgba(0,0,0,0.9); }
-        .menu-header { padding: 25px 20px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 15px; background: #000; }
-        .menu-dp { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
-        .menu-link { display: flex; align-items: center; gap: 18px; padding: 18px 20px; color: #eee; text-decoration: none; border-bottom: 1px solid #161616; font-weight: 600; transition: 0.3s; }
-        .menu-link i { color: var(--gold); width: 25px; text-align: center; }
-        .menu-link:hover { background: #111; color: var(--accent); padding-left: 25px; }
+        /* Results Card - Detailed Version */
+        .result-card { background: #121212; border-radius: 16px; margin-bottom: 20px; overflow: hidden; border: 1px solid #222; width: 100% !important; grid-column: 1 / -1; }
+        .r-img { width: 100%; max-height: 200px; object-fit: cover; border-bottom: 1px solid #222; }
+        .r-details { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.75rem; }
+        .r-row { background: #0a0a0a; padding: 8px; border-radius: 8px; border: 1px solid #1a1a1a; }
+        .r-row label { color: var(--muted); display: block; font-size: 0.6rem; margin-bottom: 2px; }
+        .r-row b { color: var(--gold); user-select: text; }
+        .r-msg { grid-column: 1 / -1; padding: 10px; background: rgba(0,255,136,0.05); border-radius: 8px; color: #ccc; border-left: 3px solid var(--accent); margin-top: 10px; font-size: 0.8rem; }
 
-        /* --- PROFILE SECTION --- */
-        .profile-head { background: linear-gradient(180deg, #1a1a1a, #050505); padding: 25px; border-radius: 20px; text-align: center; border: 1px solid #333; margin-bottom: 20px; }
-        .stats-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
-        .stat-item { background: #0b0b0b; padding: 15px 5px; border-radius: 15px; border: 1px solid #222; }
-        .stat-lbl { font-size: 0.65rem; color: #888; font-weight: 800; display: block; margin-bottom: 5px; }
-        .stat-val { font-size: 1.1rem; font-weight: 800; }
-
-        /* --- RESULTS --- */
-        .result-card { background: #121212; border-radius: 20px; border: 1px solid #222; margin-bottom: 20px; overflow: hidden; }
-        .r-img { width: 100%; height: 220px; object-fit: cover; border-bottom: 1px solid #222; }
-        .winner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: rgba(255, 215, 0, 0.05); }
-        .win-info { font-size: 0.8rem; }
-        .win-info b { color: var(--gold); display: block; font-size: 1rem; }
-
-        /* --- MODALS --- */
+        /* Modals & OTP */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 6000; display: none; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(10px); }
-        .modal-ui { background: #111; width: 100%; max-width: 450px; padding: 30px; border-radius: 25px; border: 1px solid var(--gold); position: relative; max-height: 90vh; overflow-y: auto; }
-        input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; font-size: 1rem; outline: none; }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,255,136,0.1); }
+        .modal-ui { background: #111; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid var(--gold); position: relative; max-height: 90vh; overflow-y: auto; }
+        
+        #recaptcha-container { margin: 10px 0; display: flex; justify-content: center; }
 
-        /* --- LOADER --- */
-        .loader { width: 40px; height: 40px; border: 4px solid #222; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
+        /* Side Menu */
+        #side-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: #0a0a0a; z-index: 5000; transition: 0.4s; border-left: 1px solid var(--gold); display: flex; flex-direction: column; }
+        #side-menu.active { right: 0; box-shadow: -10px 0 50px #000; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 15px; color: #ddd; text-decoration: none; border-bottom: 1px solid #1a1a1a; font-weight: 600; font-size: 0.85rem; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { width: 30px; height: 30px; border: 3px solid #222; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; grid-column: 1 / -1; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Wallet Actions */
+        .wallet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .w-btn { padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+        .w-btn:hover { border-color: var(--accent); color: var(--accent); }
     </style>
 </head>
-
 <body>
 
 <header>
-    <p class="header-title">SQL TOURNAMENT PRO</p>
-    <span class="header-sub">V2.0 ULTIMATE PRODUCTION UNIT</span>
+    <p class="header-title">FREE FIRE DAILY TOURNAMENT</p>
+    <span class="header-sub">JOIN PLAY & WIN REAL MONEY 💰</span>
     <div class="menu-btn" onclick="toggleMenu(true)"><i class="fas fa-bars-staggered"></i></div>
 </header>
 
@@ -145,106 +150,115 @@
     <button class="tab" id="tab-result" onclick="switchTab('result')">RESULTS</button>
 </div>
 
-<main id="app-content"></main>
-
 <div id="side-menu">
-    <div style="position:absolute; top:20px; left:20px; font-size:1.5rem; color:var(--red);" onclick="toggleMenu(false)">&times;</div>
-    <div class="menu-header">
-        <img id="menu-user-dp" src="https://img.icons8.com/color/96/user-male-circle.png" class="menu-dp">
-        <div>
-            <div id="menu-user-name" style="font-weight:800; color:#fff; font-size:1.1rem;">Guest User</div>
-            <div id="menu-user-bal-side" style="font-size:0.85rem; color:var(--accent); font-weight:600;">Wallet: ₹0.00</div>
-        </div>
+    <div style="padding: 20px; text-align: right; font-size: 1.5rem; color: var(--red); cursor: pointer;" onclick="toggleMenu(false)">&times;</div>
+    <div id="menu-user-info" style="padding: 0 20px 20px; border-bottom: 1px solid #222;">
+        <img id="menu-dp" src="https://img.icons8.com/color/96/user-male-circle.png" style="width: 50px; border-radius: 50%; border: 2px solid var(--gold);">
+        <div id="menu-name" style="font-weight: bold; margin-top: 10px;">Guest User</div>
+        <div id="menu-bal" style="color: var(--accent); font-size: 0.8rem;">Wallet: ₹0.00</div>
     </div>
-    <div class="menu-items" style="padding: 10px 0;">
-        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-rotate"></i> Refresh App</a>
-        <a href="#" class="menu-link" onclick="openWalletModal('add'); toggleMenu(false)"><i class="fas fa-wallet"></i> Add Funds</a>
-        <a href="#" class="menu-link" onclick="openHistoryModal()"><i class="fas fa-receipt"></i> Payment History</a>
-        <a href="https://chat.whatsapp.com/JR7wAllMf4SAyILFHDQClQ" target="_blank" class="menu-link"><i class="fab fa-whatsapp"></i> WhatsApp Support</a>
-        <a href="#" class="menu-link" onclick="showRules(); toggleMenu(false)"><i class="fas fa-file-contract"></i> Fair Play Rules</a>
-        <div id="auth-section-menu">
-            <a href="#" class="menu-link" onclick="openAuthModal('login'); toggleMenu(false)"><i class="fas fa-sign-in-alt"></i> Login / Register</a>
-        </div>
-        <button id="logout-btn" onclick="handleLogout()" class="btn-main" style="background:#1a1a1a; color:var(--red); width:90%; margin:20px auto; display:none;">LOGOUT</button>
+    <div style="flex: 1; overflow-y: auto;">
+        <a href="#" class="menu-link" onclick="location.reload()"><i class="fas fa-home"></i> Home</a>
+        <a href="#" class="menu-link" onclick="openHistoryModal()"><i class="fas fa-history"></i> My Wallet History</a>
+        <a href="https://chat.whatsapp.com/JR7wAllMf4SAyILFHDQClQ" target="_blank" class="menu-link"><i class="fab fa-whatsapp"></i> Support Group</a>
+        <a href="#" class="menu-link" onclick="showRules()"><i class="fas fa-gavel"></i> Fair Play Rules</a>
+    </div>
+    <div style="padding: 20px;">
+        <button id="logout-btn" onclick="handleLogout()" class="btn-main" style="background: #222; color: var(--red); display: none;">LOGOUT ACCOUNT</button>
+        <button id="login-btn" onclick="openAuth()" class="btn-main btn-join">LOGIN / REGISTER</button>
     </div>
 </div>
+
+<main id="app-content"></main>
 
 <div id="auth-modal" class="modal">
     <div class="modal-ui">
-        <h2 id="auth-title" style="color:var(--gold); text-align:center; margin-bottom:25px;">LOGIN</h2>
-        <div id="auth-form-container"></div>
-        <button id="auth-main-btn" class="btn-main btn-join" onclick="processAuthStep()">CONTINUE</button>
-        <p id="auth-toggle-text" style="text-align:center; color:#666; margin-top:20px; font-size:0.9rem; cursor:pointer;" onclick="toggleAuthMode()">
-            Don't have an account? <span style="color:var(--accent); font-weight:bold;">Register</span>
-        </p>
-        <p style="text-align:center; color:var(--gold); font-size:0.8rem; margin-top:10px; cursor:pointer;" onclick="showRecovery()">Forgot Password?</p>
-    </div>
-</div>
+        <h3 id="auth-title" style="color: var(--gold); text-align: center;">SECURE LOGIN</h3>
+        <p style="text-align: center; font-size: 0.7rem; color: #888; margin-bottom: 15px;">Login or Recover Account via OTP</p>
+        
+        <div id="recaptcha-container"></div>
+        
+        <div id="phone-input-step">
+            <input type="number" id="auth-phone" placeholder="Phone Number (10 Digits)" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; text-align: center; letter-spacing: 1px;">
+            <button class="btn-main btn-join" style="margin-top:15px;" onclick="sendOTP()">SEND OTP CODE</button>
+        </div>
 
-<div id="pay-modal" class="modal">
-    <div class="modal-ui">
-        <h3 style="color:var(--gold); text-align:center; margin-top:0;">CONFIRM JOINING</h3>
-        <div style="text-align:center; padding:20px 0;">
-            <span style="color:#888; display:block; font-size:0.9rem;">Amount to Pay</span>
-            <h1 id="pay-amt-display" style="font-size:3rem; color:var(--accent); margin:5px 0;">₹0</h1>
+        <div id="otp-input-step" style="display: none;">
+            <input type="number" id="auth-otp" placeholder="Enter 6 Digit OTP" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; text-align: center; letter-spacing: 5px;">
+            
+            <div id="new-user-fields" style="display:none; margin-top: 10px;">
+                <p style="font-size: 0.7rem; color: var(--accent); text-align: center;">New User Detected! Complete Profile:</p>
+                <input type="text" id="auth-name" placeholder="Full Name" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; margin-bottom: 5px;">
+                <input type="text" id="auth-game-uid" placeholder="Free Fire UID / Name" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff; border-radius:8px;">
+            </div>
+
+            <button class="btn-main btn-join" style="margin-top:15px;" onclick="verifyOTP()">VERIFY & LOGIN</button>
         </div>
         
-        <div id="wallet-pay-box" style="display:none; background:#000; border:1px solid var(--accent); padding:15px; border-radius:15px; margin-bottom:20px; text-align:center;">
-            <p style="margin:0; font-size:0.8rem; color:#888;">Wallet Balance: <b id="modal-wallet-bal" style="color:#fff;">₹0</b></p>
-            <button class="btn-main btn-join" style="margin-top:10px;" onclick="payUsingWallet()">PAY FROM WALLET</button>
-        </div>
-
-        <div style="text-align:center; color:#444; margin-bottom:15px; font-size:0.8rem;">--- OR PAY VIA UPI ---</div>
-        
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
-            <a id="upi-gpay" href="#" class="btn-main" style="background:#1a1a1a; padding:10px;"><img src="https://img.icons8.com/color/48/google-pay.png" width="30"></a>
-            <a id="upi-phonepe" href="#" class="btn-main" style="background:#1a1a1a; padding:10px;"><img src="https://img.icons8.com/color/48/phone-pe.png" width="30"></a>
-            <a id="upi-paytm" href="#" class="btn-main" style="background:#1a1a1a; padding:10px;"><img src="https://img.icons8.com/color/48/paytm.png" width="30"></a>
-        </div>
-
-        <input type="number" id="utr-input" placeholder="Enter 12 Digit UTR/Ref No" maxlength="12">
-        <button class="btn-main btn-join" onclick="submitManualPayment()">SUBMIT PAYMENT</button>
-        <button onclick="closeModal('pay-modal')" style="width:100%; background:none; border:none; color:#555; margin-top:15px; font-weight:bold; cursor:pointer;">CANCEL</button>
+        <button onclick="closeAuth()" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">Cancel</button>
     </div>
 </div>
 
 <div id="wallet-modal" class="modal">
     <div class="modal-ui">
-        <h3 id="wallet-title" style="color:var(--gold); text-align:center;">ADD MONEY</h3>
-        <div id="add-fund-ui">
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
-                <button class="small-btn" onclick="setAmt(50)" style="background:#1a1a1a; color:#fff; padding:10px; border:1px solid #333; border-radius:8px;">₹50</button>
-                <button class="small-btn" onclick="setAmt(100)" style="background:#1a1a1a; color:#fff; padding:10px; border:1px solid #333; border-radius:8px;">₹100</button>
-                <button class="small-btn" onclick="setAmt(500)" style="background:#1a1a1a; color:#fff; padding:10px; border:1px solid #333; border-radius:8px;">₹500</button>
-            </div>
-            <input type="number" id="wallet-amt-input" placeholder="Enter Custom Amount">
-            <button class="btn-main btn-join" onclick="initWalletDeposit()">PROCEED TO PAY</button>
-        </div>
-        <div id="withdraw-ui" style="display:none;">
-            <input type="number" id="with-amt" placeholder="Minimum ₹50">
-            <input type="text" id="with-upi" placeholder="Your UPI ID (e.g. name@apl)">
-            <button class="btn-main" style="background:var(--gold); color:#000;" onclick="handleWithdraw()">REQUEST WITHDRAW</button>
-        </div>
-        <button onclick="closeModal('wallet-modal')" style="width:100%; background:none; border:none; color:#555; margin-top:15px; font-weight:bold; cursor:pointer;">CLOSE</button>
+        <h3 id="wallet-title" style="color: var(--gold); text-align: center;">WALLET HISTORY</h3>
+        <div id="wallet-content"></div>
+        <button onclick="closeWallet()" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">Close</button>
     </div>
 </div>
 
-<div id="history-modal" class="modal">
+<div id="money-modal" class="modal">
     <div class="modal-ui">
-        <h3 style="color:var(--gold); text-align:center;">TRANSACTION HISTORY</h3>
-        <div id="history-content" style="margin-top:20px;"></div>
-        <button onclick="closeModal('history-modal')" class="btn-main" style="margin-top:20px; background:#222;">CLOSE</button>
+        <h3 id="mm-title" style="color: var(--gold); text-align: center;">ADD MONEY</h3>
+        
+        <div id="mm-add-view">
+             <input type="number" id="add-amount" placeholder="Amount (Min ₹10)" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; text-align: center;">
+             <button class="btn-main btn-join" style="margin-top: 15px;" onclick="initPayment('ADD_FUND', document.getElementById('add-amount').value)">PROCEED TO PAY</button>
+        </div>
+
+        <div id="mm-with-view" style="display: none;">
+             <input type="number" id="with-amount" placeholder="Amount (Min ₹50)" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; text-align: center; margin-bottom: 10px;">
+             <input type="text" id="with-upi" placeholder="Your UPI ID" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; text-align: center;">
+             <button class="btn-main" style="background: var(--gold); color: #000; margin-top: 15px;" onclick="processWithdraw()">REQUEST WITHDRAWAL</button>
+        </div>
+
+        <button onclick="document.getElementById('money-modal').style.display='none'" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">Cancel</button>
     </div>
+</div>
+
+<div id="pay-modal" class="modal">
+    <div class="modal-ui">
+        <h3 style="color: var(--gold); text-align: center;">CONFIRM ACTION</h3>
+        <div id="pay-details" style="text-align: center; margin: 20px 0;">
+            <h1 id="pay-amt" style="color: var(--accent); font-size: 3rem;">₹0</h1>
+            <p id="pay-match-id" style="font-size: 0.7rem; color: #666;"></p>
+        </div>
+        
+        <div id="wallet-pay-section">
+            <button class="btn-main btn-join" onclick="processWalletJoin()">PAY VIA WALLET</button>
+        </div>
+        
+        <div style="margin: 15px 0; text-align: center; font-size: 0.7rem; color: #444;">OR PAY MANUALLY VIA UPI</div>
+        
+        <a id="upi-link-btn" href="#" class="btn-main" style="background: #111; border: 1px solid #333; color: #fff; margin-bottom: 10px;">OPEN UPI APP</a>
+
+        <input type="text" id="manual-utr" placeholder="Enter 12 Digit UTR / Ref No" maxlength="12" style="width:100%; padding:12px; background:#000; border:1px solid var(--accent); color:#fff; border-radius:8px; text-align: center;">
+        <button class="btn-main" style="background:#222; margin-top:10px;" onclick="processManualJoin()">SUBMIT UTR FOR APPROVAL</button>
+        
+        <button onclick="closePay()" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">Cancel</button>
+    </div>
+</div>
+
+<div id="img-modal" class="modal" onclick="this.style.display='none'">
+    <img id="preview-img" src="" style="max-width:90%; max-height:80vh; border-radius:10px;">
 </div>
 
 <script type="module">
+    // --- FIREBASE IMPORTS & CONFIG ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { 
-        getFirestore, collection, doc, setDoc, getDoc, updateDoc, 
-        onSnapshot, query, where, orderBy, limit, increment, runTransaction, arrayUnion, addDoc 
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, query, where, orderBy, increment, runTransaction, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- CONFIGURATION ---
     const firebaseConfig = {
         apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
         authDomain: "sqladmin-ff04d.firebaseapp.com",
@@ -255,467 +269,521 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    auth.languageCode = 'en'; // Force English
     const db = getFirestore(app);
 
-    // --- STATE ---
+    // --- STATE MANAGEMENT ---
+    let currentUser = null;
+    let confirmationResult = null;
     let activeTab = 'live';
-    let currentUser = JSON.parse(localStorage.getItem('sql_pro_user')) || null;
-    let currentAuthMode = 'login'; // login, register, otp, recovery
-    let pendingAuthData = null;
-    let walletUnsub = null;
-    let matchUnsub = null;
-
-    // --- CORE INITIALIZATION ---
+    let activeMatch = null;
+    let listeners = []; // For cleaning up listeners
+    
+    // --- INITIALIZATION ---
     window.onload = () => {
-        if(currentUser) {
-            startWalletSync();
-            updateMenuUI();
-        }
-        renderUI();
+        setupRecaptcha();
+        observeAuth();
     };
 
-    // --- TAB SYSTEM ---
-    window.switchTab = (tab) => {
-        activeTab = tab;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`tab-${tab}`).classList.add('active');
-        
-        // Cleanup old listeners
-        if(matchUnsub) matchUnsub();
-        renderUI();
-    };
-
-    async function renderUI() {
-        const container = document.getElementById('app-content');
-        container.innerHTML = '<div class="loader"></div>';
-
-        if(activeTab === 'live') fetchMatches(container);
-        else if(activeTab === 'my') renderProfile(container);
-        else if(activeTab === 'result') fetchResults(container);
-    }
-
-    // --- MATCHES ENGINE ---
-    function fetchMatches(container) {
-        matchUnsub = onSnapshot(collection(db, "matches"), (snap) => {
-            if(activeTab !== 'live') return;
-            container.innerHTML = "";
-            if(snap.empty) {
-                container.innerHTML = "<div style='text-align:center; grid-column:1/-1; padding:50px; color:#555;'>No live matches available.</div>";
-                return;
-            }
-
-            snap.forEach(d => {
-                const m = d.data();
-                const mid = d.id;
-                const isFull = (m.joined || 0) >= (m.total || 48);
-                const isJoined = currentUser && m.participants?.includes(currentUser.phone);
-                const startTime = m.startTime || Date.now();
-                const isStarted = Date.now() > startTime;
-
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="m-tag">${m.map || 'Bermuda'}</div>
-                    <div class="card-body">
-                        <div class="item"><i class="fas fa-trophy"></i><div><span>Win Prize</span><b style="color:var(--accent)">₹${m.win}</b></div></div>
-                        <div class="item"><i class="fas fa-ticket"></i><div><span>Entry Fee</span><b style="color:var(--gold)">₹${m.entry}</b></div></div>
-                        <div class="item"><i class="fas fa-users"></i><div><span>Team</span><b>${m.type || 'Solo'}</b></div></div>
-                        <div class="item"><i class="fas fa-clock"></i><div><span>Start Time</span><b>${new Date(startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>
-                    </div>
-                    <div class="timer-box">
-                        <div class="countdown" data-time="${startTime}">00:00:00</div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="slots"><span>Slots: ${m.joined || 0}/${m.total || 48}</span><span style="color:var(--waiting)">${(m.total||48)-(m.joined||0)} Left</span></div>
-                        <div class="bar"><div class="fill" style="width:${((m.joined||0)/(m.total||48))*100}%"></div></div>
-                        ${isJoined ? renderRoomBox(m) : renderJoinButton(mid, m.entry, isFull, isStarted)}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+    function setupRecaptcha() {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible'
         });
     }
 
-    function renderRoomBox(m) {
-        if(m.roomId && m.roomId !== "") {
-            return `
-                <div class="room-box">
-                    <span style="font-size:0.7rem; color:var(--accent); font-weight:800;">MATCH SECURED - ROOM LIVE</span>
-                    <div class="room-data">
-                        <div><span>ID</span><b class="allow-select">${m.roomId}</b></div>
-                        <div><span>PASS</span><b class="allow-select">${m.password}</b></div>
-                    </div>
-                </div>
-                <button class="btn-main btn-dis">ALREADY JOINED</button>`;
+    function observeAuth() {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User logged in via Firebase Auth
+                const userDoc = await getDoc(doc(db, "users", user.phoneNumber));
+                if (userDoc.exists()) {
+                    currentUser = userDoc.data();
+                    document.getElementById('logout-btn').style.display = 'block';
+                    document.getElementById('login-btn').style.display = 'none';
+                    startDataSync(); // Realtime Balance Update
+                } else {
+                    // Auth exists but Doc doesn't (Should be handled in verifyOTP but safety net)
+                    signOut(auth);
+                }
+            } else {
+                currentUser = null;
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('login-btn').style.display = 'block';
+                updateMenuUI();
+                renderUI();
+            }
+        });
+    }
+
+    // Listener Manager to Prevent Memory Leaks
+    function cleanupListeners() {
+        listeners.forEach(unsub => unsub());
+        listeners = [];
+    }
+
+    function startDataSync() {
+        if(!currentUser) return;
+        const unsub = onSnapshot(doc(db, "users", currentUser.phone), (d) => {
+            if(d.exists()) {
+                currentUser = d.data();
+                updateMenuUI();
+                // If on profile tab, re-render to show updated stats
+                if(activeTab === 'my') renderProfile(document.getElementById('app-content'));
+            }
+        });
+        listeners.push(unsub);
+        renderUI();
+    }
+
+    // --- AUTH FUNCTIONS (OTP BASED) ---
+    window.openAuth = () => document.getElementById('auth-modal').style.display = 'flex';
+    window.closeAuth = () => document.getElementById('auth-modal').style.display = 'none';
+
+    window.sendOTP = async () => {
+        const phone = document.getElementById('auth-phone').value;
+        if (phone.length !== 10) return alert("Enter valid 10 digit number");
+        
+        const btn = event.target;
+        btn.disabled = true; btn.innerText = "Sending...";
+
+        try {
+            const fullPhone = "+91" + phone;
+            // Check if user exists in Firestore to show correct fields
+            const docSnap = await getDoc(doc(db, "users", fullPhone));
+            
+            confirmationResult = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier);
+            
+            document.getElementById('phone-input-step').style.display = 'none';
+            document.getElementById('otp-input-step').style.display = 'block';
+            
+            if(!docSnap.exists()){
+                document.getElementById('new-user-fields').style.display = 'block';
+            } else {
+                document.getElementById('new-user-fields').style.display = 'none';
+            }
+            
+            alert("OTP Sent to " + fullPhone);
+        } catch (e) { alert("Error: " + e.message); btn.disabled = false; btn.innerText = "SEND OTP"; }
+    };
+
+    window.verifyOTP = async () => {
+        const code = document.getElementById('auth-otp').value;
+        const btn = event.target;
+        btn.disabled = true; btn.innerText = "Verifying...";
+
+        try {
+            const result = await confirmationResult.confirm(code);
+            const phone = result.user.phoneNumber;
+            
+            const userRef = doc(db, "users", phone);
+            const snap = await getDoc(userRef);
+            
+            if (!snap.exists()) {
+                // Register New User
+                const name = document.getElementById('auth-name').value;
+                const uid = document.getElementById('auth-game-uid').value;
+                if(!name || !uid) throw new Error("Name and Gaming UID required");
+
+                const newUser = {
+                    name: name,
+                    phone: phone,
+                    gamingUid: uid,
+                    balance: 0,
+                    totalPlayed: 0,
+                    totalWon: 0,
+                    dpUrl: "",
+                    joinedMatches: []
+                };
+                await setDoc(userRef, newUser);
+                currentUser = newUser;
+            }
+            
+            closeAuth();
+            alert("Login Successful!");
+        } catch (e) { alert(e.message); btn.disabled = false; btn.innerText = "VERIFY & LOGIN"; }
+    };
+
+    window.handleLogout = () => { if(confirm("Logout?")) signOut(auth); };
+
+    // --- UI ROUTER ---
+    window.switchTab = (t) => {
+        activeTab = t;
+        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${t}`).classList.add('active');
+        renderUI();
+    };
+
+    function renderUI() {
+        const container = document.getElementById('app-content');
+        // Do not clean listeners yet if just refreshing UI, only on full switch
+        // But for safety, let's keep it clean
+        
+        container.innerHTML = '<div class="loader"></div>';
+        
+        if (activeTab === 'live') {
+            renderLiveMatches(container);
+        } else if (activeTab === 'my') {
+            renderProfile(container);
+        } else if (activeTab === 'result') {
+            renderResults(container);
         }
-        return `
-            <div class="room-box" style="border-color:#555;">
-                <span style="font-size:0.7rem; color:#888;">ROOM ID WILL APPEAR 15 MINS BEFORE</span>
-            </div>
-            <button class="btn-main btn-dis">JOINED & WAITING</button>`;
     }
 
-    function renderJoinButton(id, entry, full, started) {
-        if(started) return `<button class="btn-main btn-dis">MATCH STARTED</button>`;
-        if(full) return `<button class="btn-main btn-dis">HOUSE FULL</button>`;
-        return `<button class="btn-main btn-join" onclick="openPaymentModal('${id}', ${entry})"><i class="fas fa-plus-circle"></i> JOIN NOW ₹${entry}</button>`;
+    function updateMenuUI() {
+        if (!currentUser) {
+             document.getElementById('menu-name').innerText = "Guest User";
+             document.getElementById('menu-bal').innerText = "Login Required";
+             return;
+        }
+        document.getElementById('menu-name').innerText = currentUser.name;
+        document.getElementById('menu-bal').innerText = `Wallet: ₹${currentUser.balance.toFixed(2)}`;
+        if (currentUser.dpUrl) document.getElementById('menu-dp').src = currentUser.dpUrl;
     }
 
-    // --- PROFILE ENGINE ---
-    async function renderProfile(container) {
-        if(!currentUser) {
-            container.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">
-                <i class="fas fa-user-lock" style="font-size:4rem; color:#222; margin-bottom:20px;"></i>
-                <h3>Login Required</h3>
-                <button class="btn-main btn-join" onclick="openAuthModal('login')" style="width:200px; margin:20px auto;">GO TO LOGIN</button>
-            </div>`;
+    // --- TAB 1: LIVE MATCHES (GRID FIX) ---
+    function renderLiveMatches(container) {
+        // Unsubscribe previous listeners to prevent duplicates
+        if(activeTab !== 'live') return;
+
+        const q = query(collection(db, "matches"), orderBy("startTime", "asc"));
+        const unsub = onSnapshot(q, (snap) => {
+            if(activeTab !== 'live') return;
+            container.innerHTML = "";
+            
+            if (snap.empty) {
+                container.innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:50px; color:#666;'>No Active Matches</div>";
+                return;
+            }
+            
+            snap.forEach(doc => {
+                const m = doc.data();
+                const mid = doc.id;
+                const isJoined = currentUser && currentUser.joinedMatches && currentUser.joinedMatches.includes(mid);
+                const isFull = m.joined >= m.total;
+                
+                // Button Logic
+                let btnHtml = '';
+                if(isJoined) {
+                    btnHtml = `<button class="btn-main btn-dis" style="color:var(--accent);">✓ JOINED</button>`;
+                } else if (isFull) {
+                    btnHtml = `<button class="btn-main btn-dis">HOUSE FULL</button>`;
+                } else {
+                    btnHtml = `<button class="btn-main btn-join" onclick="openPayment('${mid}', ${m.entry})">JOIN ₹${m.entry}</button>`;
+                }
+
+                // Grid Item (Card)
+                const card = `
+                    <div class="card">
+                        <div class="m-tag">${m.map}</div>
+                        <div class="card-body">
+                            <div class="item"><i class="fas fa-trophy"></i><div><span>WIN</span><b>₹${m.win}</b></div></div>
+                            <div class="item"><i class="fas fa-ticket-alt"></i><div><span>ENTRY</span><b>₹${m.entry}</b></div></div>
+                            <div class="item"><i class="fas fa-clock"></i><div><span>TIME</span><b>${new Date(m.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>
+                        </div>
+                        <div class="timer-box">
+                            <div class="countdown" data-time="${m.startTime}">Loading...</div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="slots"><span>${m.joined}/${m.total}</span><span>${m.type}</span></div>
+                            <div class="bar"><div class="fill" style="width:${(m.joined/m.total)*100}%"></div></div>
+                            ${btnHtml}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+            startTimer();
+        });
+        listeners.push(unsub);
+    }
+
+    // --- TAB 2: PROFILE & ACTIVE GAMES (LOGIC UPDATE) ---
+    function renderProfile(container) {
+        if (!currentUser) {
+            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px;"><i class="fas fa-lock" style="font-size:2rem; margin-bottom:20px;"></i><br>Login to view Profile</div>`;
             return;
         }
 
         container.innerHTML = `
-            <div class="profile-head" style="grid-column: 1/-1;">
-                <div style="position:relative; width:90px; height:90px; margin:0 auto 15px;">
-                    <img src="${currentUser.dpUrl || 'https://img.icons8.com/color/96/user-male-circle.png'}" class="menu-dp" style="width:100%; height:100%;">
-                    <div onclick="document.getElementById('dp-input').click()" style="position:absolute; bottom:0; right:0; background:var(--gold); border:2px solid #000; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                        <i class="fas fa-camera" style="font-size:0.7rem; color:#000;"></i>
-                    </div>
-                    <input type="file" id="dp-input" hidden onchange="uploadDP(this)">
-                </div>
-                <h2 style="margin:0;">${currentUser.name}</h2>
-                <span style="color:var(--muted); font-size:0.8rem;">+91 ${currentUser.phone} | UID: ${currentUser.gamingName || 'Not Set'}</span>
+            <div class="profile-head">
+                <img src="${currentUser.dpUrl || 'https://img.icons8.com/color/96/user-male-circle.png'}" style="width: 80px; border-radius: 50%; border: 3px solid var(--accent);">
+                <h3 style="margin: 10px 0 5px;">${currentUser.name}</h3>
+                <div style="font-size: 0.7rem; color: var(--muted);">${currentUser.phone}</div>
+                <div style="font-size: 0.7rem; color: var(--gold);">${currentUser.gamingUid}</div>
                 
                 <div class="stats-box">
-                    <div class="stat-item">
-                        <span class="stat-lbl">WALLET</span>
-                        <div class="stat-val" style="color:var(--gold)">₹${(currentUser.balance || 0).toFixed(2)}</div>
-                    </div>
-                    <div class="stat-item" onclick="showActiveGames()" style="cursor:pointer; border-color:var(--accent);">
-                        <span class="stat-lbl">JOINED GAMES</span>
-                        <div class="stat-val" style="color:var(--accent)" id="active-count">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-lbl">TOTAL WON</span>
-                        <div class="stat-val" style="color:var(--accent)">₹${currentUser.totalWon || 0}</div>
-                    </div>
+                    <div class="stat-item"><span class="stat-lbl">Wallet</span><div class="stat-val" style="color:var(--gold)">₹${currentUser.balance.toFixed(2)}</div></div>
+                    <div class="stat-item"><span class="stat-lbl">Played</span><div class="stat-val" style="color:var(--red)">₹${currentUser.totalPlayed || 0}</div></div>
+                    <div class="stat-item"><span class="stat-lbl">Won</span><div class="stat-val" style="color:var(--accent)">₹${currentUser.totalWon || 0}</div></div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <button class="btn-main btn-join" onclick="openWalletModal('add')"><i class="fas fa-plus"></i> ADD CASH</button>
-                    <button class="btn-main" style="background:#222;" onclick="openWalletModal('with')"><i class="fas fa-arrow-up"></i> WITHDRAW</button>
+                <div class="wallet-actions">
+                    <button class="w-btn" onclick="openAddCash()">+ ADD CASH</button>
+                    <button class="w-btn" onclick="openWithdraw()">- WITHDRAW</button>
                 </div>
             </div>
-            <div id="active-games-list" style="grid-column:1/-1;"></div>
+
+            <h4 style="grid-column:1/-1; color: var(--gold); border-left: 3px solid var(--gold); padding-left: 10px; margin: 10px 0;">MY ACTIVE JOINED GAMES</h4>
+            <div id="active-games-list" style="grid-column:1/-1; display:flex; flex-direction:column; gap:10px;">
+                <div class="loader"></div>
+            </div>
         `;
         
-        // Load active count
-        const qCount = query(collection(db, "matches"), where("participants", "array-contains", currentUser.phone));
-        const qSnap = await getDoc(qCount); // This is simplified, real logic below
-        showActiveGames();
+        loadActiveGames();
     }
 
-    window.showActiveGames = async () => {
-        const listDiv = document.getElementById('active-games-list');
-        listDiv.innerHTML = '<div class="loader"></div>';
-        
-        const q = query(collection(db, "matches"), where("participants", "array-contains", currentUser.phone));
-        const snap = await getDocs(q);
-        
-        document.getElementById('active-count').innerText = snap.size;
-        listDiv.innerHTML = `<h4 style="margin:20px 0 10px; color:var(--gold);">MY ACTIVE / JOINED MATCHES</h4>`;
-        
-        if(snap.empty) {
-            listDiv.innerHTML += `<div style="padding:30px; background:#111; border-radius:15px; text-align:center; color:#555;">You haven't joined any matches yet.</div>`;
+    async function loadActiveGames() {
+        const list = document.getElementById('active-games-list');
+        if (!currentUser.joinedMatches || currentUser.joinedMatches.length === 0) {
+            list.innerHTML = "<p style='color:#444; font-size:0.8rem; text-align:center;'>No active games joined.</p>";
             return;
         }
 
-        snap.forEach(d => {
-            const m = d.data();
-            listDiv.innerHTML += `
-                <div class="card" style="margin-bottom:15px; border-style:dashed;">
-                    <div class="card-body">
-                        <div><b style="color:var(--accent)">${m.type} - ${m.map}</b><br><small style="color:#666">${new Date(m.startTime).toLocaleString()}</small></div>
-                        <div style="text-align:right">${m.roomId ? '<span style="color:var(--accent)">Room Ready</span>' : '<span style="color:var(--waiting)">Pending Room</span>'}</div>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    // --- RESULTS ENGINE ---
-    function fetchResults(container) {
-        const q = query(collection(db, "results"), orderBy("timestamp", "desc"), limit(15));
-        onSnapshot(q, (snap) => {
-            if(activeTab !== 'result') return;
-            container.innerHTML = "";
-            
-            snap.forEach(d => {
-                const r = d.data();
-                container.innerHTML += `
-                    <div class="result-card">
-                        <div style="padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
-                            <b>${r.matchTitle || 'Tournament Finished'}</b>
-                            <small style="color:#666;">${new Date(r.timestamp).toLocaleDateString()}</small>
-                        </div>
-                        ${r.image ? `<img src="${r.image}" class="r-img">` : ''}
-                        <div class="winner-grid">
-                            <div class="win-info">WINNER NAME<b>${r.winnerName || 'Unknown'}</b></div>
-                            <div class="win-info">WINNER UID<b>${r.winnerUID || '0000000'}</b></div>
-                            <div class="win-info">TOTAL KILLS<b>${r.kills || 0}</b></div>
-                            <div class="win-info">WINNINGS<b>₹${r.prize || 0}</b></div>
-                        </div>
-                        <div style="padding:15px; background:#080808; font-size:0.85rem; color:#aaa; line-height:1.5;">
-                            <i class="fas fa-quote-left" style="color:var(--gold); margin-right:8px;"></i>
-                            ${r.message || 'Well played to everyone who participated! Official results are updated.'}
+        list.innerHTML = "";
+        
+        // Fetch only joined matches
+        currentUser.joinedMatches.forEach(async (mid) => {
+            const mSnap = await getDoc(doc(db, "matches", mid));
+            if (mSnap.exists()) {
+                const m = mSnap.data();
+                // Logic: Only show if match isn't completed (simplified logic)
+                const html = `
+                    <div class="card" style="border: 1px dashed var(--accent);">
+                        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <b style="font-size:0.9rem; color:var(--accent);">${m.map} - ${m.type}</b>
+                                <div style="font-size:0.65rem; color:#888;">Match ID: ${mid}</div>
+                                <div style="font-size:0.65rem; color:#fff;">Start: ${new Date(m.startTime).toLocaleString()}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <span style="display:block; font-size:0.6rem; color:#666; margin-bottom:5px;">ROOM DETAILS</span>
+                                <div style="background:#000; padding:5px; border-radius:4px; border:1px solid #333;">
+                                    <div style="font-size:0.7rem;">ID: <b class="allow-select" style="color:#fff;">${m.roomId || 'Wait...'}</b></div>
+                                    <div style="font-size:0.7rem;">PASS: <b class="allow-select" style="color:#fff;">${m.password || 'Wait...'}</b></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
+                list.innerHTML += html;
+            }
+        });
+    }
+
+    // --- TAB 3: RESULTS (DETAILED FIX) ---
+    function renderResults(container) {
+        if(activeTab !== 'result') return;
+        
+        const q = query(collection(db, "results"), orderBy("timestamp", "desc"), limit(20));
+        const unsub = onSnapshot(q, (snap) => {
+            if(activeTab !== 'result') return;
+            container.innerHTML = "";
+            
+            if(snap.empty) {
+                 container.innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:50px; color:#666;'>No Results Yet</div>";
+                 return;
+            }
+
+            snap.forEach(doc => {
+                const r = doc.data();
+                const card = `
+                    <div class="result-card">
+                        ${r.image ? `<img src="${r.image}" class="r-img" onclick="previewImage('${r.image}')">` : ''}
+                        <div class="r-details">
+                            <div class="r-row"><label>MATCH ID</label><b>${r.matchId || 'N/A'}</b></div>
+                            <div class="r-row"><label>TOTAL PLAYERS</label><b>${r.totalPlayers || '--'}</b></div>
+                            <div class="r-row"><label>OPPONENT UID</label><b class="allow-select">${r.opponentUid || '--'}</b></div>
+                            <div class="r-row"><label>WINNER UID</label><b class="allow-select">${r.winnerUid || '--'}</b></div>
+                            <div class="r-row"><label>WINNER NAME</label><b>${r.winnerName || '--'}</b></div>
+                            <div class="r-row"><label>WINNER KILLS</label><b>${r.kills || '0'}</b></div>
+                            <div class="r-row" style="grid-column:1/-1; border-color:var(--gold);"><label>PRIZE AMOUNT</label><b style="color:var(--gold); font-size:1rem;">₹${r.amount || '0'}</b></div>
+                            <div class="r-msg"><b>📢 Admin Note:</b> ${r.message || 'Match Completed Successfully.'}</div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
             });
         });
+        listeners.push(unsub);
     }
 
-    // --- AUTHENTICATION & OTP LOGIC ---
-    window.openAuthModal = (mode) => {
-        currentAuthMode = mode;
-        document.getElementById('auth-modal').style.display = 'flex';
-        renderAuthUI();
+    // --- PAYMENT & WALLET LOGIC (SECURE) ---
+    window.openPayment = (mid, amt) => {
+        if (!currentUser) return openAuth();
+        activeMatch = { id: mid, entry: amt };
+        document.getElementById('pay-amt').innerText = "₹" + amt;
+        document.getElementById('pay-match-id').innerText = "Match ID: " + mid;
+        document.getElementById('pay-modal').style.display = 'flex';
+        
+        // Update UPI Link
+        const upiStr = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&tn=${mid}`;
+        document.getElementById('upi-link-btn').href = upiStr;
+        
+        if(mid === "ADD_FUND"){
+             document.getElementById('wallet-pay-section').style.display = 'none';
+        } else {
+             document.getElementById('wallet-pay-section').style.display = 'block';
+        }
     };
 
-    function renderAuthUI() {
-        const container = document.getElementById('auth-form-container');
-        const title = document.getElementById('auth-title');
-        const btn = document.getElementById('auth-main-btn');
-        const toggle = document.getElementById('auth-toggle-text');
+    window.processWalletJoin = async () => {
+        const mid = activeMatch.id;
+        const fee = activeMatch.entry;
 
-        if(currentAuthMode === 'login') {
-            title.innerText = "WELCOME BACK";
-            btn.innerText = "LOGIN";
-            toggle.innerHTML = `New here? <span style="color:var(--accent)">Register</span>`;
-            container.innerHTML = `
-                <input type="number" id="auth-phone" placeholder="Phone Number">
-                <input type="password" id="auth-pass" placeholder="Password">
-            `;
-        } else if(currentAuthMode === 'register') {
-            title.innerText = "CREATE ACCOUNT";
-            btn.innerText = "SEND OTP";
-            toggle.innerHTML = `Have an account? <span style="color:var(--accent)">Login</span>`;
-            container.innerHTML = `
-                <input type="text" id="auth-name" placeholder="Full Name">
-                <input type="number" id="auth-phone" placeholder="10-Digit Phone Number">
-                <input type="text" id="auth-gaming" placeholder="Free Fire UID (Optional)">
-                <input type="password" id="auth-pass" placeholder="Create Password">
-            `;
-        } else if(currentAuthMode === 'otp') {
-            title.innerText = "VERIFY OTP";
-            btn.innerText = "VERIFY & FINISH";
-            toggle.innerText = "Resend OTP in 30s";
-            container.innerHTML = `
-                <p style="text-align:center; color:#888;">Enter 4-digit OTP sent to your phone</p>
-                <input type="number" id="auth-otp" placeholder="0000" style="text-align:center; letter-spacing:10px; font-size:1.5rem;">
-            `;
-        }
-    }
-
-    window.processAuthStep = async () => {
-        const btn = document.getElementById('auth-main-btn');
-        btn.disabled = true;
-        btn.innerText = "PLEASE WAIT...";
+        if (currentUser.balance < fee) return alert("Insufficient Balance! Please Add Money.");
 
         try {
-            if(currentAuthMode === 'login') {
-                const phone = document.getElementById('auth-phone').value;
-                const pass = document.getElementById('auth-pass').value;
-                const snap = await getDoc(doc(db, "users", phone));
+            // Atomic Transaction
+            await runTransaction(db, async (transaction) => {
+                const userRef = doc(db, "users", currentUser.phone);
+                const matchRef = doc(db, "matches", mid);
                 
-                if(!snap.exists() || snap.data().password !== pass) throw "Invalid Credentials!";
-                
-                currentUser = snap.data();
-                saveAndInit();
-            } 
-            else if(currentAuthMode === 'register') {
-                const phone = document.getElementById('auth-phone').value;
-                if(phone.length !== 10) throw "Valid 10-digit phone required";
-                
-                // Duplicate Check
-                const snap = await getDoc(doc(db, "users", phone));
-                if(snap.exists()) throw "User already exists!";
+                const uSnap = await transaction.get(userRef);
+                const mSnap = await transaction.get(matchRef);
 
-                pendingAuthData = {
-                    name: document.getElementById('auth-name').value,
-                    phone: phone,
-                    gamingName: document.getElementById('auth-gaming').value,
-                    password: document.getElementById('auth-pass').value,
-                    balance: 0,
-                    totalWon: 0,
-                    otp: Math.floor(1000 + Math.random() * 9000).toString()
-                };
+                if (!mSnap.exists()) throw "Match error";
+                if (mSnap.data().joined >= mSnap.data().total) throw "Match Full!";
+                if (uSnap.data().joinedMatches && uSnap.data().joinedMatches.includes(mid)) throw "Already Joined!";
+                if (uSnap.data().balance < fee) throw "Low Balance!";
 
-                // Store OTP in temp DB for verification
-                await setDoc(doc(db, "temp_otps", phone), { otp: pendingAuthData.otp });
-                alert("DEBUG: Your OTP is " + pendingAuthData.otp); // Real production uses SMS API here
-                currentAuthMode = 'otp';
-                renderAuthUI();
-            }
-            else if(currentAuthMode === 'otp') {
-                const userOtp = document.getElementById('auth-otp').value;
-                if(userOtp === pendingAuthData.otp) {
-                    await setDoc(doc(db, "users", pendingAuthData.phone), pendingAuthData);
-                    currentUser = pendingAuthData;
-                    saveAndInit();
-                } else {
-                    throw "Wrong OTP!";
-                }
-            }
-        } catch(e) {
-            alert(e);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "CONTINUE";
-        }
-    };
-
-    function saveAndInit() {
-        localStorage.setItem('sql_pro_user', JSON.stringify(currentUser));
-        document.getElementById('auth-modal').style.display = 'none';
-        startWalletSync();
-        updateMenuUI();
-        renderUI();
-    }
-
-    // --- WALLET & ATOMIC TRANSACTIONS ---
-    function startWalletSync() {
-        if(walletUnsub) walletUnsub();
-        walletUnsub = onSnapshot(doc(db, "users", currentUser.phone), (snap) => {
-            if(snap.exists()) {
-                currentUser = snap.data();
-                localStorage.setItem('sql_pro_user', JSON.stringify(currentUser));
-                document.getElementById('menu-user-bal-side').innerText = `Wallet: ₹${currentUser.balance.toFixed(2)}`;
-                if(activeTab === 'my') document.getElementById('active-count')?.parentElement.querySelector('.stat-val').innerText = `₹${currentUser.balance.toFixed(2)}`;
-            }
-        });
-    }
-
-    window.payUsingWallet = async () => {
-        const mid = window.activeMatchId;
-        const entry = window.activeEntryFee;
-
-        if(currentUser.balance < entry) return alert("Low Balance! Add funds first.");
-
-        if(confirm(`Confirm joining for ₹${entry}?`)) {
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const matchRef = doc(db, "matches", mid);
-                    const userRef = doc(db, "users", currentUser.phone);
-                    
-                    const mSnap = await transaction.get(matchRef);
-                    const uSnap = await transaction.get(userRef);
-
-                    if(mSnap.data().joined >= mSnap.data().total) throw "Match just got full!";
-                    if(uSnap.data().balance < entry) throw "Insufficient Balance!";
-
-                    transaction.update(userRef, { balance: increment(-entry) });
-                    transaction.update(matchRef, { 
-                        joined: increment(1),
-                        participants: arrayUnion(currentUser.phone)
-                    });
+                // Deduct Balance & Update Stats
+                transaction.update(userRef, {
+                    balance: increment(-fee),
+                    totalPlayed: increment(fee), // Update Played Stat
+                    joinedMatches: arrayUnion(mid)
                 });
-                alert("Successfully Joined!");
-                closeModal('pay-modal');
-            } catch(e) {
-                alert(e);
-            }
-        }
+
+                // Add to Match
+                transaction.update(matchRef, {
+                    joined: increment(1),
+                    participants: arrayUnion(currentUser.phone)
+                });
+            });
+
+            alert("Joined Successfully!");
+            closePay();
+            // Refresh Active Games if on profile
+            if(activeTab === 'my') loadActiveGames();
+        } catch (e) { alert("Failed: " + e); }
     };
 
-    window.submitManualPayment = async () => {
-        const utr = document.getElementById('utr-input').value;
-        if(utr.length !== 12) return alert("Enter 12-digit UTR");
+    window.processManualJoin = async () => {
+        const utr = document.getElementById('manual-utr').value;
+        if (utr.length < 10) return alert("Enter valid UTR");
+
+        const payData = {
+            utr: utr,
+            userId: currentUser.phone,
+            userName: currentUser.name,
+            matchId: activeMatch.id,
+            amount: activeMatch.entry,
+            status: 'pending',
+            timestamp: Date.now()
+        };
 
         try {
-            const utrRef = doc(db, "payments", utr);
-            const utrSnap = await getDoc(utrRef);
-            if(utrSnap.exists()) throw "This UTR is already used!";
-
-            await setDoc(utrRef, {
-                utr: utr,
-                userId: currentUser.phone,
-                userName: currentUser.name,
-                matchId: window.activeMatchId,
-                amount: window.activeEntryFee,
-                status: 'pending',
-                timestamp: Date.now()
-            });
-            alert("Payment submitted! Admin will verify and add you to the match.");
-            closeModal('pay-modal');
-        } catch(e) {
-            alert(e);
-        }
+            // Use UTR as Doc ID to prevent duplicates
+            await setDoc(doc(db, "payments", utr), payData);
+            alert("Payment Submitted! Admin will verify and add you.");
+            closePay();
+        } catch (e) { alert("Error: UTR already used or System Error."); }
     };
+    
+    // --- WALLET MODALS ---
+    window.openAddCash = () => {
+        document.getElementById('money-modal').style.display='flex';
+        document.getElementById('mm-title').innerText = "ADD MONEY";
+        document.getElementById('mm-add-view').style.display='block';
+        document.getElementById('mm-with-view').style.display='none';
+    }
+    
+    window.openWithdraw = () => {
+        document.getElementById('money-modal').style.display='flex';
+        document.getElementById('mm-title').innerText = "WITHDRAW MONEY";
+        document.getElementById('mm-add-view').style.display='none';
+        document.getElementById('mm-with-view').style.display='block';
+    }
+    
+    window.processWithdraw = async () => {
+        const amt = parseFloat(document.getElementById('with-amount').value);
+        const upi = document.getElementById('with-upi').value;
+        if(amt > currentUser.balance) return alert("Insufficient Balance");
+        if(amt < 50) return alert("Min Withdraw ₹50");
+        
+        try {
+            await runTransaction(db, async (t) => {
+                 const ref = doc(db, "users", currentUser.phone);
+                 const snap = await t.get(ref);
+                 if(snap.data().balance < amt) throw "Low Balance";
+                 
+                 t.update(ref, { balance: increment(-amt) });
+                 
+                 const wRef = doc(collection(db, "withdrawals"));
+                 t.set(wRef, {
+                     userId: currentUser.phone,
+                     amount: amt,
+                     upi: upi,
+                     status: 'pending',
+                     timestamp: Date.now()
+                 });
+            });
+            alert("Withdrawal Request Sent!");
+            document.getElementById('money-modal').style.display='none';
+        } catch(e) { alert(e); }
+    }
+
+    // --- HISTORY MODAL ---
+    window.openHistoryModal = async () => {
+        const c = document.getElementById('wallet-content');
+        document.getElementById('wallet-modal').style.display='flex';
+        c.innerHTML = '<div class="loader"></div>';
+        
+        // Fetch Payments
+        const q = query(collection(db, "payments"), where("userId", "==", currentUser.phone), orderBy("timestamp", "desc"), limit(20));
+        const snap = await getDocs(q);
+        
+        c.innerHTML = "";
+        if(snap.empty) c.innerHTML = "No History.";
+        
+        snap.forEach(d => {
+             const p = d.data();
+             c.innerHTML += `
+                <div style="border-bottom:1px solid #222; padding:10px;">
+                    <div style="display:flex; justify-content:space-between;">
+                         <b style="color:${p.status==='approved'?'var(--accent)':'#fff'}">₹${p.amount}</b>
+                         <span style="font-size:0.7rem;">${p.status.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.6rem; color:#666;">${p.matchId} | ${p.utr}</div>
+                </div>
+             `;
+        });
+    }
 
     // --- HELPERS ---
     window.toggleMenu = (s) => document.getElementById('side-menu').classList.toggle('active', s);
-    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-    window.openPaymentModal = (id, amt) => {
-        if(!currentUser) return openAuthModal('login');
-        window.activeMatchId = id;
-        window.activeEntryFee = amt;
-        document.getElementById('pay-amt-display').innerText = `₹${amt}`;
-        document.getElementById('pay-modal').style.display = 'flex';
-        document.getElementById('wallet-pay-box').style.display = 'block';
-        document.getElementById('modal-wallet-bal').innerText = `₹${currentUser.balance.toFixed(2)}`;
-        
-        const upiStr = `upi://pay?pa=rizwanhasan90122778623@ybl&am=${amt}&tn=Match_${id}`;
-        document.getElementById('upi-gpay').href = upiStr;
-        document.getElementById('upi-phonepe').href = upiStr;
-        document.getElementById('upi-paytm').href = upiStr;
+    window.closePay = () => document.getElementById('pay-modal').style.display = 'none';
+    window.closeWallet = () => document.getElementById('wallet-modal').style.display = 'none';
+    window.previewImage = (src) => {
+        document.getElementById('preview-img').src = src;
+        document.getElementById('img-modal').style.display='flex';
     };
+    window.showRules = () => alert("1. No Hacks\n2. Teaming = Ban\n3. Use Registered Name");
 
-    window.openWalletModal = (type) => {
-        document.getElementById('wallet-modal').style.display = 'flex';
-        if(type === 'add') {
-            document.getElementById('wallet-title').innerText = "ADD MONEY";
-            document.getElementById('add-fund-ui').style.display = 'block';
-            document.getElementById('withdraw-ui').style.display = 'none';
-        } else {
-            document.getElementById('wallet-title').innerText = "WITHDRAW CASH";
-            document.getElementById('add-fund-ui').style.display = 'none';
-            document.getElementById('withdraw-ui').style.display = 'block';
-        }
-    };
-
-    window.handleLogout = () => {
-        localStorage.removeItem('sql_pro_user');
-        location.reload();
-    };
-
-    window.showRecovery = () => {
-        const ph = prompt("Enter registered phone for recovery:");
-        if(ph) alert("If account exists, recovery OTP will be sent.");
-    };
-
-    function updateMenuUI() {
-        if(!currentUser) return;
-        document.getElementById('menu-user-name').innerText = currentUser.name;
-        document.getElementById('menu-user-dp').src = currentUser.dpUrl || 'https://img.icons8.com/color/96/user-male-circle.png';
-        document.getElementById('logout-btn').style.display = 'block';
-        document.getElementById('auth-section-menu').style.display = 'none';
+    function startTimer() {
+        setInterval(() => {
+            document.querySelectorAll('.countdown').forEach(el => {
+                const target = parseInt(el.dataset.time);
+                const diff = target - Date.now();
+                if (diff <= 0) { el.innerText = "LIVE NOW"; el.style.color = "var(--accent)"; }
+                else {
+                    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+                    el.innerText = `${h}h:${m}m:${s}s`;
+                }
+            });
+        }, 1000);
     }
 
-    // --- TIMERS ---
-    setInterval(() => {
-        document.querySelectorAll('.countdown').forEach(el => {
-            const target = parseInt(el.dataset.time);
-            const diff = target - Date.now();
-            if(diff <= 0) {
-                el.innerText = "MATCH LIVE";
-                el.style.color = "var(--accent)";
-            } else {
-                const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-                el.innerText = `${h}h : ${m}m : ${s}s`;
-            }
-        });
-    }, 1000);
-
 </script>
-
 </body>
     </html>
