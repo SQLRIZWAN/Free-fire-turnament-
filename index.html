@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>SQL TOURNAMENT PRO - ULTIMATE</title>
+    <title>SQL TOURNAMENT PRO - ULTIMATE PRODUCTION</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
+        /* --- DESIGN SYSTEM & VARIABLES --- */
         :root {
             --accent: #00ff88;
             --gold: #ffd700;
@@ -17,853 +20,538 @@
             --muted: #888;
             --waiting: #ffae00;
             --glass: rgba(20,20,20,0.95);
+            --font-main: 'Poppins', sans-serif;
+            --font-heading: 'Rajdhani', sans-serif;
         }
+
+        /* --- GLOBAL RESET --- */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
             user-select: none;
         }
+
         body {
-            margin: 0;
             background: var(--bg);
             color: #fff;
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-main);
             overflow-x: hidden;
-        }
-        .allow-select, .room-data b {
-            user-select: text !important;
-            cursor: text;
+            line-height: 1.6;
         }
 
-        /* Header */
+        .allow-select, input, textarea, .room-data b {
+            user-select: text !important;
+        }
+
+        /* --- LOADING OVERLAY --- */
+        #global-loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #111;
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* --- HEADER & NAVIGATION --- */
         header {
             background: #000;
-            padding: 15px;
+            padding: 15px 20px;
             border-bottom: 2px solid var(--gold);
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.1);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
         }
-        .header-title {
+
+        .brand-box h1 {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
             color: var(--gold);
-            font-weight: 800;
-            font-size: 0.95rem;
-            margin: 0;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+        }
+
+        .brand-box span {
+            font-size: 0.65rem;
+            color: var(--accent);
+            font-weight: 600;
             text-transform: uppercase;
         }
-        .header-sub {
-            color: var(--accent);
-            font-size: 0.7rem;
-            display: block;
-            margin-top: 2px;
-        }
-        .menu-btn {
-            position: absolute;
-            right: 20px;
-            top: 18px;
+
+        .menu-toggle {
+            font-size: 1.5rem;
             color: var(--gold);
-            font-size: 1.4rem;
             cursor: pointer;
         }
 
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap:8px;
-            margin: 12px;
-            background: #111;
-            border-radius: 12px;
-            border:1px solid var(--border);
-            padding:6px;
-            align-items:center;
+        /* --- TAB NAVIGATION --- */
+        .tab-wrapper {
+            padding: 15px;
+            background: #0a0a0a;
         }
-        .tab {
+
+        .tabs-container {
+            display: flex;
+            background: #151515;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+
+        .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: none;
-            background: none;
+            background: transparent;
             color: var(--muted);
             font-weight: 700;
             font-size: 0.8rem;
+            border-radius: 10px;
             cursor: pointer;
-            transition: 0.2s;
-            text-align:center;
-            border-radius:10px;
+            transition: 0.3s;
         }
-        .tab.active {
+
+        .tab-btn.active {
             background: var(--accent);
             color: #000;
-            box-shadow: 0 0 10px var(--accent);
-        }
-        .small-btn {
-            padding:6px 12px;
-            font-size:0.75rem;
-            border-radius:8px;
-            border:1px solid #333;
-            background:#0b0b0b;
-            color:#ccc;
-            cursor:pointer;
-            font-weight:600;
-        }
-        .small-btn:active {
-            transform:scale(0.95);
+            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
         }
 
-        /* Grid */
+        /* --- MATCH CARDS --- */
         #app-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 15px;
-            padding: 10px 12px 90px 12px;
+            padding: 10px 15px 100px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        /* Match Card */
-        .card {
+        .match-card {
             background: var(--card);
-            border-radius: 18px;
-            border:1px solid var(--border);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
             overflow: hidden;
             position: relative;
-            transition: transform 0.2s;
+            animation: slideUp 0.5s ease;
+        }
+
+        .match-header {
+            background: linear-gradient(90deg, #1a1a1a, #111);
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-tag {
+            background: var(--accent);
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .match-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .grid-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .grid-item i {
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+
+        .grid-item .label {
+            display: block;
+            font-size: 0.6rem;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .grid-item .val {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* --- PROGRESS BAR --- */
+        .slot-container {
+            padding: 0 20px 15px;
+        }
+
+        .slot-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .progress-bg {
+            height: 10px;
+            background: #222;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #00cc6e);
+            transition: width 1s ease-in-out;
+        }
+
+        /* --- BUTTONS --- */
+        .action-area {
+            padding: 15px 20px 20px;
+            border-top: 1px solid #1a1a1a;
+        }
+
+        .btn-join {
+            width: 100%;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,255,136,0.2);
+        }
+
+        .btn-full { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+
+        /* --- ROOM DETAILS --- */
+        .room-access-box {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px dashed var(--gold);
+            border-radius: 12px;
+            padding: 15px;
             margin-bottom: 15px;
+            text-align: center;
         }
-        .m-tag {
-            position: absolute;
-            top: 12px;
-            right: 15px;
-            font-size: 0.65rem;
-            background:#000;
-            padding:4px 8px;
-            border:1px solid var(--accent);
-            border-radius:6px;
-            color:var(--accent);
-            font-weight:800;
+
+        .room-access-box h4 {
+            color: var(--gold);
+            font-size: 0.8rem;
+            margin-bottom: 10px;
         }
-        .card-body {
-            padding: 16px;
+
+        .room-data-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            align-items:center;
-        }
-        .item {
-            display:flex;
-            gap:10px;
-            align-items:center;
-        }
-        .item i {
-            color: var(--gold);
-            font-size:1rem;
-            width:20px;
-            text-align:center;
-        }
-        .item div span {
-            display:block;
-            font-size:0.6rem;
-            color:var(--muted);
-            text-transform:uppercase;
-        }
-        .item div b {
-            font-size:0.95rem;
-            color:#fff;
-        }
-        .win-green {
-            color: var(--accent);
-            text-shadow: 0 0 5px rgba(0,255,136,0.5);
-        }
-        .entry-gold {
-            color: var(--gold);
+            gap: 10px;
         }
 
-        .timer-box {
-            background:#080808;
-            padding:10px;
-            text-align:center;
-            border-top:1px solid #222;
-            border-bottom:1px solid #222;
-        }
-        .countdown {
-            font-family: monospace;
-            font-size:1.2rem;
-            color:var(--waiting);
-            font-weight:900;
-            letter-spacing:1px;
+        .room-field {
+            background: #000;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #222;
         }
 
-        .card-footer {
-            padding:14px;
-        }
-        .slots {
-            display:flex;
-            justify-content:space-between;
-            font-size:0.75rem;
-            margin-bottom:8px;
-            font-weight:800;
-        }
-        .bar {
-            height:8px;
-            background:#222;
-            border-radius:12px;
-            overflow:hidden;
-            margin-bottom:12px;
-        }
-        .fill {
-            height:100%;
-            background:linear-gradient(90deg, var(--accent), #008f4c);
-            transition:1s ease;
+        .room-field span { font-size: 0.6rem; color: #555; display: block; }
+        .room-field b { font-size: 1rem; color: #fff; font-family: monospace; }
+
+        /* --- PROFILE SECTION --- */
+        .profile-container {
+            animation: fadeIn 0.5s ease;
         }
 
-        .btn-main {
-            width:100%;
-            padding:14px;
-            border-radius:12px;
-            border:none;
-            font-weight:900;
-            font-size:1rem;
-            cursor:pointer;
-            transition:0.2s;
-            text-transform:uppercase;
-            letter-spacing:0.5px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:8px;
-        }
-        .btn-join { background:var(--accent); color:#000; box-shadow:0 0 15px rgba(0,255,136,0.2); }
-        .btn-join:active { transform:scale(0.98); }
-        .btn-dis { background:#222; color:var(--muted); cursor:not-allowed; border:1px solid #333; }
-
-        /* Room Box (Secure) */
-        .room-box {
-            background: rgba(0, 255, 136, 0.05);
-            border:1px dashed var(--accent);
-            padding:15px;
-            border-radius:12px;
-            text-align:center;
-            animation:fadeIn .5s;
-            margin-bottom:10px;
-        }
-        .room-box h4 {
-            margin:0 0 10px;
-            font-size:0.8rem;
-            color:var(--accent);
-            letter-spacing:1px;
-        }
-        .room-data {
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-        }
-        .room-data div {
-            background:#000;
-            padding:10px;
-            border-radius:8px;
-            border:1px solid #333;
-        }
-        .room-data div span {
-            display:block;
-            font-size:0.6rem;
-            color:var(--muted);
-            margin-bottom:4px;
-        }
-        .room-data div b {
-            font-size:1rem;
-            color:#fff;
-            font-family:monospace;
-            user-select: text !important;
+        .user-hero {
+            background: linear-gradient(180deg, #151515, #050505);
+            padding: 30px 20px;
+            border-radius: 25px;
+            text-align: center;
+            border: 1px solid #222;
+            margin-bottom: 25px;
         }
 
-        /* Side Menu */
-        #side-menu {
-            position: fixed;
-            top:0;
-            right:-100%;
-            width:300px;
-            height:100%;
-            background:#0a0a0a;
-            z-index:5000;
-            transition:0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left:1px solid var(--gold);
-            display:flex;
-            flex-direction:column;
-        }
-        #side-menu.active {
-            right:0;
-            box-shadow: -10px 0 50px rgba(0,0,0,0.8);
-        }
-        .menu-header {
-            padding:20px;
-            border-bottom:1px solid #222;
-            display:flex;
-            align-items:center;
-            gap:15px;
-            background:#000;
-        }
-        .menu-dp {
-            width:50px;
-            height:50px;
-            border-radius:50%;
-            object-fit:cover;
-            border:2px solid var(--gold);
-        }
-        .menu-items {
-            padding:10px;
-            overflow-y:auto;
-            flex:1;
-        }
-        .menu-link {
-            display:flex;
-            align-items:center;
-            gap:15px;
-            padding:16px;
-            color:#ddd;
-            text-decoration:none;
-            border-bottom:1px solid #1a1a1a;
-            font-weight:600;
-            font-size:0.95rem;
-            transition:0.2s;
-        }
-        .menu-link:hover {
-            background:#111;
-            color:var(--accent);
-            padding-left:20px;
-        }
-        .menu-link i {
-            width:25px;
-            text-align:center;
-            color:var(--gold);
-        }
-        .close-menu {
-            position:absolute;
-            top:15px;
-            right:15px;
-            color:var(--red);
-            font-size:1.8rem;
-            cursor:pointer;
-        }
-        .menu-footer {
-            padding:20px;
-            border-top:1px solid #222;
-            text-align:center;
-            background:#000;
-        }
-        .premium-btn {
-            background: linear-gradient(45deg, #ffd700, #b8860b);
-            color:#000;
-            border:none;
-            padding:12px;
-            width:100%;
-            border-radius:30px;
-            font-weight:bold;
-            margin-top:10px;
-            cursor:pointer;
+        .avatar-wrap {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
         }
 
-        /* Modals */
-        .modal {
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+            padding: 3px;
+        }
+
+        .edit-avatar {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--gold);
+            color: #000;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border: 2px solid #000;
+        }
+
+        .stat-card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: #0e0e0e;
+            padding: 15px 5px;
+            border-radius: 15px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .stat-box .title { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; }
+        .stat-box .value { font-size: 1.1rem; font-weight: 800; display: block; }
+
+        /* --- MODAL SYSTEM --- */
+        .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 6000;
-            display:none;
-            align-items:center;
-            justify-content:center;
-            padding:15px;
-            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .modal-ui {
-            background:#111;
-            width:100%;
-            max-width:480px;
-            padding:25px;
-            border-radius:20px;
-            border:1px solid var(--gold);
-            color:#fff;
-            position:relative;
-            box-shadow: 0 0 30px rgba(255,215,0,0.15);
+
+        .modal-card {
+            background: #111;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 25px;
+            border: 1px solid var(--border);
+            padding: 25px;
+            position: relative;
             max-height: 90vh;
             overflow-y: auto;
         }
-        .pay-opt {
-            display:flex;
-            align-items:center;
-            gap:15px;
-            padding:12px;
-            background:#1a1a1a;
-            border-radius:12px;
-            text-decoration:none;
-            color:#fff;
-            border:1px solid #333;
-            font-weight:600;
-            margin-bottom:10px;
-            transition:0.2s;
-        }
-        .pay-opt:hover {
-            border-color:var(--accent);
-            background:#222;
-        }
-        .pay-opt img {
-            width:32px;
-        }
-        input, textarea, select {
-            width:100%;
-            background:#050505;
-            border:1px solid #333;
-            color:#fff;
-            padding:12px;
-            border-radius:10px;
-            font-family:'Poppins';
-            outline:none;
-            margin-bottom:10px;
-        }
-        input:focus {
-            border-color:var(--accent);
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--muted);
+            font-size: 1.5rem;
         }
 
-        /* Result Card */
-        .result-card {
-            background:#121212;
-            padding:0;
-            border-radius:16px;
-            margin-bottom:15px;
-            overflow:hidden;
+        /* --- WALLET UI --- */
+        .wallet-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .method-btn {
+            background: #000;
             border: 1px solid #222;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: #fff;
+            cursor: pointer;
         }
-        .r-head {
-            padding:12px;
-            background:#080808;
-            border-bottom:1px solid #222;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
+
+        .method-btn i { font-size: 1.5rem; color: var(--gold); margin-bottom: 8px; }
+        .method-btn.active { border-color: var(--accent); background: rgba(0,255,136,0.05); }
+
+        input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-family: var(--font-main);
+            outline: none;
         }
-        .r-img {
-            width:100%;
-            display:block;
-            max-height:250px;
-            object-fit:cover;
-        }
-        .r-body {
-            padding:15px;
-        }
-        .winner-box {
-            background: linear-gradient(45deg, #ffd70010, transparent);
-            border-left:3px solid var(--gold);
-            padding:10px;
-            margin-bottom:10px;
-        }
-        .winner-row {
-            display:flex;
-            justify-content:space-between;
-            font-size:0.85rem;
-            margin-bottom:4px;
-        }
-        .r-actions {
-            padding:10px 15px;
-            border-top:1px solid #222;
-            display:flex;
-            gap:20px;
-        }
-        .act-btn {
-            background:none;
-            border:none;
-            color:#888;
-            cursor:pointer;
-            font-size:0.9rem;
-            display:flex;
-            align-items:center;
-            gap:6px;
-        }
-        .act-btn.liked {
-            color:var(--red);
-        }
-        
-        /* FACEBOOK STYLE COMMENT PAGE */
-        #comment-page {
+
+        input:focus { border-color: var(--accent); }
+
+        /* --- SIDE MENU --- */
+        #side-drawer {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
+            right: -100%;
+            width: 300px;
             height: 100%;
-            background: #000;
-            z-index: 7000;
-            display: none;
+            background: #0a0a0a;
+            z-index: 6000;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 1px solid var(--border);
+            display: flex;
             flex-direction: column;
         }
-        .cp-header {
-            padding:15px;
-            border-bottom:1px solid #222;
-            display:flex;
-            align-items:center;
-            gap:15px;
-            background:#080808;
+
+        #side-drawer.open { right: 0; box-shadow: -10px 0 50px rgba(0,0,0,0.8); }
+
+        .drawer-header {
+            padding: 30px 20px;
+            background: #000;
+            text-align: center;
+            border-bottom: 1px solid #222;
         }
-        .cp-back {
-            color:#fff;
-            font-size:1.2rem;
-            cursor:pointer;
+
+        .drawer-links {
+            flex: 1;
+            padding: 15px;
         }
-        .cp-body {
-            flex:1;
-            overflow-y:auto;
-            padding:15px;
-            padding-bottom:80px;
-        }
-        .cp-footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #111;
-            padding: 10px;
-            border-top: 1px solid #333;
+
+        .drawer-link {
             display: flex;
-            gap: 10px;
-        }
-        .cp-item {
-            margin-bottom:15px;
-            display:flex;
-            gap:10px;
-        }
-        .cp-dp {
-            width:35px;
-            height:35px;
-            border-radius:50%;
-            background:#222;
-            object-fit:cover;
-        }
-        .cp-box {
-            background:#1a1a1a;
-            padding:8px 12px;
-            border-radius:12px;
-            max-width:85%;
-        }
-        .cp-name {
-            font-size:0.75rem;
-            font-weight:bold;
-            color:var(--gold);
-            display:block;
-            margin-bottom:2px;
-        }
-        .cp-text {
-            font-size:0.85rem;
-            color:#eee;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            color: #ccc;
+            text-decoration: none;
+            border-bottom: 1px solid #151515;
+            font-weight: 500;
         }
 
-        /* Profile & History */
-        .profile-head {
-            background: linear-gradient(180deg, #1a1a1a, #050505);
-            padding:20px;
-            border-radius:16px;
-            text-align:center;
-            border:1px solid #333;
-            position:relative;
-            margin-bottom:20px;
-        }
-        .p-img-cont {
-            position:relative;
-            width:80px;
-            height:80px;
-            margin:0 auto 10px;
-        }
-        .p-img {
-            width:100%;
-            height:100%;
-            border-radius:50%;
-            object-fit:cover;
-            border:2px solid var(--accent);
-        }
-        .p-edit {
-            position:absolute;
-            bottom:0;
-            right:0;
-            background:var(--gold);
-            color:#000;
-            width:24px;
-            height:24px;
-            border-radius:50%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:0.8rem;
-            cursor:pointer;
-            border:2px solid #000;
-        }
-        .hist-filter {
-            display:flex;
-            background:#000;
-            padding:4px;
-            border-radius:10px;
-            border:1px solid #222;
-            margin-bottom:15px;
-        }
-        .h-btn {
-            flex:1;
-            padding:10px;
-            border:none;
-            background:none;
-            color:#666;
-            font-weight:700;
-            cursor:pointer;
-            border-radius:8px;
-        }
-        .h-btn.active {
-            background:#222;
-            color:#fff;
+        .drawer-link i { width: 20px; color: var(--gold); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- RESULT CARDS --- */
+        .res-card {
+            background: #111;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #222;
+            overflow: hidden;
         }
 
-        /* --- NEW STATS BOX STYLE --- */
-        .stats-box {
-            display:grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap:10px;
-            margin-bottom:20px;
-        }
-        .stat-item {
-            background:#0b0b0b;
-            padding:10px 5px;
-            border-radius:10px;
-            border:1px solid #222;
-            text-align:center;
-        }
-        .stat-lbl {
-            font-size:0.6rem;
-            color:#888;
-            text-transform:uppercase;
-            display:block;
-            margin-bottom:4px;
-            font-weight:700;
-        }
-        .stat-val {
-            font-size:1rem;
-            font-weight:800;
-        }
-        .st-gold {
-            color:var(--gold);
-            font-size:1.1rem;
-        }
-        .st-red {
-            color:var(--red);
-        }
-        .st-green {
-            color:var(--accent);
+        .res-banner {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
         }
 
-        /* --- NEW ADD FUND & WITHDRAW STYLES --- */
-        .wallet-actions {
-            display:grid;
-            grid-template-columns: 1fr 1fr;
-            gap:10px;
-            margin-bottom:15px;
-        }
-        .w-act-btn {
-            padding:12px;
-            border-radius:12px;
-            border:1px solid #333;
-            background:#111;
-            color:#fff;
-            font-weight:bold;
-            cursor:pointer;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:8px;
-            font-size:0.85rem;
-        }
-        .w-act-btn:hover {
-            border-color:var(--accent);
-        }
-        .pkg-grid {
-            display:grid;
-            grid-template-columns:1fr 1fr 1fr;
-            gap:8px;
-            margin-bottom:15px;
-        }
-        .pkg-box {
-            background:#1a1a1a;
-            padding:12px;
-            border-radius:10px;
-            border:1px solid #333;
-            text-align:center;
-            cursor:pointer;
-            font-weight:bold;
-        }
-        .pkg-box.active {
-            border-color:var(--gold);
-            color:var(--gold);
-            background:#222;
+        .res-info {
+            padding: 15px;
         }
 
-        /* Animation */
-        @keyframes fadeIn {
-            from{opacity:0; transform:translateY(10px)}
-            to{opacity:1; transform:none}
+        .winner-tag {
+            color: var(--gold);
+            font-weight: 800;
+            font-size: 1.1rem;
         }
-        .loader {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #333;
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
+
     </style>
 </head>
 <body>
+
+<div id="global-loader">
+    <div class="spinner"></div>
+    <p style="margin-top: 15px; color: var(--accent); font-weight: 700; font-family: var(--font-heading);">LOADING SQL ENGINE...</p>
+</div>
+
 <header>
-    <p class="header-title">FREE FIRE DAILY TOURNAMENT</p>
-    <span class="header-sub">JOIN PLAY & WIN REAL MONEY 💰</span>
-    <div class="menu-btn" onclick="toggleMenu(true)"><i class="fas fa-bars-staggered"></i></div>
+    <div class="brand-box">
+        <h1>SQL TOURNAMENT PRO</h1>
+        <span>Official Ultimate Build</span>
+    </div>
+    <div class="menu-toggle" onclick="toggleDrawer(true)">
+        <i class="fas fa-bars-staggered"></i>
+    </div>
 </header>
 
-<div class="tabs">
-    <button class="tab active" id="tab-live" onclick="switchTab('live')">LIVE MATCHES</button>
-    <button class="tab" id="tab-my" onclick="switchTab('my')">MY PROFILE</button>
-    <button class="tab" id="tab-result" onclick="switchTab('result')">RESULTS</button>
+<div class="tab-wrapper">
+    <div class="tabs-container">
+        <button class="tab-btn active" id="tab-live" onclick="app.switchTab('live')">MATCHES</button>
+        <button class="tab-btn" id="tab-my" onclick="app.switchTab('my')">PROFILE</button>
+        <button class="tab-btn" id="tab-result" onclick="app.switchTab('result')">RESULTS</button>
+    </div>
 </div>
 
-<div id="side-menu">
-    <div class="close-menu" onclick="toggleMenu(false)">&times;</div>
-    
-    <div class="menu-header">
-        <img id="menu-user-dp" src="https://img.icons8.com/color/96/user-male-circle.png" class="menu-dp" alt="User">
-        <div>
-            <div id="menu-user-name" style="font-weight:bold; color:#fff;">Guest User</div>
-            <div id="menu-user-bal-side" style="font-size:0.7rem; color:var(--accent);">Bal: ₹0.00</div>
+<main id="app-content">
+    </main>
+
+<div id="side-drawer">
+    <div class="drawer-header">
+        <div style="font-size: 1.5rem; color: var(--red); cursor: pointer; position: absolute; top: 15px; right: 20px;" onclick="toggleDrawer(false)">&times;</div>
+        <img id="drawer-dp" src="https://img.icons8.com/color/96/user-male-circle.png" style="width: 70px; border-radius: 50%; border: 2px solid var(--accent);">
+        <h3 id="drawer-name" style="margin-top: 10px;">Guest User</h3>
+        <p id="drawer-bal" style="color: var(--accent); font-weight: 800;">Bal: ₹0.00</p>
+    </div>
+    <div class="drawer-links">
+        <a href="#" class="drawer-link" onclick="location.reload()"><i class="fas fa-home"></i> Home</a>
+        <a href="#" class="drawer-link" onclick="app.openWalletModal('add'); toggleDrawer(false)"><i class="fas fa-wallet"></i> Add Money</a>
+        <a href="#" class="drawer-link" onclick="app.openWalletModal('with'); toggleDrawer(false)"><i class="fas fa-money-bill-transfer"></i> Withdraw</a>
+        <a href="https://chat.whatsapp.com/JR7wAllMf4SAyILFHDQClQ" class="drawer-link"><i class="fab fa-whatsapp"></i> Support Group</a>
+        <a href="#" class="drawer-link" onclick="app.showPolicy(); toggleDrawer(false)"><i class="fas fa-shield-alt"></i> Fair Play Rules</a>
+    </div>
+    <div style="padding: 20px; border-top: 1px solid #1a1a1a;">
+        <button id="auth-main-btn" onclick="app.openAuth()" class="btn-join">LOGIN / REGISTER</button>
+        <button id="logout-main-btn" onclick="app.logout()" class="btn-join" style="background: #222; color: var(--red); display: none;">LOGOUT</button>
+    </div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal-card" id="modal-content">
         </div>
-    </div>
-
-    <div class="menu-items">
-        <a href="#" class="menu-link" onclick="location.reload(); toggleMenu(false)"><i class="fas fa-home"></i> Home</a>
-        <a href="https://chat.whatsapp.com/JR7wAllMf4SAyILFHDQClQ" target="_blank" class="menu-link"><i class="fab fa-whatsapp"></i> WhatsApp Group</a>
-        <a href="#" class="menu-link" onclick="showRules(); toggleMenu(false)"><i class="fas fa-shield-halved"></i> Rules & Policy</a>
-        <a href="#" class="menu-link" onclick="openHistoryModal(); toggleMenu(false)"><i class="fas fa-history"></i> My History</a>
-        
-        <a href="#" id="menu-auth-btn" class="menu-link" onclick="openAuthModal('login'); toggleMenu(false)"><i class="fas fa-sign-in-alt"></i> Login / Register</a>
-    </div>
-
-    <div class="menu-footer">
-        <div style="font-size:0.7rem; color:#555; margin-bottom:10px;">
-            Secure Payments • Instant Updates<br>© 2026 SQL TOURNAMENTS
-        </div>
-        <button id="menu-logout-btn" onclick="confirmLogout()" class="premium-btn" style="background:#222; color:var(--red); display:none;">LOGOUT</button>
-    </div>
 </div>
 
-<main id="app-content"></main>
-
-<div id="history-list-modal" class="modal">
-    <div class="modal-ui" style="max-height: 80vh; overflow-y: auto;">
-        <h3 id="hist-modal-title" style="color:var(--gold); text-align:center; margin-bottom:15px;">HISTORY</h3>
-        <div id="hist-modal-content" style="font-size: 0.85rem;"></div>
-        <button onclick="document.getElementById('history-list-modal').style.display='none'" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer; font-weight: bold;">CLOSE</button>
-    </div>
-</div>
-
-<div id="wallet-modal" class="modal">
-    <div class="modal-ui">
-        <h3 id="wallet-modal-title" style="color:var(--gold); text-align:center; margin-bottom:15px;">ADD FUND</h3>
-        
-        <div id="add-fund-form">
-            <div class="pkg-grid">
-                <div class="pkg-box" onclick="setPkg(50)">₹50</div>
-                <div class="pkg-box" onclick="setPkg(100)">₹100</div>
-                <div class="pkg-box" onclick="setPkg(200)">₹200</div>
-                <div class="pkg-box" onclick="setPkg(500)">₹500</div>
-                <div class="pkg-box" onclick="setPkg(1000)">₹1000</div>
-                <div class="pkg-box" onclick="setPkg(2000)">₹2000</div>
-            </div>
-            <input type="number" id="manual-amt" placeholder="Enter Amount Manually" style="text-align:center;" min="10">
-            <button class="btn-main btn-join" onclick="initWalletDeposit()">DEPOSIT NOW</button>
-        </div>
-
-        <div id="withdraw-form" style="display:none;">
-            <div style="background:#222; padding:10px; border-radius:10px; margin-bottom:15px; font-size:0.8rem; color:#aaa;">
-                <i class="fas fa-info-circle"></i> Withdrawals are processed within 24 hours. Money will be deducted from your wallet immediately.
-            </div>
-            <input type="number" id="with-amt" placeholder="Amount (Min ₹50)" min="50">
-            <input type="text" id="with-upi" placeholder="Enter UPI ID (e.g. 9876543210@paytm)">
-            <button class="btn-main" style="background:var(--gold); color:#000;" onclick="submitWithdrawal()">CONFIRM WITHDRAWAL</button>
-        </div>
-
-        <button onclick="document.getElementById('wallet-modal').style.display = 'none'" style="width:100%; background:none; border:none; color:#555; margin-top:10px; cursor:pointer;">CLOSE</button>
-    </div>
-</div>
-
-<div id="comment-page">
-    <div class="cp-header">
-        <i class="fas fa-arrow-left cp-back" onclick="closeCommentPage()"></i>
-        <span style="font-weight:bold;">Comments</span>
-    </div>
-    <div class="cp-body" id="cp-list"></div>
-    <div class="cp-footer">
-        <input type="text" id="cp-input" placeholder="Write a comment..." style="margin:0; border-radius:20px;">
-        <button class="small-btn" onclick="postRealComment()" style="border-radius:20px; width:60px;"><i class="fas fa-paper-plane"></i></button>
-    </div>
-</div>
-
-<div id="pay-modal" class="modal">
-    <div class="modal-ui">
-        <h3 style="color:var(--gold); margin:0 0 15px 0; text-align:center;">CONFIRM PAYMENT</h3>
-        <h1 id="modal-amt" style="color:var(--accent); margin:0 0 20px 0; text-align:center; font-size:2.5rem;">₹0</h1>
-
-        <div id="wallet-pay-btn-box" style="display:none; background:#000; border:1px solid var(--accent); padding:15px; border-radius:12px; margin-bottom:15px; text-align:center;">
-            <span style="font-size:0.8rem; color:var(--accent);">Available: <b id="pay-modal-bal">₹0</b></span>
-            <button class="btn-main btn-join" style="margin-top:10px;" onclick="payViaWallet()">JOIN WITH WALLET</button>
-        </div>
-
-        <div id="manual-pay-divider" style="text-align:center; color:#444; font-size:0.7rem; margin-bottom:15px;">--- OR PAY MANUALLY ---</div>
-
-        <div style="margin-bottom:15px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
-            <a id="g-link" href="#" class="pay-opt" style="justify-content:center; flex-direction:column; padding:5px;"><img src="https://img.icons8.com/color/48/google-pay.png"><span style="font-size:0.7rem;">GPay</span></a>
-            <a id="p-link" href="#" class="pay-opt" style="justify-content:center; flex-direction:column; padding:5px;"><img src="https://img.icons8.com/color/48/phone-pe.png"><span style="font-size:0.7rem;">PhonePe</span></a>
-            <a id="y-link" href="#" class="pay-opt" style="justify-content:center; flex-direction:column; padding:5px;"><img src="https://img.icons8.com/color/48/paytm.png"><span style="font-size:0.7rem;">Paytm</span></a>
-        </div>
-
-        <label style="font-size:0.8rem; color:#aaa; margin-left:4px;">Transaction Details</label>
-        <input type="text" id="utr-input" class="allow-select" placeholder="Enter 12 Digit UTR / Ref No" maxlength="12" style="text-align:center; font-weight:bold; letter-spacing:1px; border-color:var(--accent);">
-        
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn-main btn-join" id="submit-pay-btn" onclick="processPayment()">SUBMIT</button>
-            <button onclick="closeModal()" class="btn-main" style="background:#222; color:#fff;">CANCEL</button>
-        </div>
-    </div>
-</div>
-
-<div id="auth-modal" class="modal">
-    <div class="modal-ui">
-        <h2 id="auth-title" style="color:var(--gold); text-align:center; margin-bottom:20px;">LOGIN</h2>
-        
-        <div id="auth-forms"></div>
-
-        <button id="auth-submit-btn" class="btn-main btn-join" style="margin-top:15px;" onclick="submitAuth()">LOGIN</button>
-        <p id="auth-toggle-msg" style="text-align:center; font-size:0.8rem; margin-top:15px; color:#888; cursor:pointer;" onclick="toggleAuthMode()">
-            New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>
-        </p>
-        <button onclick="document.getElementById('auth-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#555; font-size:1.5rem;">&times;</button>
-    </div>
-</div>
-
-<div id="img-modal" class="modal" onclick="this.style.display='none'">
-    <img id="preview-img" src="" style="max-width:90%; max-height:80vh; border-radius:10px; box-shadow:0 0 50px rgba(0,0,0,0.8);">
-</div>
-
-<input type="file" id="hidden-dp-input" accept="image/*" style="display:none;" onchange="handleProfileUpdate(this)">
+<input type="file" id="p-file-input" style="display: none;" accept="image/*" onchange="app.handleAvatarUpload(this)">
 
 <script type="module">
-    // ☁️ Cloudinary Config
-    const CLOUDINARY_CLOUD_NAME = "debp1kjtm";
-    const CLOUDINARY_UPLOAD_PRESET = "sql_admin";
-    const CLOUDINARY_FOLDER = "sql_users";
+    // Cloudinary Engine Config
+    const CLOUD_NAME = "debp1kjtm";
+    const UPLOAD_PRESET = "sql_admin";
 
-    // 🔥 Firebase Config
+    // Firebase Core
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getFirestore, collection, onSnapshot, addDoc, query, where, 
+        orderBy, limit, getDoc, doc, setDoc, updateDoc, increment, arrayUnion 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyBvObxADcAior6R_or9O6UmWsFT8do1GkI",
         authDomain: "sqladmin-ff04d.firebaseapp.com",
@@ -873,632 +561,484 @@
         appId: "1:539086978850:web:261e6a0cf3c9a2aa29ef7b"
     };
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-        getFirestore, collection, onSnapshot, addDoc, query, where,
-        orderBy, limit, getDocs, doc, setDoc, getDoc, updateDoc, increment, runTransaction, arrayUnion
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    const fbApp = initializeApp(firebaseConfig);
+    const db = getFirestore(fbApp);
 
-    // --- CONFIGURATION ---
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // --- MEGA ENGINE OBJECT ---
+    const app = {
+        user: null,
+        activeTab: 'live',
+        matchUnsub: null,
+        walletSync: null,
 
-    // --- STATE MANAGEMENT ---
-    let activeTab = 'live';
-    let currentAuthMode = 'login';
-    let activeMatchId = null;
-    let activeEntryFee = 0;
-    let currentResultIdForComments = null;
-    let commentUnsub = null;
-    let currentUserBal = 0;
-    let currentUser = null;
+        init() {
+            this.loadSession();
+            this.switchTab('live');
+            setTimeout(() => {
+                document.getElementById('global-loader').style.display = 'none';
+            }, 1500);
+        },
 
-    // --- CLOUDINARY UPLOAD ---
-    async function uploadToCloudinary(file){
-        if(!file) return "";
-        if(file.size > 5 * 1024 * 1024) return ""; // 5MB limit
-        
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-        fd.append("folder", CLOUDINARY_FOLDER);
-        try {
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { 
-                method:"POST", 
-                body: fd 
-            });
-            const data = await res.json();
-            return data.secure_url || "";
-        } catch(e) { 
-            console.error("Cloudinary upload error:", e); 
-            return ""; 
-        }
-    }
-
-    // --- SESSION MANAGEMENT ---
-    function loadSession(){
-        try {   
-            const sess = JSON.parse(localStorage.getItem('sql_session') || "null");
-            if(sess) currentUser = sess;
-            return sess;
-        } catch { return null; }
-    }
-    
-    function saveSession(data){
-        // Securely store session with timestamp
-        const secureData = {
-            ...data,
-            sessionTime: Date.now(),
-            sessionToken: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-        };
-        localStorage.setItem('sql_session', JSON.stringify(secureData));
-        currentUser = data;
-        updateMenuUI();
-    }
-    
-    function clearSession(){
-        localStorage.removeItem('sql_session');
-        currentUser = null;
-        updateMenuUI();
-        renderUI();
-    }
-
-    // --- REALTIME SYNC (User Balance) ---
-    function startWalletSync(phone){
-        if(!phone) return;
-        onSnapshot(doc(db, "users", phone), (docSnap) => {
-            if(docSnap.exists()){  
-                const data = docSnap.data();
-                currentUserBal = data.balance || 0;
-                document.getElementById('menu-user-bal-side').innerText = `Bal: ₹${currentUserBal.toFixed(2)}`;
-                saveSession(data);
-                if(activeTab === 'my') renderProfile(document.getElementById('app-content')); // Refresh profile if active
+        loadSession() {
+            const saved = localStorage.getItem('sql_user_session');
+            if(saved) {
+                this.user = JSON.parse(saved);
+                this.startWalletSync();
+                this.updateUI();
             }
-        });
-    }
+        },
 
-    function updateMenuUI(){
-        const s = currentUser;
-        const dp = document.getElementById('menu-user-dp');
-        const nm = document.getElementById('menu-user-name');
-        const authBtn = document.getElementById('menu-auth-btn');
-        const logoutBtn = document.getElementById('menu-logout-btn');
-
-        if(s){  
-            dp.src = s.dpUrl || "https://img.icons8.com/color/96/user-male-circle.png";
-            nm.innerText = s.name;
-            authBtn.style.display = 'none';
-            logoutBtn.style.display = 'block';
-            document.getElementById('menu-user-bal-side').innerText = `Bal: ₹${(s.balance||0).toFixed(2)}`;
-        } else {  
-            dp.src = "https://img.icons8.com/color/96/user-male-circle.png";
-            nm.innerText = "Guest User";
-            authBtn.style.display = 'flex';
-            logoutBtn.style.display = 'none';
-            document.getElementById('menu-user-bal-side').innerText = "Bal: ₹0.00";
-        }
-    }
-
-    // --- UI RENDERING ---
-    window.switchTab = (t) => {
-        activeTab = t;
-        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-${t}`).classList.add('active');
-        renderUI();
-    };
-
-    function renderUI(){
-        const c = document.getElementById('app-content');
-        c.innerHTML = '<div class="loader"></div>';
-
-        setTimeout(() => { 
-            c.innerHTML = "";
-            if(activeTab === 'live') renderLiveMatches(c);  
-            else if(activeTab === 'my') renderProfile(c);  
-            else if(activeTab === 'result') renderResults(c);  
-        }, 500);  
-    }
-
-    // --- TAB 1: LIVE MATCHES ---
-    function renderLiveMatches(container){
-        // Clean up any existing listeners
-        if(typeof renderLiveMatches.cleanup === 'function') {
-            renderLiveMatches.cleanup();
-        }
-        
-        const unsubscribe = onSnapshot(collection(db, "matches"), (snap) => {  
-            if(activeTab !== 'live') return;  
-            container.innerHTML = "";  
-            const matches = [];  
-            snap.forEach(d => matches.push({id: d.id, ...d.data()}));  
-            
-            // Sort matches by start time
-            matches.sort((a,b) => {
-                // Ensure start time is a real number
-                const startA = a.startTime && typeof a.startTime === 'number' ? a.startTime : 0;
-                const startB = b.startTime && typeof b.startTime === 'number' ? b.startTime : 0;
-                return startA - startB;  
-            });
-
-            if(matches.length === 0) {  
-                container.innerHTML = "<div style='text-align:center; padding:50px; color:#666;'>No Matches Available</div>";  
-                return;  
-            }  
-
-            matches.forEach(m => {  
-                const now = Date.now();  
-                const start = m.startTime || 0;  
-                const isStarted = now > start;  
-                const isFull = (m.joined||0) >= (m.total||48);  
-                const fill = Math.min(100, ((m.joined||0)/(m.total||48))*100);  
-
-                // Determine User Status  
-                let isJoinedUser = false;  
-                if(currentUser && m.participants && Array.isArray(m.participants) && m.participants.includes(currentUser.phone)) {  
-                    isJoinedUser = true;  
-                }  
-
-                let btnHTML = "";  
-                let roomHTML = "";  
-
-                if(isJoinedUser){  
-                    // Show Room ID Logic  
-                    if(isStarted || (m.roomId && m.roomId.length > 3)){   
-                        roomHTML = `  
-                        <div class="room-box">  
-                            <h4>✅ ROOM DETAILS</h4>  
-                            <div class="room-data">  
-                                <div><span>ID</span><b>${m.roomId || 'Wait...'}</b></div>  
-                                <div><span>PASS</span><b>${m.password || 'Wait...'}</b></div>  
-                            </div>  
-                        </div>`;  
-                        btnHTML = `<button class="btn-main btn-dis">JOINED & READY</button>`;  
-                    } else {  
-                        roomHTML = `  
-                        <div class="room-box">  
-                            <h4>✅ YOU HAVE JOINED</h4>  
-                            <div style="font-size:0.7rem; color:#aaa; padding:5px;">Room ID & Pass will appear here 15 mins before match.</div>  
-                        </div>`;  
-                        btnHTML = `<button class="btn-main btn-dis">JOINED</button>`;  
-                    }  
-                } else {  
-                    if(isStarted) btnHTML = `<button class="btn-main btn-dis">MATCH STARTED</button>`;  
-                    else if(isFull) btnHTML = `<button class="btn-main btn-dis">HOUSE FULL</button>`;  
-                    else btnHTML = `<button class="btn-main btn-join" onclick="initPayment('${m.id}', ${m.entry})"><i class="fas fa-gamepad"></i> JOIN NOW ₹${m.entry}</button>`;  
-                }  
-
-                const html = `  
-                <div class="card">  
-                    <div class="m-tag">${m.map}</div>  
-                    <div class="card-body">  
-                        <div class="item"><i class="fas fa-crosshairs"></i><div><span>Mode</span><b>${m.type}</b></div></div>  
-                        <div class="item"><i class="fas fa-trophy"></i><div><span>Prize</span><b class="win-green">₹${m.win}</b></div></div>  
-                        <div class="item"><i class="fas fa-ticket-alt"></i><div><span>Entry</span><b class="entry-gold">₹${m.entry}</b></div></div>  
-                        <div class="item"><i class="fas fa-clock"></i><div><span>Time</span><b>${new Date(start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>  
-                    </div>  
-                    <div class="timer-box">  
-                        <div class="countdown" data-time="${start}">00:00:00</div>  
-                    </div>  
-                    <div class="card-footer">  
-                        <div class="slots"><span>Joined: ${m.joined||0}/${m.total||48}</span><span style="color:var(--waiting)">Left: ${(m.total||48)-(m.joined||0)}</span></div>  
-                        <div class="bar"><div class="fill" style="width:${fill}%"></div></div>  
-                        ${roomHTML}  
-                        ${btnHTML}  
-                    </div>  
-                </div>`;  
-                container.innerHTML += html;  
-            });  
-        });  
-
-        // Save cleanup function to clean later
-        renderLiveMatches.cleanup = unsubscribe;
-    }
-
-    // --- TAB 2: PROFILE ---
-    window.renderProfile = async (c) => {  
-        if(!currentUser){  
-            c.innerHTML = `<div style="text-align:center; padding:50px; color:#666;">  
-                <i class="fas fa-lock" style="font-size:3rem; margin-bottom:20px;"></i><br>  
-                Please Login to view Profile<br>  
-                <button class="btn-main btn-join" style="width:auto; margin-top:20px; padding:10px 30px;" onclick="openAuthModal('login')">LOGIN NOW</button>  
-            </div>`;  
-            return;  
-        }  
-
-        // Load user games to calculate "my active join game" stats
-        const activeGames = await getDocs(query(
-            collection(db, "matches"),
-            where("participants", "array-contains", currentUser.phone),
-            where("startTime", ">", Date.now() - 24 * 60 * 60 * 1000)
-        ));
-        
-        const activeGameCount = activeGames.size();
-        const totalPayed = activeGames.docs.reduce((sum, doc) => {
-            if(doc.data().entry) return sum + doc.data().entry;
-            return sum;
-        }, 0);
-
-        c.innerHTML = `  
-        <div class="profile-head">  
-            <div class="p-img-cont">  
-                <img src="${currentUser.dpUrl || 'https://img.icons8.com/color/96/user-male-circle.png'}" class="p-img">  
-                <div class="p-edit" onclick="document.getElementById('hidden-dp-input').click()"><i class="fas fa-pencil-alt"></i></div>  
-            </div>  
-            <h3 style="margin:0;">${currentUser.name}</h3>  
-            <div style="font-size:0.8rem; color:var(--accent); margin-bottom:15px;">+91 ${currentUser.phone}</div>  
-              
-            <div class="stats-box">  
-                <div class="stat-item">  
-                    <span class="stat-lbl">Wallet</span>  
-                    <div class="stat-val st-gold">₹${(currentUser.balance || 0).toFixed(2)}</div>  
-                </div>  
-                <div class="stat-item">  
-                    <span class="stat-lbl">Played</span>  
-                    <div class="stat-val st-red">${activeGameCount}</div>  
-                </div>  
-                <div class="stat-item">  
-                    <span class="stat-lbl">Won</span>  
-                    <div class="stat-val st-green">₹${currentUser.totalProfit || 0}</div>  
-                </div>  
-            </div>  
-            
-            <div class="wallet-actions">  
-                <button class="w-act-btn" onclick="openWalletModal('add')"><i class="fas fa-plus-circle"></i> ADD CASH</button>  
-                <button class="w-act-btn" onclick="openWalletModal('with')"><i class="fas fa-paper-plane"></i> WITHDRAW</button>  
-                <button class="w-act-btn" onclick="showFundHistory()"><i class="fas fa-history"></i> HISTORY</button>  
-                <button class="w-act-btn" onclick="openActiveGamesModal()"><i class="fas fa-gamepad"></i> MY ACTIVE JOIN GAME</button>  
-            </div>  
-        </div>  
-        `;  
-    };
-
-    // --- NEW MODAL FOR ACTIVE GAMES ---
-    window.openActiveGamesModal = () => {
-        if(!currentUser) return openAuthModal('login');
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'active-games-modal';
-        modal.innerHTML = `
-            <div class="modal-ui">
-                <h3 style="color:var(--gold); text-align:center; margin-bottom:15px;">MY ACTIVE JOINS</h3>
-                <div id="active-games-content" style="font-size: 0.85rem;"></div>
-                <button onclick="document.getElementById('active-games-modal').remove()" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer; font-weight: bold;">CLOSE</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        modal.style.display = 'flex';
-        
-        loadActiveGames();
-    };
-
-    async function loadActiveGames() {
-        const content = document.getElementById('active-games-content');
-        content.innerHTML = '<div class="loader"></div>';
-        
-        try {
-            const activeGames = await getDocs(query(
-                collection(db, "matches"),
-                where("participants", "array-contains", currentUser.phone),
-                where("startTime", ">", Date.now() - 24 * 60 * 60 * 1000),
-                orderBy("startTime", "desc")
-            ));
-            
-            content.innerHTML = "";
-            
-            if(activeGames.empty) {
-                content.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>No active games found</div>";
-                return;
+        updateUI() {
+            if(this.user) {
+                document.getElementById('drawer-name').innerText = this.user.name;
+                document.getElementById('drawer-bal').innerText = `Bal: ₹${(this.user.balance || 0).toFixed(2)}`;
+                if(this.user.dpUrl) document.getElementById('drawer-dp').src = this.user.dpUrl;
+                document.getElementById('auth-main-btn').style.display = 'none';
+                document.getElementById('logout-main-btn').style.display = 'block';
             }
+        },
+
+        startWalletSync() {
+            if(!this.user) return;
+            if(this.walletSync) this.walletSync();
+            this.walletSync = onSnapshot(doc(db, "users", this.user.phone), (docSnap) => {
+                if(docSnap.exists()) {
+                    this.user = { ...this.user, ...docSnap.data() };
+                    localStorage.setItem('sql_user_session', JSON.stringify(this.user));
+                    this.updateUI();
+                    if(this.activeTab === 'my') this.renderProfile();
+                }
+            });
+        },
+
+        switchTab(tab) {
+            this.activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
             
-            activeGames.forEach(doc => {
-                const match = doc.data();
-                const start = match.startTime || 0;
-                const time = new Date(start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                const html = `
-                    <div class="card" style="margin-bottom:15px;">
-                        <div class="m-tag">${match.map}</div>
-                        <div class="card-body">
-                            <div class="item"><i class="fas fa-crosshairs"></i><div><span>Mode</span><b>${match.type}</b></div></div>
-                            <div class="item"><i class="fas fa-ticket-alt"></i><div><span>Entry</span><b class="entry-gold">₹${match.entry}</b></div></div>
-                            <div class="item"><i class="fas fa-clock"></i><div><span>Time</span><b>${time}</b></div></div>
+            const cont = document.getElementById('app-content');
+            cont.innerHTML = '<div class="loader"></div>';
+
+            if(tab === 'live') this.renderMatches();
+            else if(tab === 'my') this.renderProfile();
+            else if(tab === 'result') this.renderResults();
+        },
+
+        // --- MATCH ENGINE ---
+        renderMatches() {
+            const cont = document.getElementById('app-content');
+            if(this.matchUnsub) this.matchUnsub();
+
+            const q = query(collection(db, "matches"), orderBy("startTime", "asc"));
+            this.matchUnsub = onSnapshot(q, (snap) => {
+                if(this.activeTab !== 'live') return;
+                cont.innerHTML = "";
+                
+                if(snap.empty) {
+                    cont.innerHTML = `<div style="text-align:center; padding:50px; color:#555;">No Matches Scheduled Today</div>`;
+                    return;
+                }
+
+                snap.forEach(d => {
+                    const m = d.data();
+                    const isJoined = this.user && m.participants?.includes(this.user.phone);
+                    const isFull = (m.joined || 0) >= (m.total || 48);
+                    const progress = ((m.joined || 0) / (m.total || 48)) * 100;
+
+                    let actionHtml = "";
+                    if(isJoined) {
+                        actionHtml = `
+                            ${(m.roomId && m.roomId.length > 2) ? `
+                                <div class="room-access-box">
+                                    <h4>✅ ROOM DETAILS RELEASED</h4>
+                                    <div class="room-data-row">
+                                        <div class="room-field"><span>Room ID</span><b>${m.roomId}</b></div>
+                                        <div class="room-field"><span>Password</span><b>${m.password}</b></div>
+                                    </div>
+                                    <p style="font-size:0.6rem; margin-top:10px; color:var(--muted);">Join 5 minutes before match starts</p>
+                                </div>
+                            ` : `<div class="room-access-box"><h4>✅ JOINED</h4><p style="font-size:0.7rem; color:#888;">ID/Pass will appear here 15 min before match.</p></div>`}
+                            <button class="btn-join btn-full">ALREADY JOINED</button>
+                        `;
+                    } else if(isFull) {
+                        actionHtml = `<button class="btn-join btn-full">MATCH FULL</button>`;
+                    } else {
+                        actionHtml = `<button class="btn-join" onclick="app.handleMatchJoin('${d.id}', ${m.entry})"><i class="fas fa-gamepad"></i> JOIN MATCH ₹${m.entry}</button>`;
+                    }
+
+                    cont.innerHTML += `
+                        <div class="match-card">
+                            <div class="match-header">
+                                <span class="map-tag">${m.map || 'Bermuda'}</span>
+                                <span style="font-weight: 800; font-size: 0.8rem; color: var(--gold);">${m.type || 'SOLO'}</span>
+                            </div>
+                            <div class="match-grid">
+                                <div class="grid-item"><i class="fas fa-trophy"></i><div><span class="label">Prize Pool</span><b class="val" style="color:var(--accent)">₹${m.win}</b></div></div>
+                                <div class="grid-item"><i class="fas fa-skull"></i><div><span class="label">Per Kill</span><b class="val">₹${m.perkill || 0}</b></div></div>
+                                <div class="grid-item"><i class="fas fa-ticket"></i><div><span class="label">Entry Fee</span><b class="val" style="color:var(--gold)">₹${m.entry}</b></div></div>
+                                <div class="grid-item"><i class="fas fa-clock"></i><div><span class="label">Time</span><b class="val">${m.time || 'TBA'}</b></div></div>
+                            </div>
+                            <div class="slot-container">
+                                <div class="slot-info"><span>Filled: ${m.joined || 0}/${m.total || 48}</span><span>Left: ${(m.total || 48) - (m.joined || 0)}</span></div>
+                                <div class="progress-bg"><div class="progress-fill" style="width: ${progress}%"></div></div>
+                            </div>
+                            <div class="action-area">${actionHtml}</div>
                         </div>
-                        <div class="card-footer">
-                            <div style="font-size:0.75rem;"><b>Joined: ${match.joined || 0}/${match.total || 48}</b></div>
-                            <div class="slots"><span style="color:var(--accent)">Entry Fee: ₹${match.entry}</span></div>
-                        </div>
+                    `;
+                });
+            });
+        },
+
+        // --- JOIN LOGIC ---
+        async handleMatchJoin(matchId, entry) {
+            if(!this.user) return this.openAuth();
+            if(this.user.balance < entry) {
+                alert("Insufficient Balance! Please recharge your wallet.");
+                return this.openWalletModal('add');
+            }
+
+            if(!confirm(`Confirm joining for ₹${entry}? Amount will be deducted from your wallet.`)) return;
+
+            try {
+                const matchRef = doc(db, "matches", matchId);
+                const userRef = doc(db, "users", this.user.phone);
+
+                // TRANSACTIONAL UPDATE
+                await updateDoc(matchRef, {
+                    joined: increment(1),
+                    participants: arrayUnion(this.user.phone)
+                });
+
+                await updateDoc(userRef, {
+                    balance: increment(-entry)
+                });
+
+                alert("Match Joined Successfully! Good luck.");
+            } catch(e) {
+                alert("Error joining match: " + e.message);
+            }
+        },
+
+        // --- PROFILE ENGINE ---
+        renderProfile() {
+            const cont = document.getElementById('app-content');
+            if(!this.user) {
+                cont.innerHTML = `
+                    <div style="text-align:center; padding:100px 20px;">
+                        <i class="fas fa-user-lock" style="font-size:3rem; color:#222; margin-bottom:20px;"></i>
+                        <h3>Authentication Required</h3>
+                        <p style="color:#555; margin-bottom:20px;">Login to see your stats and wallet</p>
+                        <button class="btn-join" onclick="app.openAuth()">LOGIN NOW</button>
                     </div>
                 `;
-                content.innerHTML += html;
+                return;
+            }
+
+            cont.innerHTML = `
+                <div class="profile-container">
+                    <div class="user-hero">
+                        <div class="avatar-wrap" onclick="document.getElementById('p-file-input').click()">
+                            <img src="${this.user.dpUrl || 'https://img.icons8.com/color/96/user-male-circle.png'}" class="avatar-img">
+                            <div class="edit-avatar"><i class="fas fa-camera"></i></div>
+                        </div>
+                        <h2 style="font-family:var(--font-heading);">${this.user.name}</h2>
+                        <p style="color:#666; font-size:0.8rem;">+91 ${this.user.phone}</p>
+                        
+                        <div class="stat-card-grid">
+                            <div class="stat-box"><span class="title">Matches</span><span class="value">${this.user.matchesPlayed || 0}</span></div>
+                            <div class="stat-box"><span class="title">Total Won</span><span class="value" style="color:var(--accent)">₹${this.user.totalWon || 0}</span></div>
+                            <div class="stat-box"><span class="title">Kills</span><span class="value">${this.user.totalKills || 0}</span></div>
+                        </div>
+
+                        <div style="background:#000; padding:20px; border-radius:20px; border:1px solid #1a1a1a;">
+                            <span style="font-size:0.7rem; color:#555; text-transform:uppercase; font-weight:800;">Wallet Balance</span>
+                            <h1 style="color:var(--gold); margin:5px 0;">₹${(this.user.balance || 0).toFixed(2)}</h1>
+                            <div class="wallet-methods">
+                                <div class="method-btn" onclick="app.openWalletModal('add')"><i class="fas fa-plus-circle"></i><br>Deposit</div>
+                                <div class="method-btn" onclick="app.openWalletModal('with')"><i class="fas fa-arrow-up-right-from-square"></i><br>Withdraw</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;">
+                        <h4 style="margin-bottom:15px; color:var(--muted); font-size:0.8rem;">ACCOUNT SECURITY</h4>
+                        <div style="background:#111; border-radius:15px; border:1px solid #222;">
+                            <div class="drawer-link" onclick="app.showHistory()"><i class="fas fa-history"></i> Transaction History <i class="fas fa-chevron-right" style="margin-left:auto; font-size:0.7rem;"></i></div>
+                            <div class="drawer-link" onclick="app.logout()" style="color:var(--red); border:none;"><i class="fas fa-power-off"></i> Logout Account</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+
+        // --- RESULTS ENGINE ---
+        renderResults() {
+            const cont = document.getElementById('app-content');
+            const q = query(collection(db, "results"), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snap) => {
+                if(this.activeTab !== 'result') return;
+                cont.innerHTML = "";
+                if(snap.empty) {
+                    cont.innerHTML = `<div style="text-align:center; padding:50px; color:#555;">No Tournament Results Yet</div>`;
+                    return;
+                }
+                snap.forEach(d => {
+                    const r = d.data();
+                    cont.innerHTML += `
+                        <div class="res-card">
+                            <img src="${r.image || 'https://via.placeholder.com/400x200?text=Match+Result'}" class="res-banner">
+                            <div class="res-info">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                    <div>
+                                        <span class="winner-tag">🏆 ${r.winnerName || 'Winner TBA'}</span>
+                                        <p style="font-size:0.8rem; color:#888;">${r.matchTitle || 'Official Tournament'}</p>
+                                    </div>
+                                    <div style="text-align:right">
+                                        <span style="display:block; font-size:1.2rem; font-weight:800; color:var(--accent);">₹${r.prizeWon || 0}</span>
+                                        <span style="font-size:0.6rem; color:#555;">WINNINGS</span>
+                                    </div>
+                                </div>
+                                <div style="margin-top:15px; padding-top:10px; border-top:1px solid #222; display:flex; gap:20px;">
+                                    <span style="font-size:0.75rem;"><i class="fas fa-skull" style="color:var(--red);"></i> ${r.kills || 0} Kills</span>
+                                    <span style="font-size:0.75rem;"><i class="fas fa-calendar" style="color:var(--gold);"></i> ${new Date(r.timestamp).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
             });
-        } catch(e) {
-            content.innerHTML = "<div style='text-align:center; padding:20px; color:#ff4444;'>Error loading active games</div>";
-        }
-    }
+        },
 
-    // --- TAB 3: RESULTS & PAYOUTS ---
-    function renderResults(container){
-        const q = query(collection(db, "results"), orderBy("timestamp", "desc"), limit(20));  
-        onSnapshot(q, (snap) => {  
-            if(activeTab !== 'result') return;  
-            container.innerHTML = "";  
-              
-            if(snap.empty){  
-                container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--waiting);">Results Coming Soon...</div>`;  
-                return;  
-            }  
-
-            snap.forEach(d => {  
-                const r = d.data();  
-                const rid = d.id;  
-
-                let winnerHTML = "";  
-                if(r.winnerName){  
-                    winnerHTML = `  
-                    <div class="winner-box">  
-                        <div class="winner-row"><span style="color:var(--muted)">WINNER</span><b style="color:var(--accent)">${r.winnerName}</b></div>  
-                        <div class="winner-row"><span style="color:var(--muted)">KILL COUNT</span><b class="allow-select">${r.kills || '0'}</b></div>  
-                    </div>`;  
-                }  
-
-                const card = document.createElement('div');  
-                card.className = 'result-card';  
-                card.innerHTML = `  
-                    <div class="r-head">  
-                        <span style="font-weight:bold; color:#fff;">${r.title || 'Tournament Result'}</span>  
-                        <span style="font-size:0.7rem; color:#666;">${new Date(r.timestamp).toLocaleDateString()}</span>  
-                    </div>  
-                    ${r.image ? `<img src="${r.image}" class="r-img" onclick="viewPaymentSS('${r.image}')">` : ''}  
-                    <div class="r-body">  
-                        ${winnerHTML}  
-                        <p style="font-size:0.85rem; color:#ccc; margin-top:5px;">${r.message || ''}</p>  
-                    </div>  
-                    <div class="r-actions">  
-                        <button class="act-btn" id="btn-like-${rid}" onclick="doLike('${rid}')">  
-                            <i class="fas fa-thumbs-up"></i> <span>${r.likes || 0}</span>  
-                        </button>  
-                        <button class="act-btn" onclick="openCommentPage('${rid}')">  
-                            <i class="fas fa-comment"></i> Discussion  
-                        </button>  
-                    </div>  
-                `;  
-                container.appendChild(card);  
-            });  
-        });  
-    }
-
-    // --- AUTHENTICATION LOGIC ---
-    window.openAuthModal = (mode) => {  
-        document.getElementById('auth-modal').style.display = 'flex';  
-        currentAuthMode = mode;  
-        renderAuthForm();  
-    };  
-
-    window.toggleAuthMode = () => {  
-        currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login';  
-        renderAuthForm();  
-    };  
-
-    function renderAuthForm(){  
-        const ui = document.getElementById('auth-forms');  
-        const title = document.getElementById('auth-title');  
-        const msg = document.getElementById('auth-toggle-msg');  
-        const btn = document.getElementById('auth-submit-btn');  
-
-        if(currentAuthMode === 'login'){  
-            title.innerText = "LOGIN";  
-            btn.innerText = "LOGIN NOW";  
-            msg.innerHTML = `New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>`;  
-            ui.innerHTML = `  
-                <input id="login_phone" type="number" placeholder="Phone Number" oninput="this.value=this.value.slice(0,10)" min="1000000000" max="9999999999">  
-                <input id="login_pass" type="password" placeholder="Password">  
-            `;  
-        } else {  
-            title.innerText = "REGISTER";  
-            btn.innerText = "CREATE ACCOUNT";  
-            msg.innerHTML = `Already have account? <span style="color:var(--accent); font-weight:bold;">Login Here</span>`;  
-            ui.innerHTML = `  
-                <input id="reg_name" type="text" placeholder="Full Name (Compulsory)" required>  
-                <input id="reg_phone" type="number" placeholder="Phone Number (10 Digits)" oninput="this.value=this.value.slice(0,10)" min="1000000000" max="9999999999" required>  
-                <input id="reg_gaming" type="text" placeholder="Gaming UID/Name">  
-                <input id="reg_pass" type="password" placeholder="Create Password" minlength="6" required>  
-            `;  
-        }  
-    }  
-
-    window.submitAuth = async () => {  
-        const btn = document.getElementById('auth-submit-btn');  
-        btn.disabled = true; btn.innerText = "Processing...";  
-
-        try {  
-            if(currentAuthMode === 'register'){  
-                const name = document.getElementById('reg_name').value.trim();  
-                const phone = document.getElementById('reg_phone').value.trim();  
-                const gaming = document.getElementById('reg_gaming').value.trim();  
-                const pass = document.getElementById('reg_pass').value.trim();  
-
-                if(!name || !phone || !pass) throw "Fill all details";  
-                if(phone.length !== 10) throw "Phone must be 10 digits";  
-                if(pass.length < 6) throw "Password must be at least 6 characters";
-
-                const snap = await getDoc(doc(db, "users", phone));  
-                if(snap.exists()) throw "Phone already exists!";  
-
-                // Use Firebase auth (simplified) - in reality, proper OTP flow needed
-                // For demo, we'll just proceed with basic check
-                const userData = {   
-                    name, phone, gamingName: gaming, password: pass,   
-                    dpUrl: "", balance: 0, totalProfit: 0   
-                };  
-                await setDoc(doc(db, "users", phone), userData);  
-                saveSession(userData);  
-                startWalletSync(phone);  
-                alert("Account Created!");  
-            } else {  
-                const phone = document.getElementById('login_phone').value.trim();  
-                const pass = document.getElementById('login_pass').value.trim();  
-                  
-                if(phone.length !== 10) throw "Phone must be 10 digits";
-                if(!pass) throw "Enter password";
-
-                const snap = await getDoc(doc(db, "users", phone));  
-                if(!snap.exists() || !snap.data().password) throw "User not found!";  
+        // --- AUTH ENGINE ---
+        openAuth() {
+            const modal = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            modal.style.display = 'flex';
+            content.innerHTML = `
+                <div class="modal-close" onclick="closeModal()">&times;</div>
+                <h2 style="text-align:center; font-family:var(--font-heading); color:var(--gold);">WELCOME BACK</h2>
+                <p style="text-align:center; font-size:0.8rem; color:#555; margin-bottom:20px;">Login to access tournaments</p>
                 
-                const data = snap.data();  
-                if(data.password !== pass) throw "Wrong Password!";  
+                <div id="auth-err" style="color:var(--red); font-size:0.7rem; text-align:center; margin-bottom:10px;"></div>
+                
+                <input type="number" id="auth-phone" placeholder="Phone Number (10 Digits)">
+                <input type="password" id="auth-pass" placeholder="Password">
+                
+                <button class="btn-join" style="margin-top:20px;" onclick="app.handleAuthSubmit('login')">LOGIN NOW</button>
+                <p style="text-align:center; font-size:0.8rem; margin-top:20px; color:#555;">Don't have an account? <span style="color:var(--accent); font-weight:800; cursor:pointer;" onclick="app.openRegister()">Register Here</span></p>
+            `;
+        },
 
-                saveSession(data);  
-                startWalletSync(phone);  
-            }  
-            document.getElementById('auth-modal').style.display = 'none';  
-            renderUI();  
-        } catch(e) { alert(e); }  
-        finally { btn.disabled = false; btn.innerText = currentAuthMode === 'login' ? "LOGIN NOW" : "CREATE ACCOUNT"; }  
-    };  
+        openRegister() {
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <div class="modal-close" onclick="closeModal()">&times;</div>
+                <h2 style="text-align:center; font-family:var(--font-heading); color:var(--gold);">CREATE ACCOUNT</h2>
+                <p style="text-align:center; font-size:0.8rem; color:#555; margin-bottom:20px;">Join India's Most Secure Platform</p>
+                
+                <input type="text" id="reg-name" placeholder="Full Name">
+                <input type="number" id="reg-phone" placeholder="Phone Number">
+                <input type="password" id="reg-pass" placeholder="Create Password">
+                
+                <button class="btn-join" style="margin-top:20px;" onclick="app.handleAuthSubmit('reg')">REGISTER ACCOUNT</button>
+                <p style="text-align:center; font-size:0.8rem; margin-top:20px; color:#555;" onclick="app.openAuth()">Already member? <span style="color:var(--accent);">Login</span></p>
+            `;
+        },
 
-    window.confirmLogout = () => {  
-        if(confirm("Are you sure you want to Logout?")){  
-            clearSession();  
-            toggleMenu(false);  
-        }  
-    };  
+        async handleAuthSubmit(type) {
+            const btn = event.target;
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
 
-    // --- WALLET & PAYMENTS ---
-    window.openWalletModal = (type) => {  
-        if(!currentUser) return openAuthModal('login');  
-        document.getElementById('wallet-modal').style.display = 'flex';  
-          
-        if(type === 'add'){  
-            document.getElementById('wallet-modal-title').innerText = "ADD FUND";  
-            document.getElementById('add-fund-form').style.display = 'block';  
-            document.getElementById('withdraw-form').style.display = 'none';  
-        } else {  
-            document.getElementById('wallet-modal-title').innerText = "WITHDRAW";  
-            document.getElementById('add-fund-form').style.display = 'none';  
-            document.getElementById('withdraw-form').style.display = 'block';  
-        }  
-    };  
+            try {
+                if(type === 'reg') {
+                    const name = document.getElementById('reg-name').value.trim();
+                    const phone = document.getElementById('reg-phone').value.trim();
+                    const pass = document.getElementById('reg-pass').value.trim();
 
-    window.setPkg = (amt, event) => {  
-        if(event) { // Only if event object is passed
-            document.querySelectorAll('.// ... pichla code yahan continue ho raha hai ...
-        const boxes = document.querySelectorAll('.pkg-box');
-        boxes.forEach(b => b.classList.remove('active'));
-        
-        if(event) {
-            event.target.classList.add('active');
-        }
-        
-        // Agar manual input box hai to wahan value set karein
-        const manualInput = document.getElementById('manual-amt');
-        if(manualInput) manualInput.value = amt;
-        
-        activeEntryFee = amt; // Temp variable store karne ke liye
-    };
+                    if(phone.length !== 10) throw new Error("Invalid Phone Number");
+                    
+                    const snap = await getDoc(doc(db, "users", phone));
+                    if(snap.exists()) throw new Error("Phone already exists");
 
-    // --- MISSING FUNCTIONS (Placeholder Logic) ---
-    
-    window.initWalletDeposit = () => {
-        const amt = document.getElementById('manual-amt').value;
-        if(!amt || amt < 10) return alert("Minimum deposit is ₹10");
-        // Yahan payment gateway logic aayega
-        openModalForPayment(amt);
-    };
+                    const userData = {
+                        name, phone, password: pass, balance: 0, 
+                        totalWon: 0, totalKills: 0, matchesPlayed: 0,
+                        createdAt: Date.now()
+                    };
+                    await setDoc(doc(db, "users", phone), userData);
+                    this.user = userData;
+                } else {
+                    const phone = document.getElementById('auth-phone').value.trim();
+                    const pass = document.getElementById('auth-pass').value.trim();
 
-    window.submitWithdrawal = async () => {
-        if(!currentUser) return;
-        const amt = parseFloat(document.getElementById('with-amt').value);
-        const upi = document.getElementById('with-upi').value;
+                    const snap = await getDoc(doc(db, "users", phone));
+                    if(!snap.exists() || snap.data().password !== pass) throw new Error("Invalid Phone or Password");
+                    this.user = snap.data();
+                }
 
-        if(amt > currentUser.balance) return alert("Insufficient Balance");
-        if(amt < 50) return alert("Min withdrawal ₹50");
-        if(!upi.includes("@")) return alert("Invalid UPI ID");
+                localStorage.setItem('sql_user_session', JSON.stringify(this.user));
+                this.startWalletSync();
+                closeModal();
+                alert("Success! Welcome to SQL.");
+                location.reload();
+            } catch(e) {
+                alert(e.message);
+                btn.innerText = "TRY AGAIN";
+                btn.disabled = false;
+            }
+        },
 
-        try {
-            // Balance deduct karein
-            await updateDoc(doc(db, "users", currentUser.phone), {
+        // --- WALLET ENGINE ---
+        openWalletModal(type) {
+            if(!this.user) return this.openAuth();
+            const modal = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            modal.style.display = 'flex';
+
+            if(type === 'add') {
+                content.innerHTML = `
+                    <div class="modal-close" onclick="closeModal()">&times;</div>
+                    <h2 style="color:var(--gold); text-align:center;">RECHARGE WALLET</h2>
+                    <p style="font-size:0.7rem; color:#555; text-align:center;">Instant Fund Addition</p>
+                    
+                    <div class="stat-card-grid">
+                        <div class="stat-box" onclick="document.getElementById('dep-amt').value=50">₹50</div>
+                        <div class="stat-box" onclick="document.getElementById('dep-amt').value=100">₹100</div>
+                        <div class="stat-box" onclick="document.getElementById('dep-amt').value=500">₹500</div>
+                    </div>
+                    
+                    <input type="number" id="dep-amt" placeholder="Enter Amount (Min ₹20)">
+                    <p style="font-size:0.6rem; color:var(--accent); margin:10px 0;">* Pay on UPI and enter UTR to verify</p>
+                    
+                    <button class="btn-join" style="margin-top:10px;" onclick="app.initPayment()">PROCEED TO PAY</button>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="modal-close" onclick="closeModal()">&times;</div>
+                    <h2 style="color:var(--red); text-align:center;">WITHDRAW MONEY</h2>
+                    <p style="font-size:0.7rem; color:#555; text-align:center;">Available: ₹${this.user.balance}</p>
+                    
+                    <input type="number" id="with-amt" placeholder="Amount (Min ₹50)">
+                    <input type="text" id="with-upi" placeholder="Your UPI ID (e.g. name@upi)">
+                    
+                    <button class="btn-join" style="margin-top:20px; background:var(--gold);" onclick="app.submitWithdraw()">SUBMIT REQUEST</button>
+                `;
+            }
+        },
+
+        async initPayment() {
+            const amt = document.getElementById('dep-amt').value;
+            if(amt < 20) return alert("Min recharge ₹20");
+
+            const upiId = "yourname@okaxis"; // EDIT THIS
+            const upiUrl = `upi://pay?pa=${upiId}&pn=SQL-TOURNAMENT&am=${amt}&cu=INR`;
+            
+            window.location.href = upiUrl;
+
+            // Wait 2 sec then show UTR screen
+            setTimeout(() => {
+                document.getElementById('modal-content').innerHTML = `
+                    <div class="modal-close" onclick="closeModal()">&times;</div>
+                    <h3 style="text-align:center; color:var(--accent);">VERIFY PAYMENT</h3>
+                    <p style="font-size:0.7rem; color:#555; text-align:center; margin-bottom:15px;">Enter the 12-digit UTR/Ref No. from your app</p>
+                    
+                    <input type="number" id="utr-input" placeholder="Enter 12 Digit UTR Number">
+                    <button class="btn-join" style="margin-top:20px;" onclick="app.verifyDeposit('${amt}')">SUBMIT FOR VERIFICATION</button>
+                `;
+            }, 2000);
+        },
+
+        async verifyDeposit(amt) {
+            const utr = document.getElementById('utr-input').value;
+            if(utr.length < 10) return alert("Invalid UTR Number");
+
+            await addDoc(collection(db, "deposits"), {
+                phone: this.user.phone,
+                amount: parseFloat(amt),
+                utr: utr,
+                status: "pending",
+                timestamp: Date.now(),
+                userName: this.user.name
+            });
+
+            alert("Payment details submitted! Funds will be added within 30-60 minutes after manual verification.");
+            closeModal();
+        },
+
+        async submitWithdraw() {
+            const amt = parseFloat(document.getElementById('with-amt').value);
+            const upi = document.getElementById('with-upi').value;
+
+            if(amt < 50) return alert("Min withdrawal ₹50");
+            if(amt > this.user.balance) return alert("Insufficient Balance");
+            if(!upi.includes('@')) return alert("Enter valid UPI ID");
+
+            await updateDoc(doc(db, "users", this.user.phone), {
                 balance: increment(-amt)
             });
-            
-            // Withdrawal Request Save karein
+
             await addDoc(collection(db, "withdrawals"), {
-                user: currentUser.phone,
+                phone: this.user.phone,
                 amount: amt,
                 upi: upi,
                 status: "pending",
                 timestamp: Date.now()
             });
+
+            alert("Withdrawal request sent! Money will be credited within 24 hours.");
+            closeModal();
+        },
+
+        // --- AVATAR ENGINE ---
+        async handleAvatarUpload(input) {
+            if(!input.files || !input.files[0]) return;
+            alert("Uploading image... Please wait.");
             
-            alert("Withdrawal Request Sent!");
-            document.getElementById('wallet-modal').style.display = 'none';
-        } catch(e) {
-            alert("Error: " + e.message);
-        }
-    };
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", UPLOAD_PRESET);
 
-    // Payment Modal Functions
-    window.closeModal = () => document.getElementById('pay-modal').style.display = 'none';
-    
-    function openModalForPayment(amount) {
-        document.getElementById('pay-modal').style.display = 'flex';
-        document.getElementById('modal-amt').innerText = "₹" + amount;
-        document.getElementById('wallet-pay-btn-box').style.display = 'none'; // Deposit ke waqt wallet se pay nahi hota
-        document.getElementById('manual-pay-divider').style.display = 'none';
-        
-        // UPI Links update karein (Apna UPI ID dalein)
-        const myUPI = "yourupi@okaxis"; 
-        const link = `upi://pay?pa=${myUPI}&pn=SQLTournament&am=${amount}&cu=INR`;
-        
-        document.getElementById('g-link').href = link;
-        document.getElementById('p-link').href = link;
-        document.getElementById('y-link').href = link;
-    }
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+                const url = data.secure_url;
 
-    window.processPayment = async () => {
-        const utr = document.getElementById('utr-input').value;
-        if(utr.length < 10) return alert("Invalid UTR Number");
-        
-        // Request save karein admin check ke liye
-        await addDoc(collection(db, "deposits"), {
-            user: currentUser ? currentUser.phone : 'Guest',
-            utr: utr,
-            amount: document.getElementById('modal-amt').innerText.replace('₹',''),
-            status: "pending",
-            timestamp: Date.now()
-        });
-        
-        alert("Payment Submitted! Balance will update after Admin verifies.");
-        closeModal();
-    };
-
-    // --- HELPER FUNCTIONS ---
-    window.showRules = () => alert("1. No hacking.\n2. Do not team up.\n3. Decisions are final.");
-    
-    window.openHistoryModal = () => {
-        document.getElementById('history-list-modal').style.display = 'flex';
-        document.getElementById('hist-modal-content').innerHTML = "Loading history...";
-        // Yahan history fetch karne ka logic aayega
-    };
-
-    window.handleProfileUpdate = async (input) => {
-        if(input.files && input.files[0]) {
-            if(!currentUser) return;
-            alert("Uploading image...");
-            const url = await uploadToCloudinary(input.files[0]);
-            if(url) {
-                await updateDoc(doc(db, "users", currentUser.phone), { dpUrl: url });
-                alert("Profile Updated!");
-            } else {
-                alert("Upload Failed");
+                await updateDoc(doc(db, "users", this.user.phone), { dpUrl: url });
+                alert("Avatar Updated!");
+            } catch(e) {
+                alert("Upload failed. Try again.");
             }
+        },
+
+        logout() {
+            if(confirm("Are you sure you want to Logout?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        },
+
+        showPolicy() {
+            alert("FAIR PLAY RULES:\n1. No Emulators allowed.\n2. No hacking/scripting.\n3. Team-up leads to permanent ban.\n4. Admin decision is final.");
         }
     };
-    
-    // Initial Render
-    loadSession();
-    if(currentUser) startWalletSync(currentUser.phone);
-    renderUI();
+
+    // --- GLOBAL HELPERS ---
+    window.app = app;
+    window.toggleDrawer = (show) => {
+        document.getElementById('side-drawer').classList.toggle('open', show);
+    };
+    window.closeModal = () => {
+        document.getElementById('modal-overlay').style.display = 'none';
+    };
+
+    // START ENGINE
+    app.init();
 
 </script>
 </body>
-</html>
+    </html>
