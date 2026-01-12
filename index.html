@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>FREE FIRE TOURNAMENT PRO - ULTIMATE</title>
+    <title>SQL TOURNAMENT PRO - ULTIMATE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
@@ -895,9 +895,9 @@
 
     // --- CLOUDINARY UPLOAD ---
     async function uploadToCloudinary(file){
-        if(!file || !file.type.startsWith('image/')) return ""; // Validate file type
-        if(file.size > 5 * 1024 * 1024) return ""; // Image size limit 5MB
-
+        if(!file) return "";
+        if(file.size > 5 * 1024 * 1024) return ""; // 5MB limit
+        
         const fd = new FormData();
         fd.append("file", file);
         fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
@@ -1146,7 +1146,7 @@
                 <button class="w-act-btn" onclick="openWalletModal('add')"><i class="fas fa-plus-circle"></i> ADD CASH</button>  
                 <button class="w-act-btn" onclick="openWalletModal('with')"><i class="fas fa-paper-plane"></i> WITHDRAW</button>  
                 <button class="w-act-btn" onclick="showFundHistory()"><i class="fas fa-history"></i> HISTORY</button>  
-                <button class="w-act-btn" onclick="openActiveGamesModal()"><i class="fas fa-gamepad"></i> ACTIVE GAMES</button>  
+                <button class="w-act-btn" onclick="openActiveGamesModal()"><i class="fas fa-gamepad"></i> MY ACTIVE JOIN GAME</button>  
             </div>  
         </div>  
         `;  
@@ -1161,7 +1161,7 @@
         modal.id = 'active-games-modal';
         modal.innerHTML = `
             <div class="modal-ui">
-                <h3 style="color:var(--gold); text-align:center; margin-bottom:15px;">MY ACTIVE GAMES</h3>
+                <h3 style="color:var(--gold); text-align:center; margin-bottom:15px;">MY ACTIVE JOINS</h3>
                 <div id="active-games-content" style="font-size: 0.85rem;"></div>
                 <button onclick="document.getElementById('active-games-modal').remove()" style="width:100%; background:none; border:none; color:#555; margin-top:15px; cursor:pointer; font-weight: bold;">CLOSE</button>
             </div>
@@ -1380,4 +1380,125 @@
     };  
 
     window.setPkg = (amt, event) => {  
-        if
+        if(event) { // Only if event object is passed
+            document.querySelectorAll('.// ... pichla code yahan continue ho raha hai ...
+        const boxes = document.querySelectorAll('.pkg-box');
+        boxes.forEach(b => b.classList.remove('active'));
+        
+        if(event) {
+            event.target.classList.add('active');
+        }
+        
+        // Agar manual input box hai to wahan value set karein
+        const manualInput = document.getElementById('manual-amt');
+        if(manualInput) manualInput.value = amt;
+        
+        activeEntryFee = amt; // Temp variable store karne ke liye
+    };
+
+    // --- MISSING FUNCTIONS (Placeholder Logic) ---
+    
+    window.initWalletDeposit = () => {
+        const amt = document.getElementById('manual-amt').value;
+        if(!amt || amt < 10) return alert("Minimum deposit is ₹10");
+        // Yahan payment gateway logic aayega
+        openModalForPayment(amt);
+    };
+
+    window.submitWithdrawal = async () => {
+        if(!currentUser) return;
+        const amt = parseFloat(document.getElementById('with-amt').value);
+        const upi = document.getElementById('with-upi').value;
+
+        if(amt > currentUser.balance) return alert("Insufficient Balance");
+        if(amt < 50) return alert("Min withdrawal ₹50");
+        if(!upi.includes("@")) return alert("Invalid UPI ID");
+
+        try {
+            // Balance deduct karein
+            await updateDoc(doc(db, "users", currentUser.phone), {
+                balance: increment(-amt)
+            });
+            
+            // Withdrawal Request Save karein
+            await addDoc(collection(db, "withdrawals"), {
+                user: currentUser.phone,
+                amount: amt,
+                upi: upi,
+                status: "pending",
+                timestamp: Date.now()
+            });
+            
+            alert("Withdrawal Request Sent!");
+            document.getElementById('wallet-modal').style.display = 'none';
+        } catch(e) {
+            alert("Error: " + e.message);
+        }
+    };
+
+    // Payment Modal Functions
+    window.closeModal = () => document.getElementById('pay-modal').style.display = 'none';
+    
+    function openModalForPayment(amount) {
+        document.getElementById('pay-modal').style.display = 'flex';
+        document.getElementById('modal-amt').innerText = "₹" + amount;
+        document.getElementById('wallet-pay-btn-box').style.display = 'none'; // Deposit ke waqt wallet se pay nahi hota
+        document.getElementById('manual-pay-divider').style.display = 'none';
+        
+        // UPI Links update karein (Apna UPI ID dalein)
+        const myUPI = "yourupi@okaxis"; 
+        const link = `upi://pay?pa=${myUPI}&pn=SQLTournament&am=${amount}&cu=INR`;
+        
+        document.getElementById('g-link').href = link;
+        document.getElementById('p-link').href = link;
+        document.getElementById('y-link').href = link;
+    }
+
+    window.processPayment = async () => {
+        const utr = document.getElementById('utr-input').value;
+        if(utr.length < 10) return alert("Invalid UTR Number");
+        
+        // Request save karein admin check ke liye
+        await addDoc(collection(db, "deposits"), {
+            user: currentUser ? currentUser.phone : 'Guest',
+            utr: utr,
+            amount: document.getElementById('modal-amt').innerText.replace('₹',''),
+            status: "pending",
+            timestamp: Date.now()
+        });
+        
+        alert("Payment Submitted! Balance will update after Admin verifies.");
+        closeModal();
+    };
+
+    // --- HELPER FUNCTIONS ---
+    window.showRules = () => alert("1. No hacking.\n2. Do not team up.\n3. Decisions are final.");
+    
+    window.openHistoryModal = () => {
+        document.getElementById('history-list-modal').style.display = 'flex';
+        document.getElementById('hist-modal-content').innerHTML = "Loading history...";
+        // Yahan history fetch karne ka logic aayega
+    };
+
+    window.handleProfileUpdate = async (input) => {
+        if(input.files && input.files[0]) {
+            if(!currentUser) return;
+            alert("Uploading image...");
+            const url = await uploadToCloudinary(input.files[0]);
+            if(url) {
+                await updateDoc(doc(db, "users", currentUser.phone), { dpUrl: url });
+                alert("Profile Updated!");
+            } else {
+                alert("Upload Failed");
+            }
+        }
+    };
+    
+    // Initial Render
+    loadSession();
+    if(currentUser) startWalletSync(currentUser.phone);
+    renderUI();
+
+</script>
+</body>
+</html>
