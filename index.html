@@ -34,7 +34,7 @@
         .item div b { font-size:0.95rem; color:#fff; }
         .win-green { color: var(--accent); text-shadow: 0 0 5px rgba(0,255,136,0.5); }
         .entry-gold { color: var(--gold); }
-        .kill-red { color: #ff3366; }
+        .kill-red { color: #ff3366; text-shadow: 0 0 5px rgba(255,51,102,0.5); }
 
         .timer-box { background:#080808; padding:10px; text-align:center; border-top:1px solid #222; border-bottom:1px solid #222; }
         .countdown { font-family: monospace; font-size:1.2rem; color:var(--waiting); font-weight:900; letter-spacing:1px; }
@@ -242,7 +242,7 @@
 
 <div id="auth-modal" class="modal">
     <div class="modal-ui">
-        <div id="recaptcha-container" style="display:none;"></div>
+        <div id="recaptcha-container"></div>
         <h2 id="auth-title" style="color:var(--gold); text-align:center; margin-bottom:20px;">LOGIN</h2>
         
         <div id="auth-forms"></div>
@@ -250,8 +250,8 @@
         <p id="auth-toggle-msg" style="text-align:center; font-size:0.8rem; margin-top:15px; color:#888; cursor:pointer;" onclick="toggleAuthMode()">
             New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>
         </p>
-        <p id="auth-forgot-msg" style="text-align:center; font-size:0.8rem; margin-top:10px; color:#888; cursor:pointer;" onclick="currentAuthMode='forgot'; renderAuthForm()">
-            Forgot Account? <span style="color:var(--accent); font-weight:bold;">Recover with OTP</span>
+        <p id="auth-forgot-msg" style="text-align:center; font-size:0.8rem; margin-top:10px; color:#888; cursor:pointer;" onclick="startForgotFlow()">
+            Forgot Password? <span style="color:var(--accent); font-weight:bold;">Recover with OTP</span>
         </p>
         <button onclick="document.getElementById('auth-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#555; font-size:1.5rem;">&times;</button>
     </div>
@@ -286,7 +286,7 @@
     const auth = getAuth(app);
 
     let activeTab = 'live';
-    let currentAuthMode = 'login';
+    let currentAuthMode = 'login'; // login, register, forgot
     let activeMatchId = null;
     let activeEntryFee = 0;
     let currentResultIdForComments = null;
@@ -294,7 +294,7 @@
     let currentUserBal = 0;
     let confirmationResult = null;
     let recaptchaVerifier = null;
-    let tempRegisterData = {};
+    let tempData = {}; // for register name/gaming
     let verifiedPhone = null;
 
     async function uploadToCloudinary(file){
@@ -356,15 +356,14 @@
         }
     }
 
-    window.openAuthModal = (mode) => {
+    window.openAuthModal = (mode = 'login') => {
         document.getElementById('auth-modal').style.display = 'flex';
-        currentAuthMode = mode || 'login';
-        renderAuthForm();
+        currentAuthMode = mode;
+        tempData = {};
         verifiedPhone = null;
-        tempRegisterData = {};
-        document.getElementById('otp-section').style.display = 'none';
-        document.getElementById('password-section').style.display = 'none';
+        renderAuthForm();
 
+        if(recaptchaVerifier) recaptchaVerifier.clear();
         recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             size: 'invisible',
             callback: () => {}
@@ -374,6 +373,15 @@
 
     window.toggleAuthMode = () => {
         currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login';
+        tempData = {};
+        verifiedPhone = null;
+        renderAuthForm();
+    };
+
+    window.startForgotFlow = () => {
+        currentAuthMode = 'forgot';
+        tempData = {};
+        verifiedPhone = null;
         renderAuthForm();
     };
 
@@ -383,71 +391,62 @@
         const toggleMsg = document.getElementById('auth-toggle-msg');
         const forgotMsg = document.getElementById('auth-forgot-msg');
 
-        if(currentAuthMode === 'forgot'){
-            title.innerText = "ACCOUNT RECOVERY";
-            toggleMsg.style.display = 'none';
-            forgotMsg.style.display = 'none';
-        } else if(currentAuthMode === 'login'){
+        toggleMsg.style.display = (currentAuthMode === 'login' || currentAuthMode === 'register') ? 'block' : 'none';
+        forgotMsg.style.display = currentAuthMode === 'login' ? 'block' : 'none';
+
+        if(currentAuthMode === 'login'){
             title.innerText = "LOGIN WITH OTP";
-            toggleMsg.style.display = 'block';
-            forgotMsg.style.display = 'block';
             toggleMsg.innerHTML = `New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>`;
-        } else {
+        } else if(currentAuthMode === 'register'){
             title.innerText = "REGISTER WITH OTP";
-            toggleMsg.style.display = 'block';
-            forgotMsg.style.display = 'none';
             toggleMsg.innerHTML = `Already have account? <span style="color:var(--accent); font-weight:bold;">Login Here</span>`;
+        } else {
+            title.innerText = "RECOVER ACCOUNT";
         }
 
-        let formHTML = `
+        ui.innerHTML = `
             ${currentAuthMode === 'register' ? `
                 <input id="reg_name" type="text" placeholder="Full Name (Compulsory)">
                 <input id="reg_gaming" type="text" placeholder="Gaming UID/Name (Compulsory)">
             ` : ''}
-            <input id="auth_phone" type="number" placeholder="Phone Number (10 Digits)" maxlength="10">
-        `;
-
-        formHTML += `
-            <div id="otp-section" style="display:none; margin-top:15px;">
-                <input id="auth_otp" type="number" placeholder="Enter 6-Digit OTP" maxlength="6" style="text-align:center; letter-spacing:8px; font-size:1.2rem;">
+            <input id="auth_phone" type="number" placeholder="Phone Number (10 Digits)" oninput="this.value = this.value.slice(0,10)" maxlength="10">
+            
+            <div id="otp-section" style="display:none; margin-top:20px;">
+                <input id="auth_otp" type="number" placeholder="Enter 6-Digit OTP" maxlength="6" style="text-align:center; letter-spacing:10px; font-size:1.3rem;">
             </div>
             
-            <div id="password-section" style="display:none; margin-top:15px;">
-                <input id="new_password" type="password" placeholder="Create Password">
+            <div id="password-section" style="display:none; margin-top:20px;">
+                <input id="new_password" type="password" placeholder="Create New Password (Min 6 chars)">
                 <input id="confirm_password" type="password" placeholder="Confirm Password">
             </div>
             
-            <button id="send-otp-btn" class="btn-main btn-join" style="margin-top:15px;" onclick="sendOtp()">SEND OTP</button>
-            <button id="verify-otp-btn" class="btn-main btn-join" style="margin-top:15px; display:none;" onclick="verifyOtp()">VERIFY OTP</button>
-            <button id="set-password-btn" class="btn-main btn-join" style="margin-top:15px; display:none;" onclick="setPassword()">SET PASSWORD</button>
+            <button id="send-otp-btn" class="btn-main btn-join" onclick="sendOtp()">SEND OTP</button>
+            <button id="verify-otp-btn" class="btn-main btn-join" style="display:none;" onclick="verifyOtp()">VERIFY OTP</button>
+            <button id="complete-btn" class="btn-main btn-join" style="display:none;" onclick="completeRegistrationOrRecovery()">COMPLETE</button>
         `;
-
-        ui.innerHTML = formHTML;
     }
 
     window.sendOtp = async () => {
-        const phoneEl = document.getElementById('auth_phone');
-        const phone = phoneEl.value.trim();
+        const phone = document.getElementById('auth_phone').value.trim();
         if(phone.length !== 10) return alert("Enter valid 10-digit phone number");
 
         if(currentAuthMode === 'register'){
             const name = document.getElementById('reg_name')?.value.trim();
             const gaming = document.getElementById('reg_gaming')?.value.trim();
-            if(!name || !gaming) return alert("Please fill Full Name and Gaming UID/Name");
-            tempRegisterData = { name, gamingName: gaming, phone };
+            if(!name || !gaming) return alert("Fill Full Name and Gaming UID/Name");
+            tempData = { name, gamingName: gaming };
         }
 
         const fullPhone = '+91' + phone;
         try {
             confirmationResult = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifier);
-            document.getElementById('otp-section').style.display = 'block';
             document.getElementById('send-otp-btn').style.display = 'none';
+            document.getElementById('otp-section').style.display = 'block';
             document.getElementById('verify-otp-btn').style.display = 'block';
-            verifiedPhone = phone;
-            alert("OTP sent to your phone");
-        } catch(err){
+            alert("OTP sent successfully!");
+        } catch (err) {
             alert("Error sending OTP: " + err.message);
-            if(recaptchaVerifier) recaptchaVerifier.clear();
+            recaptchaVerifier.clear();
         }
     };
 
@@ -458,82 +457,59 @@
         try {
             const result = await confirmationResult.confirm(otp);
             const phone = result.user.phoneNumber.replace('+91', '');
-
-            if(verifiedPhone !== phone) return alert("Phone mismatch");
+            verifiedPhone = phone;
 
             const snap = await getDoc(doc(db, "users", phone));
-            let userData;
 
-            if(snap.exists()){
-                userData = { ...snap.data(), phone };
+            if(currentAuthMode === 'login'){
+                if(!snap.exists()) return alert("Phone not registered. Please register.");
+                const userData = { ...snap.data(), phone };
                 saveSession(userData);
                 startWalletSync(phone);
-                alert(currentAuthMode === 'forgot' ? "Account recovered! Please set new password." : "Login successful!");
-                if(currentAuthMode === 'forgot'){
-                    document.getElementById('password-section').style.display = 'block';
-                    document.getElementById('verify-otp-btn').style.display = 'none';
-                    document.getElementById('set-password-btn').style.display = 'block';
-                    document.getElementById('auth-title').innerText = "SET NEW PASSWORD";
-                } else {
-                    document.getElementById('auth-modal').style.display = 'none';
-                    renderUI();
-                }
+                alert("Login successful!");
+                document.getElementById('auth-modal').style.display = 'none';
+                renderUI();
             } else {
-                if(currentAuthMode === 'login' || currentAuthMode === 'forgot'){
-                    alert("Phone number not registered. Please register first.");
-                    await auth.signOut();
-                    return;
-                }
-                if(!tempRegisterData || tempRegisterData.phone !== phone){
-                    alert("Registration data missing");
-                    return;
-                }
-                // For new register, show password fields
-                document.getElementById('password-section').style.display = 'block';
+                // register or forgot
                 document.getElementById('verify-otp-btn').style.display = 'none';
-                document.getElementById('set-password-btn').style.display = 'block';
-                document.getElementById('auth-title').innerText = "CREATE PASSWORD";
-                alert("OTP verified! Now create your password.");
+                document.getElementById('otp-section').style.display = 'none';
+                document.getElementById('password-section').style.display = 'block';
+                document.getElementById('complete-btn').style.display = 'block';
+                document.getElementById('auth-title').innerText = currentAuthMode === 'register' ? "CREATE PASSWORD" : "SET NEW PASSWORD";
             }
-        } catch(err){
+        } catch (err) {
             alert("Invalid OTP: " + err.message);
         }
     };
 
-    window.setPassword = async () => {
-        const password = document.getElementById('new_password').value.trim();
-        const confirm = document.getElementById('confirm_password').value.trim();
+    window.completeRegistrationOrRecovery = async () => {
+        const password = document.getElementById('new_password').value;
+        const confirm = document.getElementById('confirm_password').value;
 
-        if(!password || password.length < 6) return alert("Password must be at least 6 characters");
+        if(password.length < 6) return alert("Password must be at least 6 characters");
         if(password !== confirm) return alert("Passwords do not match");
 
-        const phone = verifiedPhone;
         try {
-            let userData;
             if(currentAuthMode === 'register'){
-                if(!tempRegisterData || tempRegisterData.phone !== phone){
-                    alert("Registration data missing");
-                    return;
-                }
-                userData = {
-                    name: tempRegisterData.name,
-                    gamingName: tempRegisterData.gamingName,
-                    phone,
+                const userData = {
+                    name: tempData.name,
+                    gamingName: tempData.gamingName,
+                    phone: verifiedPhone,
                     password,
                     dpUrl: "", upiId: "", qrUrl: "",
                     balance: 0, totalProfit: 0, totalLoss: 0
                 };
-                await setDoc(doc(db, "users", phone), userData);
+                await setDoc(doc(db, "users", verifiedPhone), userData);
+                saveSession(userData);
+                startWalletSync(verifiedPhone);
                 alert("Registration successful!");
             } else if(currentAuthMode === 'forgot'){
-                await updateDoc(doc(db, "users", phone), { password });
-                alert("Password reset successful!");
+                await updateDoc(doc(db, "users", verifiedPhone), { password });
+                alert("Password reset successful! Now login with OTP.");
             }
-            saveSession(userData);
-            startWalletSync(phone);
             document.getElementById('auth-modal').style.display = 'none';
             renderUI();
-        } catch(err){
+        } catch (err) {
             alert("Error: " + err.message);
         }
     };
@@ -542,7 +518,6 @@
         if(confirm("Are you sure you want to Logout?")){
             if(confirm("Confirm Logout?")){
                 clearSession();
-                auth.signOut();
                 toggleMenu(false);
             }
         }
@@ -658,7 +633,7 @@
         }
 
         let freshUser = s;
-        try { const snap = await getDoc(doc(db,"users",s.phone)); if(snap.exists()){ freshUser={...snap.data(), phone: s.phone}; saveSession(freshUser); } } catch(e){}
+        try { const snap = await getDoc(doc(db,"users",s.phone)); if(snap.exists()){ freshUser = {...snap.data(), phone: s.phone}; saveSession(freshUser); } } catch(e){}
 
         let upiUi = '';
         if(freshUser.upiId && freshUser.upiId.length > 5){
@@ -833,7 +808,7 @@
         const url = await uploadToCloudinary(file);
         if(url){
             await updateDoc(doc(db,"users",s.phone), { qrUrl: url });
-            alert("QR Code updated! Admin can now pay you.");
+            alert("QR Code updated!");
             renderUI();
         }
     };
@@ -843,7 +818,7 @@
         if(!val) return alert("Enter valid UPI");
         const s = loadSession();
         await updateDoc(doc(db,"users",s.phone), { upiId: val });
-        alert("UPI ID Saved Securely.");
+        alert("UPI ID Saved.");
         renderUI();
     };
 
@@ -932,7 +907,6 @@
     window.closeCommentPage = () => {
         document.getElementById('comment-page').style.display = 'none';
         if(commentUnsub) commentUnsub();
-        currentResultIdForComments = null;
     };
 
     window.postRealComment = async () => {
@@ -964,11 +938,12 @@
         }
 
         const upiId = "7296976642-2@ibl";
-        const upi = `upi://pay?pa=${upiId}&am=${amt}&pn=SQL Tournament&cu=INR&tn=${mid === "ADD_FUND" ? "Add Fund" : "Match Join"}`; 
+        const upi = `upi://pay?pa=${upiId}&am=${amt}&pn=SQL Tournament&cu=INR`;
         document.getElementById('g-link').href = upi;
         document.getElementById('p-link').href = upi;
         document.getElementById('y-link').href = upi;
     };
+
     window.closeModal = () => document.getElementById('pay-modal').style.display = 'none';
 
     window.processPayment = async () => {
@@ -979,11 +954,11 @@
         btn.disabled = true; btn.innerText = "Uploading...";
         const s = loadSession();
         const ssUrl = await uploadToCloudinary(file);
-        if(!ssUrl){ btn.disabled=false; return alert("Upload failed."); }
+        if(!ssUrl) { btn.disabled = false; return alert("Upload failed."); }
         const payData = { matchId: activeMatchId, utr: utr, ss: ssUrl, userId: s.phone, userName: s.name, status: 'pending', timestamp: Date.now() };
         await addDoc(collection(db, "payments"), payData);
         localStorage.setItem(`pay_${activeMatchId}`, JSON.stringify(payData));
-        alert("Payment Submitted! Wait for Admin Approval.");
+        alert("Payment Submitted! Wait for Approval.");
         closeModal();
         btn.disabled = false; btn.innerText = "SUBMIT";
         renderUI();
@@ -991,20 +966,22 @@
 
     function checkStatusRealtime(mid, utr){
         const q = query(collection(db,"payments"), where("utr","==",utr));
-        onSnapshot(q, (s) => {
-            s.forEach(async (d) => {
+        onSnapshot(q, async (snap) => {
+            snap.forEach(async (d) => {
                 const data = d.data();
-                if(data.status === 'approved'){
-                    const old = JSON.parse(localStorage.getItem(`pay_${mid}`) || "{}");
-                    if(old.status !== 'approved'){
-                        old.status = 'approved';
-                        localStorage.setItem(`pay_${mid}`, JSON.stringify(old));
-                        renderUI();
+                const old = JSON.parse(localStorage.getItem(`pay_${mid}`) || "{}");
+                if(data.status === 'approved' && old.status !== 'approved'){
+                    localStorage.setItem(`pay_${mid}`, JSON.stringify({...old, status: 'approved'}));
+                    if(mid === "ADD_FUND"){
+                        // deposit already handled server side or admin
+                    } else {
+                        // auto increment joined for match
+                        const matchRef = doc(db, "matches", mid);
+                        await updateDoc(matchRef, { joined: increment(1) });
                     }
-                } else if(data.status === 'rejected'){
-                    const old = JSON.parse(localStorage.getItem(`pay_${mid}`) || "{}");
-                    old.status = 'rejected';
-                    localStorage.setItem(`pay_${mid}`, JSON.stringify(old));
+                    renderUI();
+                } else if(data.status === 'rejected' && old.status !== 'rejected'){
+                    localStorage.setItem(`pay_${mid}`, JSON.stringify({...old, status: 'rejected'}));
                     renderUI();
                 }
             });
@@ -1022,14 +999,12 @@
         const q = query(collection(db, "payments"), where("userId", "==", s.phone));
         const snap = await getDocs(q);
         
-        content.innerHTML = "";
         let list = [];
         snap.forEach(d => list.push(d.data()));
 
         list = list.filter(d => d.matchId === "ADD_FUND").sort((a,b) => b.timestamp - a.timestamp);
 
-        if(list.length === 0) content.innerHTML = "No deposit history found.";
-        
+        content.innerHTML = list.length === 0 ? "No deposit history." : "";
         list.forEach(data => {
             content.innerHTML += `
             <div style="border-bottom:1px solid #222; padding:10px 0;">
@@ -1053,14 +1028,12 @@
         const q = query(collection(db, "withdrawals"), where("userId", "==", s.phone));
         const snap = await getDocs(q);
         
-        content.innerHTML = "";
         let list = [];
         snap.forEach(d => list.push(d.data()));
         
         list.sort((a,b) => b.timestamp - a.timestamp);
 
-        if(list.length === 0) content.innerHTML = "No withdrawal history found.";
-        
+        content.innerHTML = list.length === 0 ? "No withdrawal history." : "";
         list.forEach(data => {
             content.innerHTML += `
             <div style="border-bottom:1px solid #222; padding:10px 0;">
@@ -1079,8 +1052,10 @@
             const diff = t - Date.now();
             if(diff <= 0) el.innerText = "LIVE NOW"; 
             else {
-                const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-                el.innerText = `${h.toString().padStart(2,'0')}h : ${m.toString().padStart(2,'0')}m : ${s.toString().padStart(2,'0')}s`;
+                const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                el.innerText = `${h}h : ${m}m : ${s}s`;
             }
         });
     }, 1000);
@@ -1094,4 +1069,4 @@
     renderUI();
 </script>
 </body>
-</html>
+            </html>
