@@ -295,6 +295,7 @@
     let confirmationResult = null;
     let recaptchaVerifier = null;
     let tempRegisterData = {};
+    let verifiedPhone = null;
 
     async function uploadToCloudinary(file){
         if(!file) return "";
@@ -359,6 +360,10 @@
         document.getElementById('auth-modal').style.display = 'flex';
         currentAuthMode = mode || 'login';
         renderAuthForm();
+        verifiedPhone = null;
+        tempRegisterData = {};
+        document.getElementById('otp-section').style.display = 'none';
+        document.getElementById('password-section').style.display = 'none';
 
         recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             size: 'invisible',
@@ -383,31 +388,41 @@
             toggleMsg.style.display = 'none';
             forgotMsg.style.display = 'none';
         } else if(currentAuthMode === 'login'){
-            title.innerText = "LOGIN";
+            title.innerText = "LOGIN WITH OTP";
             toggleMsg.style.display = 'block';
             forgotMsg.style.display = 'block';
             toggleMsg.innerHTML = `New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>`;
         } else {
-            title.innerText = "REGISTER";
+            title.innerText = "REGISTER WITH OTP";
             toggleMsg.style.display = 'block';
-            forgotMsg.style.display = 'block';
+            forgotMsg.style.display = 'none';
             toggleMsg.innerHTML = `Already have account? <span style="color:var(--accent); font-weight:bold;">Login Here</span>`;
         }
 
-        ui.innerHTML = `
+        let formHTML = `
             ${currentAuthMode === 'register' ? `
                 <input id="reg_name" type="text" placeholder="Full Name (Compulsory)">
                 <input id="reg_gaming" type="text" placeholder="Gaming UID/Name (Compulsory)">
             ` : ''}
             <input id="auth_phone" type="number" placeholder="Phone Number (10 Digits)" maxlength="10">
-            
+        `;
+
+        formHTML += `
             <div id="otp-section" style="display:none; margin-top:15px;">
                 <input id="auth_otp" type="number" placeholder="Enter 6-Digit OTP" maxlength="6" style="text-align:center; letter-spacing:8px; font-size:1.2rem;">
             </div>
             
+            <div id="password-section" style="display:none; margin-top:15px;">
+                <input id="new_password" type="password" placeholder="Create Password">
+                <input id="confirm_password" type="password" placeholder="Confirm Password">
+            </div>
+            
             <button id="send-otp-btn" class="btn-main btn-join" style="margin-top:15px;" onclick="sendOtp()">SEND OTP</button>
             <button id="verify-otp-btn" class="btn-main btn-join" style="margin-top:15px; display:none;" onclick="verifyOtp()">VERIFY OTP</button>
+            <button id="set-password-btn" class="btn-main btn-join" style="margin-top:15px; display:none;" onclick="setPassword()">SET PASSWORD</button>
         `;
+
+        ui.innerHTML = formHTML;
     }
 
     window.sendOtp = async () => {
@@ -428,6 +443,7 @@
             document.getElementById('otp-section').style.display = 'block';
             document.getElementById('send-otp-btn').style.display = 'none';
             document.getElementById('verify-otp-btn').style.display = 'block';
+            verifiedPhone = phone;
             alert("OTP sent to your phone");
         } catch(err){
             alert("Error sending OTP: " + err.message);
@@ -443,6 +459,8 @@
             const result = await confirmationResult.confirm(otp);
             const phone = result.user.phoneNumber.replace('+91', '');
 
+            if(verifiedPhone !== phone) return alert("Phone mismatch");
+
             const snap = await getDoc(doc(db, "users", phone));
             let userData;
 
@@ -450,7 +468,16 @@
                 userData = { ...snap.data(), phone };
                 saveSession(userData);
                 startWalletSync(phone);
-                alert(currentAuthMode === 'forgot' ? "Account recovered successfully!" : "Login successful!");
+                alert(currentAuthMode === 'forgot' ? "Account recovered! Please set new password." : "Login successful!");
+                if(currentAuthMode === 'forgot'){
+                    document.getElementById('password-section').style.display = 'block';
+                    document.getElementById('verify-otp-btn').style.display = 'none';
+                    document.getElementById('set-password-btn').style.display = 'block';
+                    document.getElementById('auth-title').innerText = "SET NEW PASSWORD";
+                } else {
+                    document.getElementById('auth-modal').style.display = 'none';
+                    renderUI();
+                }
             } else {
                 if(currentAuthMode === 'login' || currentAuthMode === 'forgot'){
                     alert("Phone number not registered. Please register first.");
@@ -461,23 +488,53 @@
                     alert("Registration data missing");
                     return;
                 }
+                // For new register, show password fields
+                document.getElementById('password-section').style.display = 'block';
+                document.getElementById('verify-otp-btn').style.display = 'none';
+                document.getElementById('set-password-btn').style.display = 'block';
+                document.getElementById('auth-title').innerText = "CREATE PASSWORD";
+                alert("OTP verified! Now create your password.");
+            }
+        } catch(err){
+            alert("Invalid OTP: " + err.message);
+        }
+    };
+
+    window.setPassword = async () => {
+        const password = document.getElementById('new_password').value.trim();
+        const confirm = document.getElementById('confirm_password').value.trim();
+
+        if(!password || password.length < 6) return alert("Password must be at least 6 characters");
+        if(password !== confirm) return alert("Passwords do not match");
+
+        const phone = verifiedPhone;
+        try {
+            let userData;
+            if(currentAuthMode === 'register'){
+                if(!tempRegisterData || tempRegisterData.phone !== phone){
+                    alert("Registration data missing");
+                    return;
+                }
                 userData = {
                     name: tempRegisterData.name,
                     gamingName: tempRegisterData.gamingName,
                     phone,
+                    password,
                     dpUrl: "", upiId: "", qrUrl: "",
                     balance: 0, totalProfit: 0, totalLoss: 0
                 };
                 await setDoc(doc(db, "users", phone), userData);
-                saveSession(userData);
-                startWalletSync(phone);
                 alert("Registration successful!");
+            } else if(currentAuthMode === 'forgot'){
+                await updateDoc(doc(db, "users", phone), { password });
+                alert("Password reset successful!");
             }
-
+            saveSession(userData);
+            startWalletSync(phone);
             document.getElementById('auth-modal').style.display = 'none';
             renderUI();
         } catch(err){
-            alert("Invalid OTP: " + err.message);
+            alert("Error: " + err.message);
         }
     };
 
