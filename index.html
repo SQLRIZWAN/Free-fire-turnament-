@@ -242,7 +242,6 @@
 
 <div id="auth-modal" class="modal">
     <div class="modal-ui">
-        <div id="recaptcha-container"></div>
         <h2 id="auth-title" style="color:var(--gold); text-align:center; margin-bottom:20px;">LOGIN</h2>
         
         <div id="auth-forms"></div>
@@ -251,7 +250,7 @@
             New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>
         </p>
         <p id="auth-forgot-msg" style="text-align:center; font-size:0.8rem; margin-top:10px; color:#888; cursor:pointer;" onclick="startForgotFlow()">
-            Forgot Password? <span style="color:var(--accent); font-weight:bold;">Recover with OTP</span>
+            Forgot Password? <span style="color:var(--accent); font-weight:bold;">Recover</span>
         </p>
         <button onclick="document.getElementById('auth-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#555; font-size:1.5rem;">&times;</button>
     </div>
@@ -266,10 +265,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
         getFirestore, collection, onSnapshot, addDoc, query, where,
-        orderBy, limit, getDocs, doc, setDoc, getDoc, updateDoc, increment, runTransaction, arrayUnion
+        orderBy, limit, getDocs, doc, setDoc, getDoc, updateDoc, increment, runTransaction
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -283,19 +281,16 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
     let activeTab = 'live';
-    let currentAuthMode = 'login'; // login, register, forgot
     let activeMatchId = null;
     let activeEntryFee = 0;
     let currentResultIdForComments = null;
     let commentUnsub = null;
     let currentUserBal = 0;
-    let confirmationResult = null;
-    let recaptchaVerifier = null;
-    let tempData = {}; // for register name/gaming
-    let verifiedPhone = null;
+
+    // Auth mode: 'login' | 'register' | 'forgot'
+    let currentAuthMode = 'login';
 
     async function uploadToCloudinary(file){
         if(!file) return "";
@@ -324,14 +319,18 @@
     }
 
     function startWalletSync(phone){
-        onSnapshot(doc(db, "users", phone), (docSnap) => {
-            if(docSnap.exists()){
-                const data = docSnap.data();
-                currentUserBal = data.balance || 0;
-                document.getElementById('menu-user-bal-side').innerText = `Bal: ₹${currentUserBal.toFixed(2)}`;
-                saveSession({...data, phone});
-            }
-        });
+        try {
+            onSnapshot(doc(db, "users", phone), (docSnap) => {
+                if(docSnap.exists()){
+                    const data = docSnap.data();
+                    currentUserBal = data.balance || 0;
+                    document.getElementById('menu-user-bal-side').innerText = `Bal: ₹${(currentUserBal).toFixed(2)}`;
+                    saveSession({...data, phone});
+                }
+            });
+        } catch (e) {
+            console.error("Wallet sync error:", e);
+        }
     }
 
     function updateMenuUI(){
@@ -359,29 +358,16 @@
     window.openAuthModal = (mode = 'login') => {
         document.getElementById('auth-modal').style.display = 'flex';
         currentAuthMode = mode;
-        tempData = {};
-        verifiedPhone = null;
         renderAuthForm();
-
-        if(recaptchaVerifier) recaptchaVerifier.clear();
-        recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: () => {}
-        });
-        recaptchaVerifier.render();
     };
 
     window.toggleAuthMode = () => {
         currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login';
-        tempData = {};
-        verifiedPhone = null;
         renderAuthForm();
     };
 
     window.startForgotFlow = () => {
         currentAuthMode = 'forgot';
-        tempData = {};
-        verifiedPhone = null;
         renderAuthForm();
     };
 
@@ -392,125 +378,125 @@
         const forgotMsg = document.getElementById('auth-forgot-msg');
 
         toggleMsg.style.display = (currentAuthMode === 'login' || currentAuthMode === 'register') ? 'block' : 'none';
-        forgotMsg.style.display = currentAuthMode === 'login' ? 'block' : 'none';
+        forgotMsg.style.display = currentAuthMode === 'login' ? 'block' : (currentAuthMode === 'forgot' ? 'none' : 'none');
 
         if(currentAuthMode === 'login'){
-            title.innerText = "LOGIN WITH OTP";
-            toggleMsg.innerHTML = `New user? <span style="color:var(--accent); font-weight:bold;">Register Here</span>`;
+            title.innerText = "LOGIN";
+            ui.innerHTML = `
+                <input id="auth_phone" type="number" placeholder="Phone Number (10 Digits)" oninput="this.value = this.value.slice(0,10)" maxlength="10">
+                <input id="login_password" type="password" placeholder="Password">
+                <button id="login-btn" class="btn-main btn-join" onclick="loginUser()">LOGIN</button>
+            `;
         } else if(currentAuthMode === 'register'){
-            title.innerText = "REGISTER WITH OTP";
-            toggleMsg.innerHTML = `Already have account? <span style="color:var(--accent); font-weight:bold;">Login Here</span>`;
+            title.innerText = "REGISTER";
+            ui.innerHTML = `
+                <input id="reg_username" type="text" placeholder="Full Name / Username (Compulsory)">
+                <input id="reg_phone" type="number" placeholder="Phone Number (10 Digits)" oninput="this.value = this.value.slice(0,10)" maxlength="10">
+                <input id="reg_uid" type="text" placeholder="Gaming UID (Compulsory)">
+                <input id="reg_gamingname" type="text" placeholder="Gaming Name (Compulsory)">
+                <input id="reg_password" type="password" placeholder="Create Password (Min 6 chars)">
+                <input id="reg_confirm" type="password" placeholder="Confirm Password">
+                <button id="register-btn" class="btn-main btn-join" onclick="registerUser()">REGISTER</button>
+            `;
         } else {
             title.innerText = "RECOVER ACCOUNT";
+            ui.innerHTML = `
+                <input id="rec_phone" type="number" placeholder="Phone Number (10 Digits)" oninput="this.value = this.value.slice(0,10)" maxlength="10">
+                <input id="rec_password" type="password" placeholder="New Password (Min 6 chars)">
+                <input id="rec_confirm" type="password" placeholder="Confirm Password">
+                <button id="recover-btn" class="btn-main btn-join" onclick="recoverPassword()">RESET PASSWORD</button>
+            `;
         }
-
-        ui.innerHTML = `
-            ${currentAuthMode === 'register' ? `
-                <input id="reg_name" type="text" placeholder="Full Name (Compulsory)">
-                <input id="reg_gaming" type="text" placeholder="Gaming UID/Name (Compulsory)">
-            ` : ''}
-            <input id="auth_phone" type="number" placeholder="Phone Number (10 Digits)" oninput="this.value = this.value.slice(0,10)" maxlength="10">
-            
-            <div id="otp-section" style="display:none; margin-top:20px;">
-                <input id="auth_otp" type="number" placeholder="Enter 6-Digit OTP" maxlength="6" style="text-align:center; letter-spacing:10px; font-size:1.3rem;">
-            </div>
-            
-            <div id="password-section" style="display:none; margin-top:20px;">
-                <input id="new_password" type="password" placeholder="Create New Password (Min 6 chars)">
-                <input id="confirm_password" type="password" placeholder="Confirm Password">
-            </div>
-            
-            <button id="send-otp-btn" class="btn-main btn-join" onclick="sendOtp()">SEND OTP</button>
-            <button id="verify-otp-btn" class="btn-main btn-join" style="display:none;" onclick="verifyOtp()">VERIFY OTP</button>
-            <button id="complete-btn" class="btn-main btn-join" style="display:none;" onclick="completeRegistrationOrRecovery()">COMPLETE</button>
-        `;
     }
 
-    window.sendOtp = async () => {
-        const phone = document.getElementById('auth_phone').value.trim();
+    window.registerUser = async () => {
+        const name = document.getElementById('reg_username').value.trim();
+        const phone = document.getElementById('reg_phone').value.trim();
+        const uid = document.getElementById('reg_uid').value.trim();
+        const gname = document.getElementById('reg_gamingname').value.trim();
+        const password = document.getElementById('reg_password').value;
+        const confirm = document.getElementById('reg_confirm').value;
+
+        if(!name) return alert("Enter full name / username");
         if(phone.length !== 10) return alert("Enter valid 10-digit phone number");
-
-        if(currentAuthMode === 'register'){
-            const name = document.getElementById('reg_name')?.value.trim();
-            const gaming = document.getElementById('reg_gaming')?.value.trim();
-            if(!name || !gaming) return alert("Fill Full Name and Gaming UID/Name");
-            tempData = { name, gamingName: gaming };
-        }
-
-        const fullPhone = '+91' + phone;
-        try {
-            confirmationResult = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifier);
-            document.getElementById('send-otp-btn').style.display = 'none';
-            document.getElementById('otp-section').style.display = 'block';
-            document.getElementById('verify-otp-btn').style.display = 'block';
-            alert("OTP sent successfully!");
-        } catch (err) {
-            alert("Error sending OTP: " + err.message);
-            recaptchaVerifier.clear();
-        }
-    };
-
-    window.verifyOtp = async () => {
-        const otp = document.getElementById('auth_otp').value.trim();
-        if(otp.length !== 6) return alert("Enter valid 6-digit OTP");
-
-        try {
-            const result = await confirmationResult.confirm(otp);
-            const phone = result.user.phoneNumber.replace('+91', '');
-            verifiedPhone = phone;
-
-            const snap = await getDoc(doc(db, "users", phone));
-
-            if(currentAuthMode === 'login'){
-                if(!snap.exists()) return alert("Phone not registered. Please register.");
-                const userData = { ...snap.data(), phone };
-                saveSession(userData);
-                startWalletSync(phone);
-                alert("Login successful!");
-                document.getElementById('auth-modal').style.display = 'none';
-                renderUI();
-            } else {
-                // register or forgot
-                document.getElementById('verify-otp-btn').style.display = 'none';
-                document.getElementById('otp-section').style.display = 'none';
-                document.getElementById('password-section').style.display = 'block';
-                document.getElementById('complete-btn').style.display = 'block';
-                document.getElementById('auth-title').innerText = currentAuthMode === 'register' ? "CREATE PASSWORD" : "SET NEW PASSWORD";
-            }
-        } catch (err) {
-            alert("Invalid OTP: " + err.message);
-        }
-    };
-
-    window.completeRegistrationOrRecovery = async () => {
-        const password = document.getElementById('new_password').value;
-        const confirm = document.getElementById('confirm_password').value;
-
+        if(!uid) return alert("Enter Gaming UID");
+        if(!gname) return alert("Enter Gaming Name");
         if(password.length < 6) return alert("Password must be at least 6 characters");
         if(password !== confirm) return alert("Passwords do not match");
 
         try {
-            if(currentAuthMode === 'register'){
-                const userData = {
-                    name: tempData.name,
-                    gamingName: tempData.gamingName,
-                    phone: verifiedPhone,
-                    password,
-                    dpUrl: "", upiId: "", qrUrl: "",
-                    balance: 0, totalProfit: 0, totalLoss: 0
-                };
-                await setDoc(doc(db, "users", verifiedPhone), userData);
-                saveSession(userData);
-                startWalletSync(verifiedPhone);
-                alert("Registration successful!");
-            } else if(currentAuthMode === 'forgot'){
-                await updateDoc(doc(db, "users", verifiedPhone), { password });
-                alert("Password reset successful! Now login with OTP.");
-            }
+            const userRef = doc(db, "users", phone);
+            const snap = await getDoc(userRef);
+            if(snap.exists()) return alert("Phone already registered. Please login.");
+
+            const userData = {
+                name: name,
+                phone: phone,
+                username: name,
+                gamingUid: uid,
+                gamingName: gname,
+                password: password,
+                dpUrl: "", upiId: "", qrUrl: "",
+                balance: 0, totalProfit: 0, totalLoss: 0,
+                createdAt: Date.now()
+            };
+            await setDoc(userRef, userData);
+            saveSession(userData);
+            startWalletSync(phone);
+            alert("Registration successful!");
             document.getElementById('auth-modal').style.display = 'none';
             renderUI();
         } catch (err) {
-            alert("Error: " + err.message);
+            console.error(err);
+            alert("Error: " + (err.message || err));
+        }
+    };
+
+    window.loginUser = async () => {
+        const phone = document.getElementById('auth_phone').value.trim();
+        const password = document.getElementById('login_password').value;
+
+        if(phone.length !== 10) return alert("Enter valid 10-digit phone number");
+        if(!password) return alert("Enter password");
+
+        try {
+            const userRef = doc(db, "users", phone);
+            const snap = await getDoc(userRef);
+            if(!snap.exists()) return alert("Phone not registered. Please register first.");
+            const data = snap.data();
+            if(data.password !== password) return alert("Incorrect password");
+            const userData = {...data, phone};
+            saveSession(userData);
+            startWalletSync(phone);
+            alert("Login successful!");
+            document.getElementById('auth-modal').style.display = 'none';
+            renderUI();
+        } catch (err) {
+            console.error(err);
+            alert("Error: " + (err.message || err));
+        }
+    };
+
+    window.recoverPassword = async () => {
+        const phone = document.getElementById('rec_phone').value.trim();
+        const password = document.getElementById('rec_password').value;
+        const confirm = document.getElementById('rec_confirm').value;
+
+        if(phone.length !== 10) return alert("Enter valid 10-digit phone number");
+        if(password.length < 6) return alert("Password must be at least 6 characters");
+        if(password !== confirm) return alert("Passwords do not match");
+
+        try {
+            const userRef = doc(db, "users", phone);
+            const snap = await getDoc(userRef);
+            if(!snap.exists()) return alert("Phone not registered.");
+            await updateDoc(userRef, { password });
+            alert("Password reset successful! Please login.");
+            currentAuthMode = 'login';
+            renderAuthForm();
+        } catch (err) {
+            console.error(err);
+            alert("Error: " + (err.message || err));
         }
     };
 
@@ -540,85 +526,90 @@
     }
 
     function renderLiveMatches(container){
-        onSnapshot(collection(db, "matches"), (snap) => {
-            if(activeTab !== 'live') return;
-            container.innerHTML = "";
-            const matches = [];
-            snap.forEach(d => matches.push({id: d.id, ...d.data()}));
-            
-            matches.sort((a,b) => a.startTime - b.startTime);
-
-            matches.forEach(m => {
-                const now = Date.now();
-                const start = m.startTime || 0;
-                const isStarted = now > start;
-                const isFull = (m.joined||0) >= (m.total||48);
+        try {
+            onSnapshot(collection(db, "matches"), (snap) => {
+                if(activeTab !== 'live') return;
+                container.innerHTML = "";
+                const matches = [];
+                snap.forEach(d => matches.push({id: d.id, ...d.data()}));
                 
-                const fill = Math.min(100, ((m.joined||0)/(m.total||48))*100);
+                matches.sort((a,b) => a.startTime - b.startTime);
 
-                const myRec = JSON.parse(localStorage.getItem(`pay_${m.id}`) || "null");
-                let btnHTML = "";
-                let roomHTML = "";
+                matches.forEach(m => {
+                    const now = Date.now();
+                    const start = m.startTime || 0;
+                    const isStarted = now > start;
+                    const isFull = (m.joined||0) >= (m.total||48);
+                    
+                    const fill = Math.min(100, ((m.joined||0)/(m.total||48))*100);
 
-                if(myRec){
-                    if(myRec.status === 'approved' || (m.approvedUtrs && m.approvedUtrs.includes(myRec.utr))){
-                        if(isStarted){
-                            roomHTML = `
-                            <div class="room-box">
-                                <h4>✅ MATCH STARTED</h4>
-                                <div class="room-data">
-                                    <div><span>ID</span><b>${m.roomId}</b></div>
-                                    <div><span>PASS</span><b>${m.password}</b></div>
-                                </div>
-                                <div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Check Free Fire Custom Room</div>
-                            </div>`;
-                            btnHTML = `<button class="btn-main btn-dis">GOOD LUCK</button>`;
+                    const myRec = JSON.parse(localStorage.getItem(`pay_${m.id}`) || "null");
+                    let btnHTML = "";
+                    let roomHTML = "";
+
+                    if(myRec){
+                        if(myRec.status === 'approved' || (m.approvedUtrs && m.approvedUtrs.includes(myRec.utr))){
+                            if(isStarted){
+                                roomHTML = `
+                                <div class="room-box">
+                                    <h4>✅ MATCH STARTED</h4>
+                                    <div class="room-data">
+                                        <div><span>ID</span><b>${m.roomId}</b></div>
+                                        <div><span>PASS</span><b>${m.password}</b></div>
+                                    </div>
+                                    <div style="font-size:0.7rem; color:#aaa; margin-top:5px;">Check Free Fire Custom Room</div>
+                                </div>`;
+                                btnHTML = `<button class="btn-main btn-dis">GOOD LUCK</button>`;
+                            } else {
+                                roomHTML = `
+                                <div class="room-box">
+                                    <h4>✅ YOU ARE JOINED</h4>
+                                    <div class="room-data">
+                                        <div><span>ID</span><b>${m.roomId || 'Wait...'}</b></div>
+                                        <div><span>PASS</span><b>${m.password || 'Wait...'}</b></div>
+                                    </div>
+                                </div>`;
+                                btnHTML = `<button class="btn-main btn-dis">JOINED</button>`;
+                            }
+                        } else if(myRec.status === 'rejected') {
+                            btnHTML = `<button class="btn-main" style="background:var(--red); cursor:not-allowed;">PAYMENT REJECTED</button>`;
                         } else {
-                            roomHTML = `
-                            <div class="room-box">
-                                <h4>✅ YOU ARE JOINED</h4>
-                                <div class="room-data">
-                                    <div><span>ID</span><b>${m.roomId || 'Wait...'}</b></div>
-                                    <div><span>PASS</span><b>${m.password || 'Wait...'}</b></div>
-                                </div>
-                            </div>`;
-                            btnHTML = `<button class="btn-main btn-dis">JOINED</button>`;
+                            checkStatusRealtime(m.id, myRec.utr);
+                            btnHTML = `<button class="btn-main btn-dis" style="color:var(--waiting);">VERIFYING PAYMENT...</button>`;
                         }
-                    } else if(myRec.status === 'rejected') {
-                        btnHTML = `<button class="btn-main" style="background:var(--red); cursor:not-allowed;">PAYMENT REJECTED</button>`;
                     } else {
-                        checkStatusRealtime(m.id, myRec.utr);
-                        btnHTML = `<button class="btn-main btn-dis" style="color:var(--waiting);">VERIFYING PAYMENT...</button>`;
+                        if(isStarted) btnHTML = `<button class="btn-main btn-dis">MATCH STARTED</button>`;
+                        else if(isFull) btnHTML = `<button class="btn-main btn-dis">HOUSE FULL</button>`;
+                        else btnHTML = `<button class="btn-main btn-join" onclick="initPayment('${m.id}', ${m.entry})">JOIN NOW ₹${m.entry}</button>`;
                     }
-                } else {
-                    if(isStarted) btnHTML = `<button class="btn-main btn-dis">MATCH STARTED</button>`;
-                    else if(isFull) btnHTML = `<button class="btn-main btn-dis">HOUSE FULL</button>`;
-                    else btnHTML = `<button class="btn-main btn-join" onclick="initPayment('${m.id}', ${m.entry})">JOIN NOW ₹${m.entry}</button>`;
-                }
 
-                const html = `
-                <div class="card">
-                    <div class="m-tag">${m.map}</div>
-                    <div class="card-body">
-                        <div class="item"><i class="fas fa-crosshairs"></i><div><span>Mode</span><b>${m.type}</b></div></div>
-                        <div class="item"><i class="fas fa-trophy"></i><div><span>Bhaiya Price</span><b class="win-green">₹${m.win}</b></div></div>
-                        <div class="item"><i class="fas fa-skull-crossbones"></i><div><span>Kill Price</span><b class="kill-red">₹${m.killPrice || 'N/A'}</b></div></div>
-                        <div class="item"><i class="fas fa-ticket-alt"></i><div><span>Entry</span><b class="entry-gold">₹${m.entry}</b></div></div>
-                        <div class="item"><i class="fas fa-clock"></i><div><span>Time</span><b>${new Date(start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>
-                    </div>
-                    <div class="timer-box">
-                        <div class="countdown" data-time="${start}">00:00:00</div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="slots"><span>Joined: ${m.joined||0}/${m.total||48}</span><span style="color:var(--waiting)">Left: ${(m.total||48)-(m.joined||0)}</span></div>
-                        <div class="bar"><div class="fill" style="width:${fill}%"></div></div>
-                        ${roomHTML}
-                        ${btnHTML}
-                    </div>
-                </div>`;
-                container.innerHTML += html;
+                    const html = `
+                    <div class="card">
+                        <div class="m-tag">${m.map}</div>
+                        <div class="card-body">
+                            <div class="item"><i class="fas fa-crosshairs"></i><div><span>Mode</span><b>${m.type}</b></div></div>
+                            <div class="item"><i class="fas fa-trophy"></i><div><span>Bhaiya Price</span><b class="win-green">₹${m.win}</b></div></div>
+                            <div class="item"><i class="fas fa-skull-crossbones"></i><div><span>Kill Price</span><b class="kill-red">₹${m.killPrice || 'N/A'}</b></div></div>
+                            <div class="item"><i class="fas fa-ticket-alt"></i><div><span>Entry</span><b class="entry-gold">₹${m.entry}</b></div></div>
+                            <div class="item"><i class="fas fa-clock"></i><div><span>Time</span><b>${new Date(start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b></div></div>
+                        </div>
+                        <div class="timer-box">
+                            <div class="countdown" data-time="${start}">00:00:00</div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="slots"><span>Joined: ${m.joined||0}/${m.total||48}</span><span style="color:var(--waiting)">Left: ${(m.total||48)-(m.joined||0)}</span></div>
+                            <div class="bar"><div class="fill" style="width:${fill}%"></div></div>
+                            ${roomHTML}
+                            ${btnHTML}
+                        </div>
+                    </div>`;
+                    container.innerHTML += html;
+                });
             });
-        });
+        } catch (e) {
+            console.error("renderLiveMatches error:", e);
+            container.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>Unable to load matches.</div>";
+        }
     }
 
     window.renderHistory = async (c) => {
@@ -761,8 +752,8 @@
                         totalLoss: increment(activeEntryFee)
                     });
 
-                    const payRef = doc(collection(db, "payments"));
-                    transaction.set(payRef, {
+                    const payRef = collection(db, "payments");
+                    await addDoc(payRef, {
                         matchId: activeMatchId, utr: "WALLET_PAY_" + Date.now(),
                         userId: s.phone, userName: s.name, status: 'approved', timestamp: Date.now(), ss: 'WALLET'
                     });
@@ -824,66 +815,76 @@
 
     function renderResults(container){
         container.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>Loading results...</div>";
-        const q = query(collection(db, "results"), orderBy("timestamp", "desc"), limit(20));
+        try {
+            const q = query(collection(db, "results"), orderBy("timestamp", "desc"), limit(20));
 
-        onSnapshot(q, (snap) => {
-            container.innerHTML = "";
-            if(snap.empty){
-                container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--waiting);">Results Coming Soon...</div>`;
-                return;
-            }
-
-            snap.forEach((d) => {
-                const r = d.data();
-                const rid = d.id;
-
-                let winnerHTML = "";
-                if(r.winnerName){
-                    winnerHTML = `
-                    <div class="winner-box">
-                        <div class="winner-row"><span style="color:var(--muted)">WINNER</span><b style="color:var(--accent)">${r.winnerName}</b></div>
-                        <div class="winner-row"><span style="color:var(--muted)">UID</span><b class="allow-select">${r.winnerUid||'--'}</b></div>
-                        ${r.winnerPhone ? `<div class="winner-row"><span style="color:var(--muted)">PHONE</span><b class="allow-select">${r.winnerPhone}</b></div>` : ''}
-                        ${r.runnerName ? `<div class="winner-row"><span style="color:var(--muted)">OPPONENT</span><b>${r.runnerName}</b></div>` : ''}
-                    </div>`;
+            onSnapshot(q, (snap) => {
+                container.innerHTML = "";
+                if(snap.empty){
+                    container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--waiting);">Results Coming Soon...</div>`;
+                    return;
                 }
 
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <div class="r-head">
-                        <span style="font-weight:bold; color:#fff;">${r.title || 'Tournament Result'}</span>
-                        <span style="font-size:0.7rem; color:#666;">${new Date(r.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    ${r.image ? `<img src="${r.image}" class="r-img" onclick="viewPaymentSS('${r.image}')">` : ''}
-                    <div class="r-body">
-                        ${winnerHTML}
-                        <p style="font-size:0.85rem; color:#ccc; margin-top:5px;">${r.message || ''}</p>
-                    </div>
-                    <div class="r-actions">
-                        <button class="act-btn" id="btn-like-${rid}" onclick="doLike('${rid}')">
-                            <i class="fas fa-thumbs-up"></i> <span>${r.likes || 0}</span>
-                        </button>
-                        <button class="act-btn" onclick="openCommentPage('${rid}')">
-                            <i class="fas fa-comment"></i> Comment
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
+                snap.forEach((d) => {
+                    const r = d.data();
+                    const rid = d.id;
+
+                    let winnerHTML = "";
+                    if(r.winnerName){
+                        winnerHTML = `
+                        <div class="winner-box">
+                            <div class="winner-row"><span style="color:var(--muted)">WINNER</span><b style="color:var(--accent)">${r.winnerName}</b></div>
+                            <div class="winner-row"><span style="color:var(--muted)">UID</span><b class="allow-select">${r.winnerUid||'--'}</b></div>
+                            ${r.winnerPhone ? `<div class="winner-row"><span style="color:var(--muted)">PHONE</span><b class="allow-select">${r.winnerPhone}</b></div>` : ''}
+                            ${r.runnerName ? `<div class="winner-row"><span style="color:var(--muted)">OPPONENT</span><b>${r.runnerName}</b></div>` : ''}
+                        </div>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    card.innerHTML = `
+                        <div class="r-head">
+                            <span style="font-weight:bold; color:#fff;">${r.title || 'Tournament Result'}</span>
+                            <span style="font-size:0.7rem; color:#666;">${new Date(r.timestamp).toLocaleDateString()}</span>
+                        </div>
+                        ${r.image ? `<img src="${r.image}" class="r-img" onclick="viewPaymentSS('${r.image}')">` : ''}
+                        <div class="r-body">
+                            ${winnerHTML}
+                            <p style="font-size:0.85rem; color:#ccc; margin-top:5px;">${r.message || ''}</p>
+                        </div>
+                        <div class="r-actions">
+                            <button class="act-btn" id="btn-like-${rid}" onclick="doLike('${rid}')">
+                                <i class="fas fa-thumbs-up"></i> <span>${r.likes || 0}</span>
+                            </button>
+                            <button class="act-btn" onclick="openCommentPage('${rid}')">
+                                <i class="fas fa-comment"></i> Comment
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
             });
-        });
+        } catch (e) {
+            console.error("renderResults error:", e);
+            container.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>Unable to load results.</div>";
+        }
     }
 
     window.doLike = async (rid) => {
         const s = loadSession();
         if(!s) return alert("Please Login to Like.");
-        const likeRef = doc(db, "results", rid, "user_likes", s.phone);
-        const likeSnap = await getDoc(likeRef);
-        if(likeSnap.exists()) return alert("You already liked this!");
-        await setDoc(likeRef, { time: Date.now() });
-        await updateDoc(doc(db, "results", rid), { likes: increment(1) });
-        const span = document.querySelector(`#btn-like-${rid} span`);
-        if(span) span.innerText = parseInt(span.innerText) + 1;
+        try {
+            const likeRef = doc(db, "results", rid, "user_likes", s.phone);
+            const likeSnap = await getDoc(likeRef);
+            if(likeSnap.exists()) return alert("You already liked this!");
+            await setDoc(likeRef, { time: Date.now() });
+            await updateDoc(doc(db, "results", rid), { likes: increment(1) });
+            const span = document.querySelector(`#btn-like-${rid} span`);
+            if(span) span.innerText = parseInt(span.innerText) + 1;
+        } catch (e) {
+            console.error(e);
+            alert("Error liking.");
+        }
     };
 
     window.openCommentPage = (rid) => {
@@ -892,16 +893,21 @@
         const list = document.getElementById('cp-list');
         page.style.display = 'flex';
         list.innerHTML = "<div style='text-align:center; margin-top:20px; color:#666;'>Loading comments...</div>";
-        const q = query(collection(db, "result_comments"), where("resultId","==",rid), orderBy("time","asc"));
-        commentUnsub = onSnapshot(q, (snap) => {
-            list.innerHTML = "";
-            snap.forEach(d => {
-                const c = d.data();
-                list.innerHTML += `<div class="cp-item"><img src="${c.dp || 'https://img.icons8.com/color/48/user-male-circle.png'}" class="cp-dp"><div class="cp-box"><span class="cp-name">${c.name}</span><span class="cp-text">${c.text}</span></div></div>`;
+        try {
+            const q = query(collection(db, "result_comments"), where("resultId","==",rid), orderBy("time","asc"));
+            commentUnsub = onSnapshot(q, (snap) => {
+                list.innerHTML = "";
+                snap.forEach(d => {
+                    const c = d.data();
+                    list.innerHTML += `<div class="cp-item"><img src="${c.dp || 'https://img.icons8.com/color/48/user-male-circle.png'}" class="cp-dp"><div class="cp-box"><span class="cp-name">${c.name}</span><span class="cp-text">${c.text}</span></div></div>`;
+                });
+                if(snap.empty) list.innerHTML = "<div style='text-align:center; margin-top:50px; color:#444;'>No comments yet.</div>";
+                list.scrollTop = list.scrollHeight;
             });
-            if(snap.empty) list.innerHTML = "<div style='text-align:center; margin-top:50px; color:#444;'>No comments yet.</div>";
-            list.scrollTop = list.scrollHeight;
-        });
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = "<div style='text-align:center; margin-top:50px; color:#444;'>Unable to load comments.</div>";
+        }
     };
 
     window.closeCommentPage = () => {
@@ -955,7 +961,7 @@
         const s = loadSession();
         const ssUrl = await uploadToCloudinary(file);
         if(!ssUrl) { btn.disabled = false; return alert("Upload failed."); }
-        const payData = { matchId: activeMatchId, utr: utr, ss: ssUrl, userId: s.phone, userName: s.name, status: 'pending', timestamp: Date.now() };
+        const payData = { matchId: activeMatchId, utr: utr, ss: ssUrl, userId: s.phone, userName: s.name, status: 'pending', timestamp: Date.now(), amount: activeEntryFee };
         await addDoc(collection(db, "payments"), payData);
         localStorage.setItem(`pay_${activeMatchId}`, JSON.stringify(payData));
         alert("Payment Submitted! Wait for Approval.");
@@ -965,27 +971,30 @@
     };
 
     function checkStatusRealtime(mid, utr){
-        const q = query(collection(db,"payments"), where("utr","==",utr));
-        onSnapshot(q, async (snap) => {
-            snap.forEach(async (d) => {
-                const data = d.data();
-                const old = JSON.parse(localStorage.getItem(`pay_${mid}`) || "{}");
-                if(data.status === 'approved' && old.status !== 'approved'){
-                    localStorage.setItem(`pay_${mid}`, JSON.stringify({...old, status: 'approved'}));
-                    if(mid === "ADD_FUND"){
-                        // deposit already handled server side or admin
-                    } else {
-                        // auto increment joined for match
-                        const matchRef = doc(db, "matches", mid);
-                        await updateDoc(matchRef, { joined: increment(1) });
+        try {
+            const q = query(collection(db,"payments"), where("utr","==",utr));
+            onSnapshot(q, async (snap) => {
+                snap.forEach(async (d) => {
+                    const data = d.data();
+                    const old = JSON.parse(localStorage.getItem(`pay_${mid}`) || "{}");
+                    if(data.status === 'approved' && old.status !== 'approved'){
+                        localStorage.setItem(`pay_${mid}`, JSON.stringify({...old, status: 'approved'}));
+                        if(mid === "ADD_FUND"){
+                            // deposit already handled server side or admin
+                        } else {
+                            const matchRef = doc(db, "matches", mid);
+                            await updateDoc(matchRef, { joined: increment(1) });
+                        }
+                        renderUI();
+                    } else if(data.status === 'rejected' && old.status !== 'rejected'){
+                        localStorage.setItem(`pay_${mid}`, JSON.stringify({...old, status: 'rejected'}));
+                        renderUI();
                     }
-                    renderUI();
-                } else if(data.status === 'rejected' && old.status !== 'rejected'){
-                    localStorage.setItem(`pay_${mid}`, JSON.stringify({...old, status: 'rejected'}));
-                    renderUI();
-                }
+                });
             });
-        });
+        } catch (e) {
+            console.error("checkStatusRealtime error:", e);
+        }
     }
 
     window.showFundHistory = async () => {
@@ -996,25 +1005,30 @@
         content.innerHTML = "Loading...";
         modal.style.display = 'flex';
 
-        const q = query(collection(db, "payments"), where("userId", "==", s.phone));
-        const snap = await getDocs(q);
-        
-        let list = [];
-        snap.forEach(d => list.push(d.data()));
+        try {
+            const q = query(collection(db, "payments"), where("userId", "==", s.phone));
+            const snap = await getDocs(q);
+            
+            let list = [];
+            snap.forEach(d => list.push(d.data()));
 
-        list = list.filter(d => d.matchId === "ADD_FUND").sort((a,b) => b.timestamp - a.timestamp);
+            list = list.filter(d => d.matchId === "ADD_FUND").sort((a,b) => b.timestamp - a.timestamp);
 
-        content.innerHTML = list.length === 0 ? "No deposit history." : "";
-        list.forEach(data => {
-            content.innerHTML += `
-            <div style="border-bottom:1px solid #222; padding:10px 0;">
-                <div style="display:flex; justify-content:space-between;">
-                    <b style="color:var(--accent);">₹${data.amount || '--'}</b>
-                    <span style="color:${data.status==='approved'?'var(--accent)':'var(--red)'}">${data.status.toUpperCase()}</span>
-                </div>
-                <div style="font-size:0.7rem; color:#555;">UTR: ${data.utr} | ${new Date(data.timestamp).toLocaleString()}</div>
-            </div>`;
-        });
+            content.innerHTML = list.length === 0 ? "No deposit history." : "";
+            list.forEach(data => {
+                content.innerHTML += `
+                <div style="border-bottom:1px solid #222; padding:10px 0;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b style="color:var(--accent);">₹${data.amount || '--'}</b>
+                        <span style="color:${data.status==='approved'?'var(--accent)':'var(--red)'}">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.7rem; color:#555;">UTR: ${data.utr} | ${new Date(data.timestamp).toLocaleString()}</div>
+                </div>`;
+            });
+        } catch (e) {
+            console.error(e);
+            content.innerHTML = "Unable to load deposit history.";
+        }
     };
 
     window.showWithdrawHistory = async () => {
@@ -1025,25 +1039,30 @@
         content.innerHTML = "Loading...";
         modal.style.display = 'flex';
 
-        const q = query(collection(db, "withdrawals"), where("userId", "==", s.phone));
-        const snap = await getDocs(q);
-        
-        let list = [];
-        snap.forEach(d => list.push(d.data()));
-        
-        list.sort((a,b) => b.timestamp - a.timestamp);
+        try {
+            const q = query(collection(db, "withdrawals"), where("userId", "==", s.phone));
+            const snap = await getDocs(q);
+            
+            let list = [];
+            snap.forEach(d => list.push(d.data()));
+            
+            list.sort((a,b) => b.timestamp - a.timestamp);
 
-        content.innerHTML = list.length === 0 ? "No withdrawal history." : "";
-        list.forEach(data => {
-            content.innerHTML += `
-            <div style="border-bottom:1px solid #222; padding:10px 0;">
-                <div style="display:flex; justify-content:space-between;">
-                    <b style="color:var(--gold);">₹${data.amount}</b>
-                    <span style="color:${data.status==='approved'?'var(--accent)':'var(--waiting)'}">${data.status.toUpperCase()}</span>
-                </div>
-                <div style="font-size:0.7rem; color:#555;">UPI: ${data.upi} | ${new Date(data.timestamp).toLocaleString()}</div>
-            </div>`;
-        });
+            content.innerHTML = list.length === 0 ? "No withdrawal history." : "";
+            list.forEach(data => {
+                content.innerHTML += `
+                <div style="border-bottom:1px solid #222; padding:10px 0;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b style="color:var(--gold);">₹${data.amount}</b>
+                        <span style="color:${data.status==='approved'?'var(--accent)':'var(--waiting)'}">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.7rem; color:#555;">UPI: ${data.upi} | ${new Date(data.timestamp).toLocaleString()}</div>
+                </div>`;
+            });
+        } catch (e) {
+            console.error(e);
+            content.innerHTML = "Unable to load withdraw history.";
+        }
     };
 
     setInterval(() => {
@@ -1069,4 +1088,4 @@
     renderUI();
 </script>
 </body>
-            </html>
+    </html>
